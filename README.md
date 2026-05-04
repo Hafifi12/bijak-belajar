@@ -1,6 +1,6 @@
 # Bijak Belajar
 
-Tiny Finder is a free Flutter learning app for kids ages 3 to 7. It helps children explore real objects, match memory cards, and sort numbers or letters with playful train activities.
+Bijak Belajar is a free Flutter learning app for kids ages 3 to 7. It helps children explore real objects, match memory cards, and sort numbers or letters with playful train activities.
 
 ## MVP
 
