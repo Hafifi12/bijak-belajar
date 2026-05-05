@@ -11,35 +11,52 @@ class StarCounter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stars = context.select<ProgressService, int>(
-      (service) => service.stars,
+      (s) => s.stars,
     );
 
     return Semantics(
       label: '$stars stars earned',
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: large ? 18 : 14,
-          vertical: large ? 12 : 8,
+          horizontal: large ? 16 : 12,
+          vertical: large ? 10 : 7,
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF2B8),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFFFC857), width: 2),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFD93D), Color(0xFFFF9F43)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(50),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFFD93D).withValues(alpha: 0.45),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.star_rounded,
-              color: const Color(0xFFFFB000),
-              size: large ? 36 : 28,
+            Text(
+              '⭐',
+              style: TextStyle(fontSize: large ? 26 : 20),
             ),
             const SizedBox(width: 6),
             Text(
               '$stars',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: large ? 28 : 20,
-                color: const Color(0xFF24304F),
+              style: TextStyle(
+                fontSize: large ? 24 : 18,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                shadows: [
+                  Shadow(
+                    color: Colors.orange.shade700,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
             ),
           ],
