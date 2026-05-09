@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../models/app_language.dart';
 import '../services/audio_service.dart';
 import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
+import '../widgets/star_counter.dart';
 
 /// Jawi Asas — teaches the 28 Arabic/Jawi letters used in Bahasa Melayu Jawi
 /// in a warm, fun style for Malaysian Muslim preschool children.
@@ -19,39 +22,208 @@ class JawiAsasScreen extends StatefulWidget {
 class _JawiAsasScreenState extends State<JawiAsasScreen>
     with SingleTickerProviderStateMixin {
   int _current = 0;
+  bool _recordedInitial = false;
   late AnimationController _bounceController;
   late Animation<double> _bounceAnim;
 
   // 28 Jawi / Arabic letters with Malay pronunciation guide and a Malay example word
   static const _jawis = <_JawiItem>[
-    _JawiItem(jawi: 'ا', name: 'Alif', example: 'anak', exampleJawi: 'اناق', emoji: '👶'),
-    _JawiItem(jawi: 'ب', name: 'Ba', example: 'buku', exampleJawi: 'بوكو', emoji: '📚'),
-    _JawiItem(jawi: 'ت', name: 'Ta', example: 'tali', exampleJawi: 'تالي', emoji: '🪢'),
-    _JawiItem(jawi: 'ث', name: 'Tha', example: 'thabit', exampleJawi: 'ثابت', emoji: '⭐'),
-    _JawiItem(jawi: 'ج', name: 'Jim', example: 'jambatan', exampleJawi: 'جمباتن', emoji: '🌉'),
-    _JawiItem(jawi: 'ح', name: 'Ha', example: 'hari', exampleJawi: 'هاري', emoji: '☀️'),
-    _JawiItem(jawi: 'خ', name: 'Kha', example: 'khabar', exampleJawi: 'خابر', emoji: '📰'),
-    _JawiItem(jawi: 'د', name: 'Dal', example: 'dapur', exampleJawi: 'دافور', emoji: '🍳'),
-    _JawiItem(jawi: 'ذ', name: 'Zal', example: 'zikir', exampleJawi: 'ذكر', emoji: '🤲'),
-    _JawiItem(jawi: 'ر', name: 'Ra', example: 'rama-rama', exampleJawi: 'راما-راما', emoji: '🦋'),
-    _JawiItem(jawi: 'ز', name: 'Zai', example: 'zaman', exampleJawi: 'زامن', emoji: '🕰️'),
-    _JawiItem(jawi: 'س', name: 'Sin', example: 'singa', exampleJawi: 'سيڠا', emoji: '🦁'),
-    _JawiItem(jawi: 'ش', name: 'Shin', example: 'syukur', exampleJawi: 'شكور', emoji: '🙏'),
-    _JawiItem(jawi: 'ص', name: 'Sad', example: 'sabar', exampleJawi: 'صابر', emoji: '😌'),
-    _JawiItem(jawi: 'ض', name: 'Dad', example: 'darurat', exampleJawi: 'ضرورة', emoji: '⚠️'),
-    _JawiItem(jawi: 'ط', name: 'Ta (besar)', example: 'tabib', exampleJawi: 'طبيب', emoji: '🏥'),
-    _JawiItem(jawi: 'ظ', name: 'Za (besar)', example: 'zalim', exampleJawi: 'ظالم', emoji: '⚖️'),
-    _JawiItem(jawi: 'ع', name: 'Ain', example: 'alam', exampleJawi: 'عالم', emoji: '🌍'),
-    _JawiItem(jawi: 'غ', name: 'Ghain', example: 'ghairah', exampleJawi: 'غيره', emoji: '🔥'),
-    _JawiItem(jawi: 'ف', name: 'Fa', example: 'fajar', exampleJawi: 'فجر', emoji: '🌅'),
-    _JawiItem(jawi: 'ق', name: 'Qaf', example: 'quran', exampleJawi: 'قرآن', emoji: '📖'),
-    _JawiItem(jawi: 'ك', name: 'Kaf', example: 'kucing', exampleJawi: 'كوچيڠ', emoji: '🐱'),
-    _JawiItem(jawi: 'ل', name: 'Lam', example: 'lembu', exampleJawi: 'لمبو', emoji: '🐄'),
-    _JawiItem(jawi: 'م', name: 'Mim', example: 'matahari', exampleJawi: 'ماتاهاري', emoji: '☀️'),
-    _JawiItem(jawi: 'ن', name: 'Nun', example: 'nanas', exampleJawi: 'ناناس', emoji: '🍍'),
-    _JawiItem(jawi: 'و', name: 'Waw', example: 'warna', exampleJawi: 'وارنا', emoji: '🌈'),
-    _JawiItem(jawi: 'ه', name: 'Ha (kecil)', example: 'hujan', exampleJawi: 'هوجن', emoji: '🌧️'),
-    _JawiItem(jawi: 'ي', name: 'Ya', example: 'yatim', exampleJawi: 'يتيم', emoji: '🤗'),
+    _JawiItem(
+      jawi: 'ا',
+      name: 'Alif',
+      example: 'anak',
+      exampleJawi: 'اناق',
+      emoji: '👶',
+    ),
+    _JawiItem(
+      jawi: 'ب',
+      name: 'Ba',
+      example: 'buku',
+      exampleJawi: 'بوكو',
+      emoji: '📚',
+    ),
+    _JawiItem(
+      jawi: 'ت',
+      name: 'Ta',
+      example: 'tali',
+      exampleJawi: 'تالي',
+      emoji: '🪢',
+    ),
+    _JawiItem(
+      jawi: 'ث',
+      name: 'Tha',
+      example: 'thabit',
+      exampleJawi: 'ثابت',
+      emoji: '⭐',
+    ),
+    _JawiItem(
+      jawi: 'ج',
+      name: 'Jim',
+      example: 'jambatan',
+      exampleJawi: 'جمباتن',
+      emoji: '🌉',
+    ),
+    _JawiItem(
+      jawi: 'ح',
+      name: 'Ha',
+      example: 'hari',
+      exampleJawi: 'هاري',
+      emoji: '☀️',
+    ),
+    _JawiItem(
+      jawi: 'خ',
+      name: 'Kha',
+      example: 'khabar',
+      exampleJawi: 'خابر',
+      emoji: '📰',
+    ),
+    _JawiItem(
+      jawi: 'د',
+      name: 'Dal',
+      example: 'dapur',
+      exampleJawi: 'دافور',
+      emoji: '🍳',
+    ),
+    _JawiItem(
+      jawi: 'ذ',
+      name: 'Zal',
+      example: 'zikir',
+      exampleJawi: 'ذكر',
+      emoji: '🤲',
+    ),
+    _JawiItem(
+      jawi: 'ر',
+      name: 'Ra',
+      example: 'rama-rama',
+      exampleJawi: 'راما-راما',
+      emoji: '🦋',
+    ),
+    _JawiItem(
+      jawi: 'ز',
+      name: 'Zai',
+      example: 'zaman',
+      exampleJawi: 'زامن',
+      emoji: '🕰️',
+    ),
+    _JawiItem(
+      jawi: 'س',
+      name: 'Sin',
+      example: 'singa',
+      exampleJawi: 'سيڠا',
+      emoji: '🦁',
+    ),
+    _JawiItem(
+      jawi: 'ش',
+      name: 'Shin',
+      example: 'syukur',
+      exampleJawi: 'شكور',
+      emoji: '🙏',
+    ),
+    _JawiItem(
+      jawi: 'ص',
+      name: 'Sad',
+      example: 'sabar',
+      exampleJawi: 'صابر',
+      emoji: '😌',
+    ),
+    _JawiItem(
+      jawi: 'ض',
+      name: 'Dad',
+      example: 'darurat',
+      exampleJawi: 'ضرورة',
+      emoji: '⚠️',
+    ),
+    _JawiItem(
+      jawi: 'ط',
+      name: 'Ta (besar)',
+      example: 'tabib',
+      exampleJawi: 'طبيب',
+      emoji: '🏥',
+    ),
+    _JawiItem(
+      jawi: 'ظ',
+      name: 'Za (besar)',
+      example: 'zalim',
+      exampleJawi: 'ظالم',
+      emoji: '⚖️',
+    ),
+    _JawiItem(
+      jawi: 'ع',
+      name: 'Ain',
+      example: 'alam',
+      exampleJawi: 'عالم',
+      emoji: '🌍',
+    ),
+    _JawiItem(
+      jawi: 'غ',
+      name: 'Ghain',
+      example: 'ghairah',
+      exampleJawi: 'غيره',
+      emoji: '🔥',
+    ),
+    _JawiItem(
+      jawi: 'ف',
+      name: 'Fa',
+      example: 'fajar',
+      exampleJawi: 'فجر',
+      emoji: '🌅',
+    ),
+    _JawiItem(
+      jawi: 'ق',
+      name: 'Qaf',
+      example: 'quran',
+      exampleJawi: 'قرآن',
+      emoji: '📖',
+    ),
+    _JawiItem(
+      jawi: 'ك',
+      name: 'Kaf',
+      example: 'kucing',
+      exampleJawi: 'كوچيڠ',
+      emoji: '🐱',
+    ),
+    _JawiItem(
+      jawi: 'ل',
+      name: 'Lam',
+      example: 'lembu',
+      exampleJawi: 'لمبو',
+      emoji: '🐄',
+    ),
+    _JawiItem(
+      jawi: 'م',
+      name: 'Mim',
+      example: 'matahari',
+      exampleJawi: 'ماتاهاري',
+      emoji: '☀️',
+    ),
+    _JawiItem(
+      jawi: 'ن',
+      name: 'Nun',
+      example: 'nanas',
+      exampleJawi: 'ناناس',
+      emoji: '🍍',
+    ),
+    _JawiItem(
+      jawi: 'و',
+      name: 'Waw',
+      example: 'warna',
+      exampleJawi: 'وارنا',
+      emoji: '🌈',
+    ),
+    _JawiItem(
+      jawi: 'ه',
+      name: 'Ha (kecil)',
+      example: 'hujan',
+      exampleJawi: 'هوجن',
+      emoji: '🌧️',
+    ),
+    _JawiItem(
+      jawi: 'ي',
+      name: 'Ya',
+      example: 'yatim',
+      exampleJawi: 'يتيم',
+      emoji: '🤗',
+    ),
   ];
 
   static const _colors = [
@@ -84,10 +256,20 @@ class _JawiAsasScreenState extends State<JawiAsasScreen>
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_recordedInitial) {
+      _recordedInitial = true;
+      _recordCurrentLesson();
+    }
+  }
+
   void _next() {
     if (_current < _jawis.length - 1) {
       setState(() => _current++);
       _bounceController.forward(from: 0);
+      _recordCurrentLesson();
     }
   }
 
@@ -95,7 +277,13 @@ class _JawiAsasScreenState extends State<JawiAsasScreen>
     if (_current > 0) {
       setState(() => _current--);
       _bounceController.forward(from: 0);
+      _recordCurrentLesson();
     }
+  }
+
+  void _recordCurrentLesson() {
+    final item = _jawis[_current];
+    context.read<ProgressService>().markModuleLesson('jawi', item.jawi);
   }
 
   Future<void> _speakIn(String word, String locale) async {
@@ -117,241 +305,330 @@ class _JawiAsasScreenState extends State<JawiAsasScreen>
     final isLast = _current == _jawis.length - 1;
 
     return Scaffold(
-      backgroundColor: color.withValues(alpha: 0.06),
+      backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: color,
+        backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
-        title: Text(
-          language == AppLanguage.malay
-              ? 'Jawi Asas — حروف جاوي'
-              : 'Jawi Letters — حروف جاوي',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top hint
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                language == AppLanguage.malay
-                    ? 'Huruf ke-${_current + 1} daripada ${_jawis.length}'
-                    : 'Letter ${_current + 1} of ${_jawis.length}',
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+            Text(
+              language == AppLanguage.malay
+                  ? 'Jawi Asas — حروف جاوي'
+                  : 'Jawi Letters — حروف جاوي',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            ),
+            Text(
+              '${_current + 1} / ${_jawis.length}',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.white70,
               ),
             ),
-
-            // Progress bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: (_current + 1) / _jawis.length,
-                  minHeight: 10,
-                  backgroundColor: color.withValues(alpha: 0.2),
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
+          ],
+        ),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: StarCounter()),
+          ),
+        ],
+      ),
+      body: BijakScene(
+        topColor: const Color(0xFFE9F8FF),
+        bottomColor: AppTheme.lightBlue,
+        showHills: false,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // ── Progress bar ───────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: (_current + 1) / _jawis.length,
+                          minHeight: 13,
+                          backgroundColor: Colors.white,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppTheme.sunnyYellow,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.deepBlue,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Text(
+                        '${_current + 1}/${_jawis.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Main card
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Card(
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    side: BorderSide(color: color, width: 3),
+              // ── Instruction ────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        // Big Jawi letter
-                        ScaleTransition(
-                          scale: _bounceAnim,
-                          child: Container(
-                            width: 150,
-                            height: 150,
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(28),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.4),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                item.jawi,
-                                style: const TextStyle(
-                                  fontSize: 90,
-                                  color: Colors.white,
-                                  height: 1.2,
-                                  fontFamily: 'serif',
-                                ),
-                                textDirection: TextDirection.rtl,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // Name
-                        Text(
-                          item.name,
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w900,
-                            color: color,
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Example word row
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                item.emoji,
-                                style: const TextStyle(fontSize: 36),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.example,
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w700,
-                                      color: color,
-                                    ),
-                                  ),
-                                  Text(
-                                    item.exampleJawi,
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      color: color.withValues(alpha: 0.8),
-                                      fontFamily: 'serif',
-                                    ),
-                                    textDirection: TextDirection.rtl,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const Spacer(),
-
-                        // 5-language pronounce buttons
-                        _JawiPronounceButtons(
-                          onSpeak: _speakIn,
-                          arabicLetter: item.jawi,
-                          arabicName: item.name,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
                           color: color,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.center_focus_strong_rounded,
+                          color: Colors.white,
+                          size: 19,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          language == AppLanguage.malay
+                              ? 'Lihat huruf Jawi, baca namanya, dan sebut contoh perkataan!'
+                              : 'See the Jawi letter, read its name, and say the example word!',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // ── Main card ──────────────────────────────────────
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.deepBlue.withValues(alpha: 0.14),
+                          blurRadius: 18,
+                          offset: const Offset(0, 9),
                         ),
                       ],
                     ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          // Big Jawi letter
+                          ScaleTransition(
+                            scale: _bounceAnim,
+                            child: Container(
+                              width: 150,
+                              height: 150,
+                              decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.4),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  item.jawi,
+                                  style: const TextStyle(
+                                    fontSize: 90,
+                                    color: Colors.white,
+                                    height: 1.2,
+                                    fontFamily: 'serif',
+                                  ),
+                                  textDirection: TextDirection.rtl,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          // Name
+                          Text(
+                            item.name,
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              color: color,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Example word row
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  item.emoji,
+                                  style: const TextStyle(fontSize: 36),
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.example,
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w700,
+                                        color: color,
+                                      ),
+                                    ),
+                                    Text(
+                                      item.exampleJawi,
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        color: color.withValues(alpha: 0.8),
+                                        fontFamily: 'serif',
+                                      ),
+                                      textDirection: TextDirection.rtl,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Spacer(),
+                          _JawiPronounceButtons(
+                            onSpeak: _speakIn,
+                            arabicLetter: item.jawi,
+                            arabicName: item.name,
+                            color: color,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // Navigation
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: isFirst ? null : _prev,
-                      icon: const Icon(Icons.arrow_back_ios_rounded),
-                      label: Text(
-                        language == AppLanguage.malay ? 'Sebelum' : 'Back',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade200,
-                        foregroundColor: Colors.grey.shade700,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: isLast ? null : _next,
-                      label: Text(
-                        language == AppLanguage.malay ? 'Seterusnya' : 'Next',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      icon: const Icon(Icons.arrow_forward_ios_rounded),
-                      iconAlignment: IconAlignment.end,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: color,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            if (isLast)
+              // ── Navigation ─────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  '🌙 Alhamdulillah! Semua huruf Jawi dah kenal! ⭐',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                  textAlign: TextAlign.center,
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: isFirst ? null : _prev,
+                        icon: const Icon(Icons.arrow_back_ios_rounded),
+                        label: Text(
+                          language == AppLanguage.malay ? 'Sebelum' : 'Back',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.deepBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 5,
+                          side: const BorderSide(
+                            color: Colors.white,
+                            width: 2.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: isLast ? null : _next,
+                        label: Text(
+                          language == AppLanguage.malay ? 'Seterusnya' : 'Next',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        icon: const Icon(Icons.arrow_forward_ios_rounded),
+                        iconAlignment: IconAlignment.end,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.sunnyYellow,
+                          foregroundColor: AppTheme.ink,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 6,
+                          side: const BorderSide(
+                            color: Colors.white,
+                            width: 2.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-          ],
+
+              if (isLast)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    '🌙 Alhamdulillah! Semua huruf Jawi dah kenal! ⭐',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -403,7 +680,10 @@ class _JawiPronounceButtons extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(50),
-            border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
+            border: Border.all(
+              color: color.withValues(alpha: 0.35),
+              width: 1.5,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

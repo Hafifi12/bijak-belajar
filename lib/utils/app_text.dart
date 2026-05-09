@@ -8,7 +8,10 @@ class AppText {
   const AppText._();
 
   static String ui(String key, AppLanguage language) {
-    return _uiText[key]?[language] ?? _uiText[key]?[AppLanguage.english] ?? key;
+    return _uiText[key]?[language] ??
+        _uiText[key]?[_fallbackLanguage(language)] ??
+        _uiText[key]?[AppLanguage.english] ??
+        key;
   }
 
   static String challengeTitle(Challenge challenge, AppLanguage language) {
@@ -61,6 +64,7 @@ class AppText {
   ) {
     if (mode == TrainMode.numbers) {
       return _numberWords[value]?[language] ??
+          _numberWords[value]?[_fallbackLanguage(language)] ??
           _numberWords[value]?[AppLanguage.english] ??
           value;
     }
@@ -74,8 +78,16 @@ class AppText {
     required String fallback,
   }) {
     return _labels[id]?[language] ??
+        _labels[id]?[_fallbackLanguage(language)] ??
         _labels[id]?[AppLanguage.english] ??
         fallback;
+  }
+
+  static AppLanguage _fallbackLanguage(AppLanguage language) {
+    return switch (language) {
+      AppLanguage.indonesian => AppLanguage.malay,
+      _ => AppLanguage.english,
+    };
   }
 
   static String prompt(Challenge challenge, AppLanguage language) {
@@ -98,6 +110,8 @@ class AppText {
         return ui('letterTrain', language);
       case ChallengeMode.memory:
         return ui('memoryGame', language);
+      case ChallengeMode.puzzle:
+        return ui('puzzleGame', language);
     }
   }
 
@@ -128,7 +142,10 @@ class AppText {
     String target,
   ) {
     final template =
-        templates[language] ?? templates[AppLanguage.english] ?? '{target}';
+        templates[language] ??
+        templates[_fallbackLanguage(language)] ??
+        templates[AppLanguage.english] ??
+        '{target}';
     return template.replaceAll('{target}', target);
   }
 }
@@ -211,6 +228,12 @@ const _uiText = <String, Map<AppLanguage, String>>{
     AppLanguage.malay: 'Permainan Memori',
     AppLanguage.mandarin: '记忆游戏',
     AppLanguage.tamil: 'நினைவுப் விளையாட்டு',
+  },
+  'puzzleGame': {
+    AppLanguage.english: 'Puzzle Game',
+    AppLanguage.malay: 'Permainan Teka-Teki',
+    AppLanguage.mandarin: '拼图游戏',
+    AppLanguage.tamil: 'புதிர் விளையாட்டு',
   },
   'colorSubtitle': {
     AppLanguage.english: 'Find things by color',
@@ -542,96 +565,546 @@ const _numberWords = <String, Map<AppLanguage, String>>{
     AppLanguage.mandarin: '十',
     AppLanguage.tamil: 'பத்து',
   },
-  '11': {AppLanguage.english: 'eleven', AppLanguage.malay: 'sebelas', AppLanguage.mandarin: '十一', AppLanguage.tamil: 'பதினொன்று'},
-  '12': {AppLanguage.english: 'twelve', AppLanguage.malay: 'dua belas', AppLanguage.mandarin: '十二', AppLanguage.tamil: 'பன்னிரண்டு'},
-  '13': {AppLanguage.english: 'thirteen', AppLanguage.malay: 'tiga belas', AppLanguage.mandarin: '十三', AppLanguage.tamil: 'பதின்மூன்று'},
-  '14': {AppLanguage.english: 'fourteen', AppLanguage.malay: 'empat belas', AppLanguage.mandarin: '十四', AppLanguage.tamil: 'பதினான்கு'},
-  '15': {AppLanguage.english: 'fifteen', AppLanguage.malay: 'lima belas', AppLanguage.mandarin: '十五', AppLanguage.tamil: 'பதினைந்து'},
-  '16': {AppLanguage.english: 'sixteen', AppLanguage.malay: 'enam belas', AppLanguage.mandarin: '十六', AppLanguage.tamil: 'பதினாறு'},
-  '17': {AppLanguage.english: 'seventeen', AppLanguage.malay: 'tujuh belas', AppLanguage.mandarin: '十七', AppLanguage.tamil: 'பதினேழு'},
-  '18': {AppLanguage.english: 'eighteen', AppLanguage.malay: 'lapan belas', AppLanguage.mandarin: '十八', AppLanguage.tamil: 'பதினெட்டு'},
-  '19': {AppLanguage.english: 'nineteen', AppLanguage.malay: 'sembilan belas', AppLanguage.mandarin: '十九', AppLanguage.tamil: 'பத்தொன்பது'},
-  '20': {AppLanguage.english: 'twenty', AppLanguage.malay: 'dua puluh', AppLanguage.mandarin: '二十', AppLanguage.tamil: 'இருபது'},
-  '21': {AppLanguage.english: 'twenty one', AppLanguage.malay: 'dua puluh satu', AppLanguage.mandarin: '二十一', AppLanguage.tamil: 'இருபத்தொன்று'},
-  '22': {AppLanguage.english: 'twenty two', AppLanguage.malay: 'dua puluh dua', AppLanguage.mandarin: '二十二', AppLanguage.tamil: 'இருபத்திரண்டு'},
-  '23': {AppLanguage.english: 'twenty three', AppLanguage.malay: 'dua puluh tiga', AppLanguage.mandarin: '二十三', AppLanguage.tamil: 'இருபத்துமூன்று'},
-  '24': {AppLanguage.english: 'twenty four', AppLanguage.malay: 'dua puluh empat', AppLanguage.mandarin: '二十四', AppLanguage.tamil: 'இருபத்துநான்கு'},
-  '25': {AppLanguage.english: 'twenty five', AppLanguage.malay: 'dua puluh lima', AppLanguage.mandarin: '二十五', AppLanguage.tamil: 'இருபத்தைந்து'},
-  '26': {AppLanguage.english: 'twenty six', AppLanguage.malay: 'dua puluh enam', AppLanguage.mandarin: '二十六', AppLanguage.tamil: 'இருபத்தாறு'},
-  '27': {AppLanguage.english: 'twenty seven', AppLanguage.malay: 'dua puluh tujuh', AppLanguage.mandarin: '二十七', AppLanguage.tamil: 'இருபத்தேழு'},
-  '28': {AppLanguage.english: 'twenty eight', AppLanguage.malay: 'dua puluh lapan', AppLanguage.mandarin: '二十八', AppLanguage.tamil: 'இருபத்தெட்டு'},
-  '29': {AppLanguage.english: 'twenty nine', AppLanguage.malay: 'dua puluh sembilan', AppLanguage.mandarin: '二十九', AppLanguage.tamil: 'இருபத்தொன்பது'},
-  '30': {AppLanguage.english: 'thirty', AppLanguage.malay: 'tiga puluh', AppLanguage.mandarin: '三十', AppLanguage.tamil: 'முப்பது'},
-  '31': {AppLanguage.english: 'thirty one', AppLanguage.malay: 'tiga puluh satu', AppLanguage.mandarin: '三十一', AppLanguage.tamil: 'முப்பத்தொன்று'},
-  '32': {AppLanguage.english: 'thirty two', AppLanguage.malay: 'tiga puluh dua', AppLanguage.mandarin: '三十二', AppLanguage.tamil: 'முப்பத்திரண்டு'},
-  '33': {AppLanguage.english: 'thirty three', AppLanguage.malay: 'tiga puluh tiga', AppLanguage.mandarin: '三十三', AppLanguage.tamil: 'முப்பத்துமூன்று'},
-  '34': {AppLanguage.english: 'thirty four', AppLanguage.malay: 'tiga puluh empat', AppLanguage.mandarin: '三十四', AppLanguage.tamil: 'முப்பத்துநான்கு'},
-  '35': {AppLanguage.english: 'thirty five', AppLanguage.malay: 'tiga puluh lima', AppLanguage.mandarin: '三十五', AppLanguage.tamil: 'முப்பத்தைந்து'},
-  '36': {AppLanguage.english: 'thirty six', AppLanguage.malay: 'tiga puluh enam', AppLanguage.mandarin: '三十六', AppLanguage.tamil: 'முப்பத்தாறு'},
-  '37': {AppLanguage.english: 'thirty seven', AppLanguage.malay: 'tiga puluh tujuh', AppLanguage.mandarin: '三十七', AppLanguage.tamil: 'முப்பத்தேழு'},
-  '38': {AppLanguage.english: 'thirty eight', AppLanguage.malay: 'tiga puluh lapan', AppLanguage.mandarin: '三十八', AppLanguage.tamil: 'முப்பத்தெட்டு'},
-  '39': {AppLanguage.english: 'thirty nine', AppLanguage.malay: 'tiga puluh sembilan', AppLanguage.mandarin: '三十九', AppLanguage.tamil: 'முப்பத்தொன்பது'},
-  '40': {AppLanguage.english: 'forty', AppLanguage.malay: 'empat puluh', AppLanguage.mandarin: '四十', AppLanguage.tamil: 'நாற்பது'},
-  '41': {AppLanguage.english: 'forty one', AppLanguage.malay: 'empat puluh satu', AppLanguage.mandarin: '四十一', AppLanguage.tamil: 'நாற்பத்தொன்று'},
-  '42': {AppLanguage.english: 'forty two', AppLanguage.malay: 'empat puluh dua', AppLanguage.mandarin: '四十二', AppLanguage.tamil: 'நாற்பத்திரண்டு'},
-  '43': {AppLanguage.english: 'forty three', AppLanguage.malay: 'empat puluh tiga', AppLanguage.mandarin: '四十三', AppLanguage.tamil: 'நாற்பத்துமூன்று'},
-  '44': {AppLanguage.english: 'forty four', AppLanguage.malay: 'empat puluh empat', AppLanguage.mandarin: '四十四', AppLanguage.tamil: 'நாற்பத்துநான்கு'},
-  '45': {AppLanguage.english: 'forty five', AppLanguage.malay: 'empat puluh lima', AppLanguage.mandarin: '四十五', AppLanguage.tamil: 'நாற்பத்தைந்து'},
-  '46': {AppLanguage.english: 'forty six', AppLanguage.malay: 'empat puluh enam', AppLanguage.mandarin: '四十六', AppLanguage.tamil: 'நாற்பத்தாறு'},
-  '47': {AppLanguage.english: 'forty seven', AppLanguage.malay: 'empat puluh tujuh', AppLanguage.mandarin: '四十七', AppLanguage.tamil: 'நாற்பத்தேழு'},
-  '48': {AppLanguage.english: 'forty eight', AppLanguage.malay: 'empat puluh lapan', AppLanguage.mandarin: '四十八', AppLanguage.tamil: 'நாற்பத்தெட்டு'},
-  '49': {AppLanguage.english: 'forty nine', AppLanguage.malay: 'empat puluh sembilan', AppLanguage.mandarin: '四十九', AppLanguage.tamil: 'நாற்பத்தொன்பது'},
-  '50': {AppLanguage.english: 'fifty', AppLanguage.malay: 'lima puluh', AppLanguage.mandarin: '五十', AppLanguage.tamil: 'ஐம்பது'},
-  '51': {AppLanguage.english: 'fifty one', AppLanguage.malay: 'lima puluh satu', AppLanguage.mandarin: '五十一', AppLanguage.tamil: 'ஐம்பத்தொன்று'},
-  '52': {AppLanguage.english: 'fifty two', AppLanguage.malay: 'lima puluh dua', AppLanguage.mandarin: '五十二', AppLanguage.tamil: 'ஐம்பத்திரண்டு'},
-  '53': {AppLanguage.english: 'fifty three', AppLanguage.malay: 'lima puluh tiga', AppLanguage.mandarin: '五十三', AppLanguage.tamil: 'ஐம்பத்துமூன்று'},
-  '54': {AppLanguage.english: 'fifty four', AppLanguage.malay: 'lima puluh empat', AppLanguage.mandarin: '五十四', AppLanguage.tamil: 'ஐம்பத்துநான்கு'},
-  '55': {AppLanguage.english: 'fifty five', AppLanguage.malay: 'lima puluh lima', AppLanguage.mandarin: '五十五', AppLanguage.tamil: 'ஐம்பத்தைந்து'},
-  '56': {AppLanguage.english: 'fifty six', AppLanguage.malay: 'lima puluh enam', AppLanguage.mandarin: '五十六', AppLanguage.tamil: 'ஐம்பத்தாறு'},
-  '57': {AppLanguage.english: 'fifty seven', AppLanguage.malay: 'lima puluh tujuh', AppLanguage.mandarin: '五十七', AppLanguage.tamil: 'ஐம்பத்தேழு'},
-  '58': {AppLanguage.english: 'fifty eight', AppLanguage.malay: 'lima puluh lapan', AppLanguage.mandarin: '五十八', AppLanguage.tamil: 'ஐம்பத்தெட்டு'},
-  '59': {AppLanguage.english: 'fifty nine', AppLanguage.malay: 'lima puluh sembilan', AppLanguage.mandarin: '五十九', AppLanguage.tamil: 'ஐம்பத்தொன்பது'},
-  '60': {AppLanguage.english: 'sixty', AppLanguage.malay: 'enam puluh', AppLanguage.mandarin: '六十', AppLanguage.tamil: 'அறுபது'},
-  '61': {AppLanguage.english: 'sixty one', AppLanguage.malay: 'enam puluh satu', AppLanguage.mandarin: '六十一', AppLanguage.tamil: 'அறுபத்தொன்று'},
-  '62': {AppLanguage.english: 'sixty two', AppLanguage.malay: 'enam puluh dua', AppLanguage.mandarin: '六十二', AppLanguage.tamil: 'அறுபத்திரண்டு'},
-  '63': {AppLanguage.english: 'sixty three', AppLanguage.malay: 'enam puluh tiga', AppLanguage.mandarin: '六十三', AppLanguage.tamil: 'அறுபத்துமூன்று'},
-  '64': {AppLanguage.english: 'sixty four', AppLanguage.malay: 'enam puluh empat', AppLanguage.mandarin: '六十四', AppLanguage.tamil: 'அறுபத்துநான்கு'},
-  '65': {AppLanguage.english: 'sixty five', AppLanguage.malay: 'enam puluh lima', AppLanguage.mandarin: '六十五', AppLanguage.tamil: 'அறுபத்தைந்து'},
-  '66': {AppLanguage.english: 'sixty six', AppLanguage.malay: 'enam puluh enam', AppLanguage.mandarin: '六十六', AppLanguage.tamil: 'அறுபத்தாறு'},
-  '67': {AppLanguage.english: 'sixty seven', AppLanguage.malay: 'enam puluh tujuh', AppLanguage.mandarin: '六十七', AppLanguage.tamil: 'அறுபத்தேழு'},
-  '68': {AppLanguage.english: 'sixty eight', AppLanguage.malay: 'enam puluh lapan', AppLanguage.mandarin: '六十八', AppLanguage.tamil: 'அறுபத்தெட்டு'},
-  '69': {AppLanguage.english: 'sixty nine', AppLanguage.malay: 'enam puluh sembilan', AppLanguage.mandarin: '六十九', AppLanguage.tamil: 'அறுபத்தொன்பது'},
-  '70': {AppLanguage.english: 'seventy', AppLanguage.malay: 'tujuh puluh', AppLanguage.mandarin: '七十', AppLanguage.tamil: 'எழுபது'},
-  '71': {AppLanguage.english: 'seventy one', AppLanguage.malay: 'tujuh puluh satu', AppLanguage.mandarin: '七十一', AppLanguage.tamil: 'எழுபத்தொன்று'},
-  '72': {AppLanguage.english: 'seventy two', AppLanguage.malay: 'tujuh puluh dua', AppLanguage.mandarin: '七十二', AppLanguage.tamil: 'எழுபத்திரண்டு'},
-  '73': {AppLanguage.english: 'seventy three', AppLanguage.malay: 'tujuh puluh tiga', AppLanguage.mandarin: '七十三', AppLanguage.tamil: 'எழுபத்துமூன்று'},
-  '74': {AppLanguage.english: 'seventy four', AppLanguage.malay: 'tujuh puluh empat', AppLanguage.mandarin: '七十四', AppLanguage.tamil: 'எழுபத்துநான்கு'},
-  '75': {AppLanguage.english: 'seventy five', AppLanguage.malay: 'tujuh puluh lima', AppLanguage.mandarin: '七十五', AppLanguage.tamil: 'எழுபத்தைந்து'},
-  '76': {AppLanguage.english: 'seventy six', AppLanguage.malay: 'tujuh puluh enam', AppLanguage.mandarin: '七十六', AppLanguage.tamil: 'எழுபத்தாறு'},
-  '77': {AppLanguage.english: 'seventy seven', AppLanguage.malay: 'tujuh puluh tujuh', AppLanguage.mandarin: '七十七', AppLanguage.tamil: 'எழுபத்தேழு'},
-  '78': {AppLanguage.english: 'seventy eight', AppLanguage.malay: 'tujuh puluh lapan', AppLanguage.mandarin: '七十八', AppLanguage.tamil: 'எழுபத்தெட்டு'},
-  '79': {AppLanguage.english: 'seventy nine', AppLanguage.malay: 'tujuh puluh sembilan', AppLanguage.mandarin: '七十九', AppLanguage.tamil: 'எழுபத்தொன்பது'},
-  '80': {AppLanguage.english: 'eighty', AppLanguage.malay: 'lapan puluh', AppLanguage.mandarin: '八十', AppLanguage.tamil: 'எண்பது'},
-  '81': {AppLanguage.english: 'eighty one', AppLanguage.malay: 'lapan puluh satu', AppLanguage.mandarin: '八十一', AppLanguage.tamil: 'எண்பத்தொன்று'},
-  '82': {AppLanguage.english: 'eighty two', AppLanguage.malay: 'lapan puluh dua', AppLanguage.mandarin: '八十二', AppLanguage.tamil: 'எண்பத்திரண்டு'},
-  '83': {AppLanguage.english: 'eighty three', AppLanguage.malay: 'lapan puluh tiga', AppLanguage.mandarin: '八十三', AppLanguage.tamil: 'எண்பத்துமூன்று'},
-  '84': {AppLanguage.english: 'eighty four', AppLanguage.malay: 'lapan puluh empat', AppLanguage.mandarin: '八十四', AppLanguage.tamil: 'எண்பத்துநான்கு'},
-  '85': {AppLanguage.english: 'eighty five', AppLanguage.malay: 'lapan puluh lima', AppLanguage.mandarin: '八十五', AppLanguage.tamil: 'எண்பத்தைந்து'},
-  '86': {AppLanguage.english: 'eighty six', AppLanguage.malay: 'lapan puluh enam', AppLanguage.mandarin: '八十六', AppLanguage.tamil: 'எண்பத்தாறு'},
-  '87': {AppLanguage.english: 'eighty seven', AppLanguage.malay: 'lapan puluh tujuh', AppLanguage.mandarin: '八十七', AppLanguage.tamil: 'எண்பத்தேழு'},
-  '88': {AppLanguage.english: 'eighty eight', AppLanguage.malay: 'lapan puluh lapan', AppLanguage.mandarin: '八十八', AppLanguage.tamil: 'எண்பத்தெட்டு'},
-  '89': {AppLanguage.english: 'eighty nine', AppLanguage.malay: 'lapan puluh sembilan', AppLanguage.mandarin: '八十九', AppLanguage.tamil: 'எண்பத்தொன்பது'},
-  '90': {AppLanguage.english: 'ninety', AppLanguage.malay: 'sembilan puluh', AppLanguage.mandarin: '九十', AppLanguage.tamil: 'தொண்ணூறு'},
-  '91': {AppLanguage.english: 'ninety one', AppLanguage.malay: 'sembilan puluh satu', AppLanguage.mandarin: '九十一', AppLanguage.tamil: 'தொண்ணூற்றொன்று'},
-  '92': {AppLanguage.english: 'ninety two', AppLanguage.malay: 'sembilan puluh dua', AppLanguage.mandarin: '九十二', AppLanguage.tamil: 'தொண்ணூற்றிரண்டு'},
-  '93': {AppLanguage.english: 'ninety three', AppLanguage.malay: 'sembilan puluh tiga', AppLanguage.mandarin: '九十三', AppLanguage.tamil: 'தொண்ணூற்றுமூன்று'},
-  '94': {AppLanguage.english: 'ninety four', AppLanguage.malay: 'sembilan puluh empat', AppLanguage.mandarin: '九十四', AppLanguage.tamil: 'தொண்ணூற்றுநான்கு'},
-  '95': {AppLanguage.english: 'ninety five', AppLanguage.malay: 'sembilan puluh lima', AppLanguage.mandarin: '九十五', AppLanguage.tamil: 'தொண்ணூற்றைந்து'},
-  '96': {AppLanguage.english: 'ninety six', AppLanguage.malay: 'sembilan puluh enam', AppLanguage.mandarin: '九十六', AppLanguage.tamil: 'தொண்ணூற்றாறு'},
-  '97': {AppLanguage.english: 'ninety seven', AppLanguage.malay: 'sembilan puluh tujuh', AppLanguage.mandarin: '九十七', AppLanguage.tamil: 'தொண்ணூற்றேழு'},
-  '98': {AppLanguage.english: 'ninety eight', AppLanguage.malay: 'sembilan puluh lapan', AppLanguage.mandarin: '九十八', AppLanguage.tamil: 'தொண்ணூற்றெட்டு'},
-  '99': {AppLanguage.english: 'ninety nine', AppLanguage.malay: 'sembilan puluh sembilan', AppLanguage.mandarin: '九十九', AppLanguage.tamil: 'தொண்ணூற்றொன்பது'},
-  '100': {AppLanguage.english: 'one hundred', AppLanguage.malay: 'seratus', AppLanguage.mandarin: '一百', AppLanguage.tamil: 'நூறு'},
+  '11': {
+    AppLanguage.english: 'eleven',
+    AppLanguage.malay: 'sebelas',
+    AppLanguage.mandarin: '十一',
+    AppLanguage.tamil: 'பதினொன்று',
+  },
+  '12': {
+    AppLanguage.english: 'twelve',
+    AppLanguage.malay: 'dua belas',
+    AppLanguage.mandarin: '十二',
+    AppLanguage.tamil: 'பன்னிரண்டு',
+  },
+  '13': {
+    AppLanguage.english: 'thirteen',
+    AppLanguage.malay: 'tiga belas',
+    AppLanguage.mandarin: '十三',
+    AppLanguage.tamil: 'பதின்மூன்று',
+  },
+  '14': {
+    AppLanguage.english: 'fourteen',
+    AppLanguage.malay: 'empat belas',
+    AppLanguage.mandarin: '十四',
+    AppLanguage.tamil: 'பதினான்கு',
+  },
+  '15': {
+    AppLanguage.english: 'fifteen',
+    AppLanguage.malay: 'lima belas',
+    AppLanguage.mandarin: '十五',
+    AppLanguage.tamil: 'பதினைந்து',
+  },
+  '16': {
+    AppLanguage.english: 'sixteen',
+    AppLanguage.malay: 'enam belas',
+    AppLanguage.mandarin: '十六',
+    AppLanguage.tamil: 'பதினாறு',
+  },
+  '17': {
+    AppLanguage.english: 'seventeen',
+    AppLanguage.malay: 'tujuh belas',
+    AppLanguage.mandarin: '十七',
+    AppLanguage.tamil: 'பதினேழு',
+  },
+  '18': {
+    AppLanguage.english: 'eighteen',
+    AppLanguage.malay: 'lapan belas',
+    AppLanguage.mandarin: '十八',
+    AppLanguage.tamil: 'பதினெட்டு',
+  },
+  '19': {
+    AppLanguage.english: 'nineteen',
+    AppLanguage.malay: 'sembilan belas',
+    AppLanguage.mandarin: '十九',
+    AppLanguage.tamil: 'பத்தொன்பது',
+  },
+  '20': {
+    AppLanguage.english: 'twenty',
+    AppLanguage.malay: 'dua puluh',
+    AppLanguage.mandarin: '二十',
+    AppLanguage.tamil: 'இருபது',
+  },
+  '21': {
+    AppLanguage.english: 'twenty one',
+    AppLanguage.malay: 'dua puluh satu',
+    AppLanguage.mandarin: '二十一',
+    AppLanguage.tamil: 'இருபத்தொன்று',
+  },
+  '22': {
+    AppLanguage.english: 'twenty two',
+    AppLanguage.malay: 'dua puluh dua',
+    AppLanguage.mandarin: '二十二',
+    AppLanguage.tamil: 'இருபத்திரண்டு',
+  },
+  '23': {
+    AppLanguage.english: 'twenty three',
+    AppLanguage.malay: 'dua puluh tiga',
+    AppLanguage.mandarin: '二十三',
+    AppLanguage.tamil: 'இருபத்துமூன்று',
+  },
+  '24': {
+    AppLanguage.english: 'twenty four',
+    AppLanguage.malay: 'dua puluh empat',
+    AppLanguage.mandarin: '二十四',
+    AppLanguage.tamil: 'இருபத்துநான்கு',
+  },
+  '25': {
+    AppLanguage.english: 'twenty five',
+    AppLanguage.malay: 'dua puluh lima',
+    AppLanguage.mandarin: '二十五',
+    AppLanguage.tamil: 'இருபத்தைந்து',
+  },
+  '26': {
+    AppLanguage.english: 'twenty six',
+    AppLanguage.malay: 'dua puluh enam',
+    AppLanguage.mandarin: '二十六',
+    AppLanguage.tamil: 'இருபத்தாறு',
+  },
+  '27': {
+    AppLanguage.english: 'twenty seven',
+    AppLanguage.malay: 'dua puluh tujuh',
+    AppLanguage.mandarin: '二十七',
+    AppLanguage.tamil: 'இருபத்தேழு',
+  },
+  '28': {
+    AppLanguage.english: 'twenty eight',
+    AppLanguage.malay: 'dua puluh lapan',
+    AppLanguage.mandarin: '二十八',
+    AppLanguage.tamil: 'இருபத்தெட்டு',
+  },
+  '29': {
+    AppLanguage.english: 'twenty nine',
+    AppLanguage.malay: 'dua puluh sembilan',
+    AppLanguage.mandarin: '二十九',
+    AppLanguage.tamil: 'இருபத்தொன்பது',
+  },
+  '30': {
+    AppLanguage.english: 'thirty',
+    AppLanguage.malay: 'tiga puluh',
+    AppLanguage.mandarin: '三十',
+    AppLanguage.tamil: 'முப்பது',
+  },
+  '31': {
+    AppLanguage.english: 'thirty one',
+    AppLanguage.malay: 'tiga puluh satu',
+    AppLanguage.mandarin: '三十一',
+    AppLanguage.tamil: 'முப்பத்தொன்று',
+  },
+  '32': {
+    AppLanguage.english: 'thirty two',
+    AppLanguage.malay: 'tiga puluh dua',
+    AppLanguage.mandarin: '三十二',
+    AppLanguage.tamil: 'முப்பத்திரண்டு',
+  },
+  '33': {
+    AppLanguage.english: 'thirty three',
+    AppLanguage.malay: 'tiga puluh tiga',
+    AppLanguage.mandarin: '三十三',
+    AppLanguage.tamil: 'முப்பத்துமூன்று',
+  },
+  '34': {
+    AppLanguage.english: 'thirty four',
+    AppLanguage.malay: 'tiga puluh empat',
+    AppLanguage.mandarin: '三十四',
+    AppLanguage.tamil: 'முப்பத்துநான்கு',
+  },
+  '35': {
+    AppLanguage.english: 'thirty five',
+    AppLanguage.malay: 'tiga puluh lima',
+    AppLanguage.mandarin: '三十五',
+    AppLanguage.tamil: 'முப்பத்தைந்து',
+  },
+  '36': {
+    AppLanguage.english: 'thirty six',
+    AppLanguage.malay: 'tiga puluh enam',
+    AppLanguage.mandarin: '三十六',
+    AppLanguage.tamil: 'முப்பத்தாறு',
+  },
+  '37': {
+    AppLanguage.english: 'thirty seven',
+    AppLanguage.malay: 'tiga puluh tujuh',
+    AppLanguage.mandarin: '三十七',
+    AppLanguage.tamil: 'முப்பத்தேழு',
+  },
+  '38': {
+    AppLanguage.english: 'thirty eight',
+    AppLanguage.malay: 'tiga puluh lapan',
+    AppLanguage.mandarin: '三十八',
+    AppLanguage.tamil: 'முப்பத்தெட்டு',
+  },
+  '39': {
+    AppLanguage.english: 'thirty nine',
+    AppLanguage.malay: 'tiga puluh sembilan',
+    AppLanguage.mandarin: '三十九',
+    AppLanguage.tamil: 'முப்பத்தொன்பது',
+  },
+  '40': {
+    AppLanguage.english: 'forty',
+    AppLanguage.malay: 'empat puluh',
+    AppLanguage.mandarin: '四十',
+    AppLanguage.tamil: 'நாற்பது',
+  },
+  '41': {
+    AppLanguage.english: 'forty one',
+    AppLanguage.malay: 'empat puluh satu',
+    AppLanguage.mandarin: '四十一',
+    AppLanguage.tamil: 'நாற்பத்தொன்று',
+  },
+  '42': {
+    AppLanguage.english: 'forty two',
+    AppLanguage.malay: 'empat puluh dua',
+    AppLanguage.mandarin: '四十二',
+    AppLanguage.tamil: 'நாற்பத்திரண்டு',
+  },
+  '43': {
+    AppLanguage.english: 'forty three',
+    AppLanguage.malay: 'empat puluh tiga',
+    AppLanguage.mandarin: '四十三',
+    AppLanguage.tamil: 'நாற்பத்துமூன்று',
+  },
+  '44': {
+    AppLanguage.english: 'forty four',
+    AppLanguage.malay: 'empat puluh empat',
+    AppLanguage.mandarin: '四十四',
+    AppLanguage.tamil: 'நாற்பத்துநான்கு',
+  },
+  '45': {
+    AppLanguage.english: 'forty five',
+    AppLanguage.malay: 'empat puluh lima',
+    AppLanguage.mandarin: '四十五',
+    AppLanguage.tamil: 'நாற்பத்தைந்து',
+  },
+  '46': {
+    AppLanguage.english: 'forty six',
+    AppLanguage.malay: 'empat puluh enam',
+    AppLanguage.mandarin: '四十六',
+    AppLanguage.tamil: 'நாற்பத்தாறு',
+  },
+  '47': {
+    AppLanguage.english: 'forty seven',
+    AppLanguage.malay: 'empat puluh tujuh',
+    AppLanguage.mandarin: '四十七',
+    AppLanguage.tamil: 'நாற்பத்தேழு',
+  },
+  '48': {
+    AppLanguage.english: 'forty eight',
+    AppLanguage.malay: 'empat puluh lapan',
+    AppLanguage.mandarin: '四十八',
+    AppLanguage.tamil: 'நாற்பத்தெட்டு',
+  },
+  '49': {
+    AppLanguage.english: 'forty nine',
+    AppLanguage.malay: 'empat puluh sembilan',
+    AppLanguage.mandarin: '四十九',
+    AppLanguage.tamil: 'நாற்பத்தொன்பது',
+  },
+  '50': {
+    AppLanguage.english: 'fifty',
+    AppLanguage.malay: 'lima puluh',
+    AppLanguage.mandarin: '五十',
+    AppLanguage.tamil: 'ஐம்பது',
+  },
+  '51': {
+    AppLanguage.english: 'fifty one',
+    AppLanguage.malay: 'lima puluh satu',
+    AppLanguage.mandarin: '五十一',
+    AppLanguage.tamil: 'ஐம்பத்தொன்று',
+  },
+  '52': {
+    AppLanguage.english: 'fifty two',
+    AppLanguage.malay: 'lima puluh dua',
+    AppLanguage.mandarin: '五十二',
+    AppLanguage.tamil: 'ஐம்பத்திரண்டு',
+  },
+  '53': {
+    AppLanguage.english: 'fifty three',
+    AppLanguage.malay: 'lima puluh tiga',
+    AppLanguage.mandarin: '五十三',
+    AppLanguage.tamil: 'ஐம்பத்துமூன்று',
+  },
+  '54': {
+    AppLanguage.english: 'fifty four',
+    AppLanguage.malay: 'lima puluh empat',
+    AppLanguage.mandarin: '五十四',
+    AppLanguage.tamil: 'ஐம்பத்துநான்கு',
+  },
+  '55': {
+    AppLanguage.english: 'fifty five',
+    AppLanguage.malay: 'lima puluh lima',
+    AppLanguage.mandarin: '五十五',
+    AppLanguage.tamil: 'ஐம்பத்தைந்து',
+  },
+  '56': {
+    AppLanguage.english: 'fifty six',
+    AppLanguage.malay: 'lima puluh enam',
+    AppLanguage.mandarin: '五十六',
+    AppLanguage.tamil: 'ஐம்பத்தாறு',
+  },
+  '57': {
+    AppLanguage.english: 'fifty seven',
+    AppLanguage.malay: 'lima puluh tujuh',
+    AppLanguage.mandarin: '五十七',
+    AppLanguage.tamil: 'ஐம்பத்தேழு',
+  },
+  '58': {
+    AppLanguage.english: 'fifty eight',
+    AppLanguage.malay: 'lima puluh lapan',
+    AppLanguage.mandarin: '五十八',
+    AppLanguage.tamil: 'ஐம்பத்தெட்டு',
+  },
+  '59': {
+    AppLanguage.english: 'fifty nine',
+    AppLanguage.malay: 'lima puluh sembilan',
+    AppLanguage.mandarin: '五十九',
+    AppLanguage.tamil: 'ஐம்பத்தொன்பது',
+  },
+  '60': {
+    AppLanguage.english: 'sixty',
+    AppLanguage.malay: 'enam puluh',
+    AppLanguage.mandarin: '六十',
+    AppLanguage.tamil: 'அறுபது',
+  },
+  '61': {
+    AppLanguage.english: 'sixty one',
+    AppLanguage.malay: 'enam puluh satu',
+    AppLanguage.mandarin: '六十一',
+    AppLanguage.tamil: 'அறுபத்தொன்று',
+  },
+  '62': {
+    AppLanguage.english: 'sixty two',
+    AppLanguage.malay: 'enam puluh dua',
+    AppLanguage.mandarin: '六十二',
+    AppLanguage.tamil: 'அறுபத்திரண்டு',
+  },
+  '63': {
+    AppLanguage.english: 'sixty three',
+    AppLanguage.malay: 'enam puluh tiga',
+    AppLanguage.mandarin: '六十三',
+    AppLanguage.tamil: 'அறுபத்துமூன்று',
+  },
+  '64': {
+    AppLanguage.english: 'sixty four',
+    AppLanguage.malay: 'enam puluh empat',
+    AppLanguage.mandarin: '六十四',
+    AppLanguage.tamil: 'அறுபத்துநான்கு',
+  },
+  '65': {
+    AppLanguage.english: 'sixty five',
+    AppLanguage.malay: 'enam puluh lima',
+    AppLanguage.mandarin: '六十五',
+    AppLanguage.tamil: 'அறுபத்தைந்து',
+  },
+  '66': {
+    AppLanguage.english: 'sixty six',
+    AppLanguage.malay: 'enam puluh enam',
+    AppLanguage.mandarin: '六十六',
+    AppLanguage.tamil: 'அறுபத்தாறு',
+  },
+  '67': {
+    AppLanguage.english: 'sixty seven',
+    AppLanguage.malay: 'enam puluh tujuh',
+    AppLanguage.mandarin: '六十七',
+    AppLanguage.tamil: 'அறுபத்தேழு',
+  },
+  '68': {
+    AppLanguage.english: 'sixty eight',
+    AppLanguage.malay: 'enam puluh lapan',
+    AppLanguage.mandarin: '六十八',
+    AppLanguage.tamil: 'அறுபத்தெட்டு',
+  },
+  '69': {
+    AppLanguage.english: 'sixty nine',
+    AppLanguage.malay: 'enam puluh sembilan',
+    AppLanguage.mandarin: '六十九',
+    AppLanguage.tamil: 'அறுபத்தொன்பது',
+  },
+  '70': {
+    AppLanguage.english: 'seventy',
+    AppLanguage.malay: 'tujuh puluh',
+    AppLanguage.mandarin: '七十',
+    AppLanguage.tamil: 'எழுபது',
+  },
+  '71': {
+    AppLanguage.english: 'seventy one',
+    AppLanguage.malay: 'tujuh puluh satu',
+    AppLanguage.mandarin: '七十一',
+    AppLanguage.tamil: 'எழுபத்தொன்று',
+  },
+  '72': {
+    AppLanguage.english: 'seventy two',
+    AppLanguage.malay: 'tujuh puluh dua',
+    AppLanguage.mandarin: '七十二',
+    AppLanguage.tamil: 'எழுபத்திரண்டு',
+  },
+  '73': {
+    AppLanguage.english: 'seventy three',
+    AppLanguage.malay: 'tujuh puluh tiga',
+    AppLanguage.mandarin: '七十三',
+    AppLanguage.tamil: 'எழுபத்துமூன்று',
+  },
+  '74': {
+    AppLanguage.english: 'seventy four',
+    AppLanguage.malay: 'tujuh puluh empat',
+    AppLanguage.mandarin: '七十四',
+    AppLanguage.tamil: 'எழுபத்துநான்கு',
+  },
+  '75': {
+    AppLanguage.english: 'seventy five',
+    AppLanguage.malay: 'tujuh puluh lima',
+    AppLanguage.mandarin: '七十五',
+    AppLanguage.tamil: 'எழுபத்தைந்து',
+  },
+  '76': {
+    AppLanguage.english: 'seventy six',
+    AppLanguage.malay: 'tujuh puluh enam',
+    AppLanguage.mandarin: '七十六',
+    AppLanguage.tamil: 'எழுபத்தாறு',
+  },
+  '77': {
+    AppLanguage.english: 'seventy seven',
+    AppLanguage.malay: 'tujuh puluh tujuh',
+    AppLanguage.mandarin: '七十七',
+    AppLanguage.tamil: 'எழுபத்தேழு',
+  },
+  '78': {
+    AppLanguage.english: 'seventy eight',
+    AppLanguage.malay: 'tujuh puluh lapan',
+    AppLanguage.mandarin: '七十八',
+    AppLanguage.tamil: 'எழுபத்தெட்டு',
+  },
+  '79': {
+    AppLanguage.english: 'seventy nine',
+    AppLanguage.malay: 'tujuh puluh sembilan',
+    AppLanguage.mandarin: '七十九',
+    AppLanguage.tamil: 'எழுபத்தொன்பது',
+  },
+  '80': {
+    AppLanguage.english: 'eighty',
+    AppLanguage.malay: 'lapan puluh',
+    AppLanguage.mandarin: '八十',
+    AppLanguage.tamil: 'எண்பது',
+  },
+  '81': {
+    AppLanguage.english: 'eighty one',
+    AppLanguage.malay: 'lapan puluh satu',
+    AppLanguage.mandarin: '八十一',
+    AppLanguage.tamil: 'எண்பத்தொன்று',
+  },
+  '82': {
+    AppLanguage.english: 'eighty two',
+    AppLanguage.malay: 'lapan puluh dua',
+    AppLanguage.mandarin: '八十二',
+    AppLanguage.tamil: 'எண்பத்திரண்டு',
+  },
+  '83': {
+    AppLanguage.english: 'eighty three',
+    AppLanguage.malay: 'lapan puluh tiga',
+    AppLanguage.mandarin: '八十三',
+    AppLanguage.tamil: 'எண்பத்துமூன்று',
+  },
+  '84': {
+    AppLanguage.english: 'eighty four',
+    AppLanguage.malay: 'lapan puluh empat',
+    AppLanguage.mandarin: '八十四',
+    AppLanguage.tamil: 'எண்பத்துநான்கு',
+  },
+  '85': {
+    AppLanguage.english: 'eighty five',
+    AppLanguage.malay: 'lapan puluh lima',
+    AppLanguage.mandarin: '八十五',
+    AppLanguage.tamil: 'எண்பத்தைந்து',
+  },
+  '86': {
+    AppLanguage.english: 'eighty six',
+    AppLanguage.malay: 'lapan puluh enam',
+    AppLanguage.mandarin: '八十六',
+    AppLanguage.tamil: 'எண்பத்தாறு',
+  },
+  '87': {
+    AppLanguage.english: 'eighty seven',
+    AppLanguage.malay: 'lapan puluh tujuh',
+    AppLanguage.mandarin: '八十七',
+    AppLanguage.tamil: 'எண்பத்தேழு',
+  },
+  '88': {
+    AppLanguage.english: 'eighty eight',
+    AppLanguage.malay: 'lapan puluh lapan',
+    AppLanguage.mandarin: '八十八',
+    AppLanguage.tamil: 'எண்பத்தெட்டு',
+  },
+  '89': {
+    AppLanguage.english: 'eighty nine',
+    AppLanguage.malay: 'lapan puluh sembilan',
+    AppLanguage.mandarin: '八十九',
+    AppLanguage.tamil: 'எண்பத்தொன்பது',
+  },
+  '90': {
+    AppLanguage.english: 'ninety',
+    AppLanguage.malay: 'sembilan puluh',
+    AppLanguage.mandarin: '九十',
+    AppLanguage.tamil: 'தொண்ணூறு',
+  },
+  '91': {
+    AppLanguage.english: 'ninety one',
+    AppLanguage.malay: 'sembilan puluh satu',
+    AppLanguage.mandarin: '九十一',
+    AppLanguage.tamil: 'தொண்ணூற்றொன்று',
+  },
+  '92': {
+    AppLanguage.english: 'ninety two',
+    AppLanguage.malay: 'sembilan puluh dua',
+    AppLanguage.mandarin: '九十二',
+    AppLanguage.tamil: 'தொண்ணூற்றிரண்டு',
+  },
+  '93': {
+    AppLanguage.english: 'ninety three',
+    AppLanguage.malay: 'sembilan puluh tiga',
+    AppLanguage.mandarin: '九十三',
+    AppLanguage.tamil: 'தொண்ணூற்றுமூன்று',
+  },
+  '94': {
+    AppLanguage.english: 'ninety four',
+    AppLanguage.malay: 'sembilan puluh empat',
+    AppLanguage.mandarin: '九十四',
+    AppLanguage.tamil: 'தொண்ணூற்றுநான்கு',
+  },
+  '95': {
+    AppLanguage.english: 'ninety five',
+    AppLanguage.malay: 'sembilan puluh lima',
+    AppLanguage.mandarin: '九十五',
+    AppLanguage.tamil: 'தொண்ணூற்றைந்து',
+  },
+  '96': {
+    AppLanguage.english: 'ninety six',
+    AppLanguage.malay: 'sembilan puluh enam',
+    AppLanguage.mandarin: '九十六',
+    AppLanguage.tamil: 'தொண்ணூற்றாறு',
+  },
+  '97': {
+    AppLanguage.english: 'ninety seven',
+    AppLanguage.malay: 'sembilan puluh tujuh',
+    AppLanguage.mandarin: '九十七',
+    AppLanguage.tamil: 'தொண்ணூற்றேழு',
+  },
+  '98': {
+    AppLanguage.english: 'ninety eight',
+    AppLanguage.malay: 'sembilan puluh lapan',
+    AppLanguage.mandarin: '九十八',
+    AppLanguage.tamil: 'தொண்ணூற்றெட்டு',
+  },
+  '99': {
+    AppLanguage.english: 'ninety nine',
+    AppLanguage.malay: 'sembilan puluh sembilan',
+    AppLanguage.mandarin: '九十九',
+    AppLanguage.tamil: 'தொண்ணூற்றொன்பது',
+  },
+  '100': {
+    AppLanguage.english: 'one hundred',
+    AppLanguage.malay: 'seratus',
+    AppLanguage.mandarin: '一百',
+    AppLanguage.tamil: 'நூறு',
+  },
 };
 
 const _labels = <String, Map<AppLanguage, String>>{

@@ -9,6 +9,7 @@ enum ChallengeMode {
   numberTrain,
   letterTrain,
   memory,
+  puzzle,
 }
 
 enum ShapeKind {
@@ -41,6 +42,8 @@ extension ChallengeModeLabels on ChallengeMode {
         return 'Letter Train';
       case ChallengeMode.memory:
         return 'Memory Game';
+      case ChallengeMode.puzzle:
+        return 'Puzzle Game';
     }
   }
 
@@ -62,6 +65,8 @@ extension ChallengeModeLabels on ChallengeMode {
         return 'letter_train';
       case ChallengeMode.memory:
         return 'memory';
+      case ChallengeMode.puzzle:
+        return 'puzzle';
     }
   }
 }

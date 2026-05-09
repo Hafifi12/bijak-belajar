@@ -47,6 +47,7 @@ void main() {
   test('reset clears learning progress but keeps settings', () async {
     final progressService = ProgressService();
     await progressService.load();
+    await progressService.setBackgroundMusicEnabled(true);
     await progressService.setSoundEnabled(false);
     await progressService.setVoiceEnabled(false);
     await progressService.completeChallenge(ChallengeMode.numberTrain);
@@ -60,19 +61,40 @@ void main() {
     expect(progressService.countFor(ChallengeMode.numberTrain), 0);
     expect(progressService.countFor(ChallengeMode.letterTrain), 0);
     expect(progressService.countFor(ChallengeMode.memory), 0);
+    expect(progressService.backgroundMusicEnabled, isTrue);
     expect(progressService.soundEnabled, isFalse);
     expect(progressService.voiceEnabled, isFalse);
   });
 
-  test('stores selected language locally', () async {
+  test('module lessons are counted once and persist locally', () async {
     final progressService = ProgressService();
     await progressService.load();
 
-    await progressService.setLanguage(AppLanguage.malay);
+    await progressService.markModuleLesson('numbers', '1');
+    await progressService.markModuleLesson('numbers', '1');
+    await progressService.markModuleLesson('numbers', '2');
+
+    expect(progressService.getModuleLessons('numbers'), 2);
+    expect(progressService.getLastLesson('numbers'), '2');
+    expect(progressService.stars, 2);
 
     final reloaded = ProgressService();
     await reloaded.load();
 
-    expect(reloaded.language, AppLanguage.malay);
+    expect(reloaded.getModuleLessons('numbers'), 2);
+    expect(reloaded.getLastLesson('numbers'), '2');
+    expect(reloaded.stars, 2);
+  });
+
+  test('stores selected Indonesian language locally', () async {
+    final progressService = ProgressService();
+    await progressService.load();
+
+    await progressService.setLanguage(AppLanguage.indonesian);
+
+    final reloaded = ProgressService();
+    await reloaded.load();
+
+    expect(reloaded.language, AppLanguage.indonesian);
   });
 }

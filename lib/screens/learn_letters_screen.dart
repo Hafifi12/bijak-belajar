@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../models/app_language.dart';
 import '../services/audio_service.dart';
 import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
+import '../widgets/star_counter.dart';
 
 class LearnLettersScreen extends StatefulWidget {
   const LearnLettersScreen({super.key});
@@ -17,148 +20,287 @@ class LearnLettersScreen extends StatefulWidget {
 class _LearnLettersScreenState extends State<LearnLettersScreen>
     with SingleTickerProviderStateMixin {
   int _current = 0;
+  bool _recordedInitial = false;
   late AnimationController _bounceController;
   late Animation<double> _bounceAnim;
 
   // ── A–Z with 5 languages ───────────────────────────────────────
   static const _letters = <_LetterItem>[
     _LetterItem(
-      letter: 'A', emoji: '🐔',
-      malay: 'Ayam', english: 'Ant', mandarin: '苹果 (Píngguǒ)', tamil: 'அம்மா (Ammā)', indonesian: 'Apel',
+      letter: 'A',
+      emoji: '🐔',
+      malay: 'Ayam',
+      english: 'Ant',
+      mandarin: '苹果 (Píngguǒ)',
+      tamil: 'அம்மா (Ammā)',
+      indonesian: 'Apel',
       phonicsMalay: 'A seperti Ayam',
     ),
     _LetterItem(
-      letter: 'B', emoji: '📚',
-      malay: 'Buku', english: 'Ball', mandarin: '杯子 (Bēizi)', tamil: 'பந்து (Pandu)', indonesian: 'Buku',
+      letter: 'B',
+      emoji: '📚',
+      malay: 'Buku',
+      english: 'Ball',
+      mandarin: '杯子 (Bēizi)',
+      tamil: 'பந்து (Pandu)',
+      indonesian: 'Buku',
       phonicsMalay: 'B seperti Buku',
     ),
     _LetterItem(
-      letter: 'C', emoji: '☕',
-      malay: 'Cawan', english: 'Cup', mandarin: '车 (Chē)', tamil: 'சந்திரன் (Candiran)', indonesian: 'Cangkir',
+      letter: 'C',
+      emoji: '☕',
+      malay: 'Cawan',
+      english: 'Cup',
+      mandarin: '车 (Chē)',
+      tamil: 'சந்திரன் (Candiran)',
+      indonesian: 'Cangkir',
       phonicsMalay: 'C seperti Cawan',
     ),
     _LetterItem(
-      letter: 'D', emoji: '🍈',
-      malay: 'Durian', english: 'Duck', mandarin: '大象 (Dàxiàng)', tamil: 'தேன் (Tēṉ)', indonesian: 'Durian',
+      letter: 'D',
+      emoji: '🍈',
+      malay: 'Durian',
+      english: 'Duck',
+      mandarin: '大象 (Dàxiàng)',
+      tamil: 'தேன் (Tēṉ)',
+      indonesian: 'Durian',
       phonicsMalay: 'D seperti Durian',
     ),
     _LetterItem(
-      letter: 'E', emoji: '🦊',
-      malay: 'Ekor', english: 'Egg', mandarin: '鹅 (É)', tamil: 'எலி (Eli)', indonesian: 'Ekor',
+      letter: 'E',
+      emoji: '🦊',
+      malay: 'Ekor',
+      english: 'Egg',
+      mandarin: '鹅 (É)',
+      tamil: 'எலி (Eli)',
+      indonesian: 'Ekor',
       phonicsMalay: 'E seperti Ekor',
     ),
     _LetterItem(
-      letter: 'F', emoji: '🌅',
-      malay: 'Fajar', english: 'Fish', mandarin: '风 (Fēng)', tamil: 'பூ (Pū)', indonesian: 'Fajar',
+      letter: 'F',
+      emoji: '🌅',
+      malay: 'Fajar',
+      english: 'Fish',
+      mandarin: '风 (Fēng)',
+      tamil: 'பூ (Pū)',
+      indonesian: 'Fajar',
       phonicsMalay: 'F seperti Fajar',
     ),
     _LetterItem(
-      letter: 'G', emoji: '🐘',
-      malay: 'Gajah', english: 'Goat', mandarin: '狗 (Gǒu)', tamil: 'கடல் (Kaṭal)', indonesian: 'Gajah',
+      letter: 'G',
+      emoji: '🐘',
+      malay: 'Gajah',
+      english: 'Goat',
+      mandarin: '狗 (Gǒu)',
+      tamil: 'கடல் (Kaṭal)',
+      indonesian: 'Gajah',
       phonicsMalay: 'G seperti Gajah',
     ),
     _LetterItem(
-      letter: 'H', emoji: '🐯',
-      malay: 'Harimau', english: 'Hat', mandarin: '花 (Huā)', tamil: 'புல் (Pul)', indonesian: 'Harimau',
+      letter: 'H',
+      emoji: '🐯',
+      malay: 'Harimau',
+      english: 'Hat',
+      mandarin: '花 (Huā)',
+      tamil: 'புல் (Pul)',
+      indonesian: 'Harimau',
       phonicsMalay: 'H seperti Harimau',
     ),
     _LetterItem(
-      letter: 'I', emoji: '🐟',
-      malay: 'Ikan', english: 'Ice', mandarin: '鱼 (Yú)', tamil: 'இலை (Ilai)', indonesian: 'Ikan',
+      letter: 'I',
+      emoji: '🐟',
+      malay: 'Ikan',
+      english: 'Ice',
+      mandarin: '鱼 (Yú)',
+      tamil: 'இலை (Ilai)',
+      indonesian: 'Ikan',
       phonicsMalay: 'I seperti Ikan',
     ),
     _LetterItem(
-      letter: 'J', emoji: '🌉',
-      malay: 'Jambatan', english: 'Juice', mandarin: '橘子 (Júzi)', tamil: 'ஜன்னல் (Jannal)', indonesian: 'Jembatan',
+      letter: 'J',
+      emoji: '🌉',
+      malay: 'Jambatan',
+      english: 'Juice',
+      mandarin: '橘子 (Júzi)',
+      tamil: 'ஜன்னல் (Jannal)',
+      indonesian: 'Jembatan',
       phonicsMalay: 'J seperti Jambatan',
     ),
     _LetterItem(
-      letter: 'K', emoji: '🐱',
-      malay: 'Kucing', english: 'Kite', mandarin: '快 (Kuài)', tamil: 'கிளி (Kiḷi)', indonesian: 'Kucing',
+      letter: 'K',
+      emoji: '🐱',
+      malay: 'Kucing',
+      english: 'Kite',
+      mandarin: '快 (Kuài)',
+      tamil: 'கிளி (Kiḷi)',
+      indonesian: 'Kucing',
       phonicsMalay: 'K seperti Kucing',
     ),
     _LetterItem(
-      letter: 'L', emoji: '🐄',
-      malay: 'Lembu', english: 'Lion', mandarin: '老虎 (Lǎohǔ)', tamil: 'லாம்பு (Lāmpu)', indonesian: 'Lembu',
+      letter: 'L',
+      emoji: '🐄',
+      malay: 'Lembu',
+      english: 'Lion',
+      mandarin: '老虎 (Lǎohǔ)',
+      tamil: 'லாம்பு (Lāmpu)',
+      indonesian: 'Lembu',
       phonicsMalay: 'L seperti Lembu',
     ),
     _LetterItem(
-      letter: 'M', emoji: '🐒',
-      malay: 'Monyet', english: 'Moon', mandarin: '猫 (Māo)', tamil: 'மரம் (Maram)', indonesian: 'Monyet',
+      letter: 'M',
+      emoji: '🐒',
+      malay: 'Monyet',
+      english: 'Moon',
+      mandarin: '猫 (Māo)',
+      tamil: 'மரம் (Maram)',
+      indonesian: 'Monyet',
       phonicsMalay: 'M seperti Monyet',
     ),
     _LetterItem(
-      letter: 'N', emoji: '🍍',
-      malay: 'Nanas', english: 'Nose', mandarin: '鸟 (Niǎo)', tamil: 'நாய் (Nāy)', indonesian: 'Nanas',
+      letter: 'N',
+      emoji: '🍍',
+      malay: 'Nanas',
+      english: 'Nose',
+      mandarin: '鸟 (Niǎo)',
+      tamil: 'நாய் (Nāy)',
+      indonesian: 'Nanas',
       phonicsMalay: 'N seperti Nanas',
     ),
     _LetterItem(
-      letter: 'O', emoji: '🍊',
-      malay: 'Oren', english: 'Owl', mandarin: '苹果 (Chéng)', tamil: 'ஒட்டகம் (Oṭṭakam)', indonesian: 'Oren',
+      letter: 'O',
+      emoji: '🍊',
+      malay: 'Oren',
+      english: 'Owl',
+      mandarin: '苹果 (Chéng)',
+      tamil: 'ஒட்டகம் (Oṭṭakam)',
+      indonesian: 'Oren',
       phonicsMalay: 'O seperti Oren',
     ),
     _LetterItem(
-      letter: 'P', emoji: '🍌',
-      malay: 'Pisang', english: 'Pen', mandarin: '苹 (Píng)', tamil: 'பழம் (Paḻam)', indonesian: 'Pisang',
+      letter: 'P',
+      emoji: '🍌',
+      malay: 'Pisang',
+      english: 'Pen',
+      mandarin: '苹 (Píng)',
+      tamil: 'பழம் (Paḻam)',
+      indonesian: 'Pisang',
       phonicsMalay: 'P seperti Pisang',
     ),
     _LetterItem(
-      letter: 'Q', emoji: '👑',
-      malay: 'Queen', english: 'Queen', mandarin: '球 (Qiú)', tamil: 'குரல் (Kural)', indonesian: 'Ratu',
+      letter: 'Q',
+      emoji: '👑',
+      malay: 'Queen',
+      english: 'Queen',
+      mandarin: '球 (Qiú)',
+      tamil: 'குரல் (Kural)',
+      indonesian: 'Ratu',
       phonicsMalay: 'Q seperti Queen',
     ),
     _LetterItem(
-      letter: 'R', emoji: '🦋',
-      malay: 'Rama-rama', english: 'Rain', mandarin: '人 (Rén)', tamil: 'ரயில் (Rayil)', indonesian: 'Rama-rama',
+      letter: 'R',
+      emoji: '🦋',
+      malay: 'Rama-rama',
+      english: 'Rain',
+      mandarin: '人 (Rén)',
+      tamil: 'ரயில் (Rayil)',
+      indonesian: 'Rama-rama',
       phonicsMalay: 'R seperti Rama-rama',
     ),
     _LetterItem(
-      letter: 'S', emoji: '🦁',
-      malay: 'Singa', english: 'Sun', mandarin: '蛇 (Shé)', tamil: 'சூரியன் (Cūriyaṉ)', indonesian: 'Singa',
+      letter: 'S',
+      emoji: '🦁',
+      malay: 'Singa',
+      english: 'Sun',
+      mandarin: '蛇 (Shé)',
+      tamil: 'சூரியன் (Cūriyaṉ)',
+      indonesian: 'Singa',
       phonicsMalay: 'S seperti Singa',
     ),
     _LetterItem(
-      letter: 'T', emoji: '🐭',
-      malay: 'Tikus', english: 'Tree', mandarin: '兔 (Tù)', tamil: 'தண்ணீர் (Taṇṇīr)', indonesian: 'Tikus',
+      letter: 'T',
+      emoji: '🐭',
+      malay: 'Tikus',
+      english: 'Tree',
+      mandarin: '兔 (Tù)',
+      tamil: 'தண்ணீர் (Taṇṇīr)',
+      indonesian: 'Tikus',
       phonicsMalay: 'T seperti Tikus',
     ),
     _LetterItem(
-      letter: 'U', emoji: '🦐',
-      malay: 'Udang', english: 'Umbrella', mandarin: '鱼 (Yú)', tamil: 'உணவு (Uṇavu)', indonesian: 'Udang',
+      letter: 'U',
+      emoji: '🦐',
+      malay: 'Udang',
+      english: 'Umbrella',
+      mandarin: '鱼 (Yú)',
+      tamil: 'உணவு (Uṇavu)',
+      indonesian: 'Udang',
       phonicsMalay: 'U seperti Udang',
     ),
     _LetterItem(
-      letter: 'V', emoji: '🎻',
-      malay: 'Violin', english: 'Van', mandarin: '花瓶 (Huāpíng)', tamil: 'வானம் (Vāṉam)', indonesian: 'Violin',
+      letter: 'V',
+      emoji: '🎻',
+      malay: 'Violin',
+      english: 'Van',
+      mandarin: '花瓶 (Huāpíng)',
+      tamil: 'வானம் (Vāṉam)',
+      indonesian: 'Violin',
       phonicsMalay: 'V seperti Violin',
     ),
     _LetterItem(
-      letter: 'W', emoji: '🍉',
-      malay: 'Tembikai', english: 'Water', mandarin: '乌龟 (Wūguī)', tamil: 'வீடு (Vīṭu)', indonesian: 'Semangka',
+      letter: 'W',
+      emoji: '🍉',
+      malay: 'Tembikai',
+      english: 'Water',
+      mandarin: '乌龟 (Wūguī)',
+      tamil: 'வீடு (Vīṭu)',
+      indonesian: 'Semangka',
       phonicsMalay: 'W seperti Tembikai',
     ),
     _LetterItem(
-      letter: 'X', emoji: '🩻',
-      malay: 'X-ray', english: 'X-ray', mandarin: 'X光 (X-guāng)', tamil: 'எக்ஸ்ரே (Eksrē)', indonesian: 'X-ray',
+      letter: 'X',
+      emoji: '🩻',
+      malay: 'X-ray',
+      english: 'X-ray',
+      mandarin: 'X光 (X-guāng)',
+      tamil: 'எக்ஸ்ரே (Eksrē)',
+      indonesian: 'X-ray',
       phonicsMalay: 'X seperti X-ray',
     ),
     _LetterItem(
-      letter: 'Y', emoji: '🪁',
-      malay: 'Yoyo', english: 'Yak', mandarin: '鱼 (Yú)', tamil: 'யானை (Yāṉai)', indonesian: 'Yoyo',
+      letter: 'Y',
+      emoji: '🪁',
+      malay: 'Yoyo',
+      english: 'Yak',
+      mandarin: '鱼 (Yú)',
+      tamil: 'யானை (Yāṉai)',
+      indonesian: 'Yoyo',
       phonicsMalay: 'Y seperti Yoyo',
     ),
     _LetterItem(
-      letter: 'Z', emoji: '🦓',
-      malay: 'Zebra', english: 'Zebra', mandarin: '动物园 (Dòngwùyuán)', tamil: 'ஜீப் (Jīp)', indonesian: 'Zebra',
+      letter: 'Z',
+      emoji: '🦓',
+      malay: 'Zebra',
+      english: 'Zebra',
+      mandarin: '动物园 (Dòngwùyuán)',
+      tamil: 'ஜீப் (Jīp)',
+      indonesian: 'Zebra',
       phonicsMalay: 'Z seperti Zebra',
     ),
   ];
 
   static const _colors = [
-    Color(0xFFFF6B6B), Color(0xFFFF9F43), Color(0xFFFECA57),
-    Color(0xFF1DD1A1), Color(0xFF48DBFB), Color(0xFF5F27CD),
-    Color(0xFF6C5CE7), Color(0xFFFF7675), Color(0xFF00B894),
-    Color(0xFFFDCB6E), Color(0xFFE17055), Color(0xFF74B9FF),
+    Color(0xFFFF6B6B),
+    Color(0xFFFF9F43),
+    Color(0xFFFECA57),
+    Color(0xFF1DD1A1),
+    Color(0xFF48DBFB),
+    Color(0xFF5F27CD),
+    Color(0xFF6C5CE7),
+    Color(0xFFFF7675),
+    Color(0xFF00B894),
+    Color(0xFFFDCB6E),
+    Color(0xFFE17055),
+    Color(0xFF74B9FF),
     Color(0xFFA29BFE),
   ];
 
@@ -182,10 +324,20 @@ class _LearnLettersScreenState extends State<LearnLettersScreen>
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_recordedInitial) {
+      _recordedInitial = true;
+      _recordCurrentLesson();
+    }
+  }
+
   void _next() {
     if (_current < _letters.length - 1) {
       setState(() => _current++);
       _bounceController.forward(from: 0);
+      _recordCurrentLesson();
     }
   }
 
@@ -193,7 +345,13 @@ class _LearnLettersScreenState extends State<LearnLettersScreen>
     if (_current > 0) {
       setState(() => _current--);
       _bounceController.forward(from: 0);
+      _recordCurrentLesson();
     }
+  }
+
+  void _recordCurrentLesson() {
+    final item = _letters[_current];
+    context.read<ProgressService>().markModuleLesson('letters', item.letter);
   }
 
   Future<void> _speakIn(String word, String locale) async {
@@ -216,226 +374,327 @@ class _LearnLettersScreenState extends State<LearnLettersScreen>
     final isLast = _current == _letters.length - 1;
 
     return Scaffold(
-      backgroundColor: color.withValues(alpha: 0.07),
+      backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: color,
+        backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
-        title: Text(
-          isMalay ? 'Belajar Huruf A–Z' : 'Learn Letters A–Z',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Progress bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: (_current + 1) / _letters.length,
-                  minHeight: 10,
-                  backgroundColor: color.withValues(alpha: 0.2),
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
-                ),
-              ),
+            Text(
+              isMalay ? 'Belajar Huruf A–Z' : 'Learn Letters A–Z',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
             ),
             Text(
               '${_current + 1} / ${_letters.length}',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.white70,
               ),
             ),
-            const SizedBox(height: 6),
-
-            // Main card
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Card(
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    side: BorderSide(color: color, width: 3),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
+          ],
+        ),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: StarCounter()),
+          ),
+        ],
+      ),
+      body: BijakScene(
+        topColor: const Color(0xFFE9F8FF),
+        bottomColor: AppTheme.lightBlue,
+        showHills: false,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // ── Progress bar ───────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: (_current + 1) / _letters.length,
+                          minHeight: 13,
+                          backgroundColor: Colors.white,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppTheme.sunnyYellow,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: Column(
-                      children: [
-                        // Big letter with bounce
-                        ScaleTransition(
-                          scale: _bounceAnim,
-                          child: Container(
-                            width: 140,
-                            height: 140,
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(28),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.4),
-                                  blurRadius: 18,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Stack(
-                              children: [
-                                Center(
-                                  child: Text(
-                                    item.letter,
-                                    style: const TextStyle(
-                                      fontSize: 90,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                      height: 1,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 8,
-                                  right: 14,
-                                  child: Text(
-                                    item.letter.toLowerCase(),
-                                    style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white.withValues(alpha: 0.65),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.deepBlue,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Text(
+                        '${_current + 1}/${_letters.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
                         ),
-
-                        const SizedBox(height: 12),
-
-                        // Emoji + phonics hint
-                        Text(item.emoji, style: const TextStyle(fontSize: 52)),
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: Text(
-                            item.phonicsMalay,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: color,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // 5-language word table
-                        _LetterWordTable(item: item, color: color),
-
-                        const SizedBox(height: 14),
-
-                        // 5-language pronunciation buttons — pronounce the letter only
-                        _PronounceButtons(
-                          onSpeak: _speakIn,
-                          malay: item.letter.toLowerCase(),
-                          english: item.letter.toLowerCase(),
-                          mandarin: item.letter.toLowerCase(),
-                          indonesian: item.letter.toLowerCase(),
-                          tamil: item.letter.toLowerCase(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // ── Instruction hint ───────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
                           color: color,
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(height: 4),
+                        child: const Icon(
+                          Icons.center_focus_strong_rounded,
+                          color: Colors.white,
+                          size: 19,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isMalay
+                              ? 'Dengar bunyi huruf, lihat contoh, kemudian sebut kuat-kuat!'
+                              : 'Hear the letter sound, see the example, then say it aloud!',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // ── Main card ──────────────────────────────────────
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.deepBlue.withValues(alpha: 0.14),
+                          blurRadius: 18,
+                          offset: const Offset(0, 9),
+                        ),
                       ],
                     ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 16,
+                      ),
+                      child: Column(
+                        children: [
+                          // Big letter with bounce
+                          ScaleTransition(
+                            scale: _bounceAnim,
+                            child: Container(
+                              width: 140,
+                              height: 140,
+                              decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.4),
+                                    blurRadius: 18,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Stack(
+                                children: [
+                                  Center(
+                                    child: Text(
+                                      item.letter,
+                                      style: const TextStyle(
+                                        fontSize: 90,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 8,
+                                    right: 14,
+                                    child: Text(
+                                      item.letter.toLowerCase(),
+                                      style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.65,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Emoji + phonics hint
+                          Text(
+                            item.emoji,
+                            style: const TextStyle(fontSize: 52),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: Text(
+                              item.phonicsMalay,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: color,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _LetterWordTable(item: item, color: color),
+                          const SizedBox(height: 14),
+                          _PronounceButtons(
+                            onSpeak: _speakIn,
+                            malay: item.letter.toLowerCase(),
+                            english: item.letter.toLowerCase(),
+                            mandarin: item.letter.toLowerCase(),
+                            indonesian: item.letter.toLowerCase(),
+                            tamil: item.letter.toLowerCase(),
+                            color: color,
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 10),
+              const SizedBox(height: 10),
 
-            // Navigation
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: isFirst ? null : _prev,
-                      icon: const Icon(Icons.arrow_back_ios_rounded),
-                      label: Text(
-                        isMalay ? 'Sebelum' : 'Back',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade200,
-                        foregroundColor: Colors.grey.shade700,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: isLast ? null : _next,
-                      label: Text(
-                        isMalay ? 'Seterusnya' : 'Next',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      icon: const Icon(Icons.arrow_forward_ios_rounded),
-                      iconAlignment: IconAlignment.end,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: color,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            if (isLast)
+              // ── Navigation ─────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  '🌟 Bagus! Kamu dah kenal semua huruf A–Z! 🌟',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                  textAlign: TextAlign.center,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: isFirst ? null : _prev,
+                        icon: const Icon(Icons.arrow_back_ios_rounded),
+                        label: Text(
+                          isMalay ? 'Sebelum' : 'Back',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.deepBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 5,
+                          side: const BorderSide(
+                            color: Colors.white,
+                            width: 2.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: isLast ? null : _next,
+                        label: Text(
+                          isMalay ? 'Seterusnya' : 'Next',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        icon: const Icon(Icons.arrow_forward_ios_rounded),
+                        iconAlignment: IconAlignment.end,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.sunnyYellow,
+                          foregroundColor: AppTheme.ink,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 6,
+                          side: const BorderSide(
+                            color: Colors.white,
+                            width: 2.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-          ],
+
+              if (isLast)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    '🌟 Bagus! Kamu dah kenal semua huruf A–Z! 🌟',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -470,7 +729,10 @@ class _LetterWordTable extends StatelessWidget {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Text(flag, style: const TextStyle(fontSize: 20)),
@@ -544,12 +806,18 @@ class _PronounceButtons extends StatelessWidget {
 
   String _wordFor(String locale) {
     switch (locale) {
-      case 'ms-MY': return malay;
-      case 'en-US': return english;
-      case 'zh-CN': return mandarin;
-      case 'id-ID': return indonesian;
-      case 'ta-IN': return tamil;
-      default: return english;
+      case 'ms-MY':
+        return malay;
+      case 'en-US':
+        return english;
+      case 'zh-CN':
+        return mandarin;
+      case 'id-ID':
+        return indonesian;
+      case 'ta-IN':
+        return tamil;
+      default:
+        return english;
     }
   }
 
@@ -580,10 +848,16 @@ class _PronounceButtons extends StatelessWidget {
                 borderRadius: BorderRadius.circular(50),
                 onTap: () => onSpeak(_wordFor(l.locale), l.locale),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(50),
-                    border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
+                    border: Border.all(
+                      color: color.withValues(alpha: 0.35),
+                      width: 1.5,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

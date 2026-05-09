@@ -7,6 +7,7 @@ class ProgressSnapshot {
     required this.completedChallenges,
     required this.completedByMode,
     required this.badgeIds,
+    required this.backgroundMusicEnabled,
     required this.soundEnabled,
     required this.voiceEnabled,
     required this.language,
@@ -16,6 +17,7 @@ class ProgressSnapshot {
   final int completedChallenges;
   final Map<ChallengeMode, int> completedByMode;
   final Set<String> badgeIds;
+  final bool backgroundMusicEnabled;
   final bool soundEnabled;
   final bool voiceEnabled;
   final AppLanguage language;

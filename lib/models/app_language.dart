@@ -1,4 +1,4 @@
-enum AppLanguage { english, malay, mandarin, tamil }
+enum AppLanguage { english, malay, mandarin, tamil, indonesian }
 
 extension AppLanguageDetails on AppLanguage {
   String get code {
@@ -11,6 +11,8 @@ extension AppLanguageDetails on AppLanguage {
         return 'zh';
       case AppLanguage.tamil:
         return 'ta';
+      case AppLanguage.indonesian:
+        return 'id';
     }
   }
 
@@ -24,6 +26,8 @@ extension AppLanguageDetails on AppLanguage {
         return 'Mandarin';
       case AppLanguage.tamil:
         return 'Tamil';
+      case AppLanguage.indonesian:
+        return 'Indonesian';
     }
   }
 
@@ -37,6 +41,8 @@ extension AppLanguageDetails on AppLanguage {
         return '中文';
       case AppLanguage.tamil:
         return 'தமிழ்';
+      case AppLanguage.indonesian:
+        return 'Bahasa Indonesia';
     }
   }
 
@@ -50,15 +56,23 @@ extension AppLanguageDetails on AppLanguage {
         return 'zh-CN';
       case AppLanguage.tamil:
         return 'ta-IN';
+      case AppLanguage.indonesian:
+        return 'id-ID';
     }
   }
 
   static AppLanguage fromCode(String? code) {
-    for (final language in AppLanguage.values) {
-      if (language.code == code) {
-        return language;
-      }
+    switch (code) {
+      case 'ms':
+        return AppLanguage.malay;
+      case 'zh':
+        return AppLanguage.mandarin;
+      case 'ta':
+        return AppLanguage.tamil;
+      case 'id':
+        return AppLanguage.indonesian;
+      default:
+        return AppLanguage.english;
     }
-    return AppLanguage.english;
   }
 }

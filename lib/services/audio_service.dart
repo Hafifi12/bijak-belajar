@@ -7,6 +7,25 @@ class AudioService {
 
   static const _ttsChannel = MethodChannel('tiny_finder/tts');
 
+  Future<void> playOfflinePronunciation({
+    required String assetPath,
+    required bool enabled,
+    required String fallbackText,
+    required String locale,
+  }) async {
+    if (!enabled) return;
+
+    try {
+      await rootBundle.load('assets/audio/$assetPath');
+      // Audio files can be dropped into assets/audio later without changing
+      // lesson data. Until an offline audio player is added, TTS is the fallback.
+    } catch (_) {
+      // Missing recordings are expected during content production.
+    }
+
+    await _speak(fallbackText, locale);
+  }
+
   Future<void> playCelebration({required bool enabled}) async {
     if (!enabled) return;
     await SystemSound.play(SystemSoundType.alert);

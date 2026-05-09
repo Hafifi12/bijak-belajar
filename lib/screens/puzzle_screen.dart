@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/app_language.dart';
+import '../models/challenge.dart';
 import '../services/audio_service.dart';
 import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
+import '../widgets/star_counter.dart';
 
 class PuzzleScreen extends StatefulWidget {
   const PuzzleScreen({super.key});
@@ -30,31 +34,131 @@ class _Puzzle {
 }
 
 const _puzzles = <_Puzzle>[
-  _Puzzle(emoji: '🐘', answer: 'Elephant',  answerBM: 'Gajah',       bgColor: Color(0xFFB0BEC5)),
-  _Puzzle(emoji: '🦁', answer: 'Lion',      answerBM: 'Singa',       bgColor: Color(0xFFFFCC80)),
-  _Puzzle(emoji: '🐬', answer: 'Dolphin',   answerBM: 'Lumba-lumba', bgColor: Color(0xFF80DEEA)),
-  _Puzzle(emoji: '🦋', answer: 'Butterfly', answerBM: 'Rama-rama',   bgColor: Color(0xFFF48FB1)),
-  _Puzzle(emoji: '🐸', answer: 'Frog',      answerBM: 'Katak',       bgColor: Color(0xFFA5D6A7)),
-  _Puzzle(emoji: '🐧', answer: 'Penguin',   answerBM: 'Penguin',     bgColor: Color(0xFF90CAF9)),
-  _Puzzle(emoji: '🦊', answer: 'Fox',       answerBM: 'Rubah',       bgColor: Color(0xFFFFAB91)),
-  _Puzzle(emoji: '🐙', answer: 'Octopus',   answerBM: 'Sotong',      bgColor: Color(0xFFCE93D8)),
-  _Puzzle(emoji: '🦒', answer: 'Giraffe',   answerBM: 'Zirafah',     bgColor: Color(0xFFFFE082)),
-  _Puzzle(emoji: '🐨', answer: 'Koala',     answerBM: 'Koala',       bgColor: Color(0xFFB0BEC5)),
-  _Puzzle(emoji: '🐢', answer: 'Turtle',    answerBM: 'Kura-kura',   bgColor: Color(0xFF80CBC4)),
-  _Puzzle(emoji: '🦜', answer: 'Parrot',    answerBM: 'Kakak Tua',   bgColor: Color(0xFFA5D6A7)),
-  _Puzzle(emoji: '🦓', answer: 'Zebra',     answerBM: 'Zebra',       bgColor: Color(0xFFECEFF1)),
-  _Puzzle(emoji: '🐮', answer: 'Cow',       answerBM: 'Lembu',       bgColor: Color(0xFFF8BBD0)),
-  _Puzzle(emoji: '🐔', answer: 'Chicken',   answerBM: 'Ayam',        bgColor: Color(0xFFFFF9C4)),
-  _Puzzle(emoji: '🐟', answer: 'Fish',      answerBM: 'Ikan',        bgColor: Color(0xFF80D8FF)),
-  _Puzzle(emoji: '🐝', answer: 'Bee',       answerBM: 'Lebah',       bgColor: Color(0xFFFFEE58)),
-  _Puzzle(emoji: '🐱', answer: 'Cat',       answerBM: 'Kucing',      bgColor: Color(0xFFFFCDD2)),
-  _Puzzle(emoji: '🐶', answer: 'Dog',       answerBM: 'Anjing',      bgColor: Color(0xFFD7CCC8)),
-  _Puzzle(emoji: '🐺', answer: 'Wolf',      answerBM: 'Serigala',    bgColor: Color(0xFFCFD8DC)),
+  _Puzzle(
+    emoji: '🐘',
+    answer: 'Elephant',
+    answerBM: 'Gajah',
+    bgColor: Color(0xFFB0BEC5),
+  ),
+  _Puzzle(
+    emoji: '🦁',
+    answer: 'Lion',
+    answerBM: 'Singa',
+    bgColor: Color(0xFFFFCC80),
+  ),
+  _Puzzle(
+    emoji: '🐬',
+    answer: 'Dolphin',
+    answerBM: 'Lumba-lumba',
+    bgColor: Color(0xFF80DEEA),
+  ),
+  _Puzzle(
+    emoji: '🦋',
+    answer: 'Butterfly',
+    answerBM: 'Rama-rama',
+    bgColor: Color(0xFFF48FB1),
+  ),
+  _Puzzle(
+    emoji: '🐸',
+    answer: 'Frog',
+    answerBM: 'Katak',
+    bgColor: Color(0xFFA5D6A7),
+  ),
+  _Puzzle(
+    emoji: '🐧',
+    answer: 'Penguin',
+    answerBM: 'Penguin',
+    bgColor: Color(0xFF90CAF9),
+  ),
+  _Puzzle(
+    emoji: '🦊',
+    answer: 'Fox',
+    answerBM: 'Rubah',
+    bgColor: Color(0xFFFFAB91),
+  ),
+  _Puzzle(
+    emoji: '🐙',
+    answer: 'Octopus',
+    answerBM: 'Sotong',
+    bgColor: Color(0xFFCE93D8),
+  ),
+  _Puzzle(
+    emoji: '🦒',
+    answer: 'Giraffe',
+    answerBM: 'Zirafah',
+    bgColor: Color(0xFFFFE082),
+  ),
+  _Puzzle(
+    emoji: '🐨',
+    answer: 'Koala',
+    answerBM: 'Koala',
+    bgColor: Color(0xFFB0BEC5),
+  ),
+  _Puzzle(
+    emoji: '🐢',
+    answer: 'Turtle',
+    answerBM: 'Kura-kura',
+    bgColor: Color(0xFF80CBC4),
+  ),
+  _Puzzle(
+    emoji: '🦜',
+    answer: 'Parrot',
+    answerBM: 'Kakak Tua',
+    bgColor: Color(0xFFA5D6A7),
+  ),
+  _Puzzle(
+    emoji: '🦓',
+    answer: 'Zebra',
+    answerBM: 'Zebra',
+    bgColor: Color(0xFFECEFF1),
+  ),
+  _Puzzle(
+    emoji: '🐮',
+    answer: 'Cow',
+    answerBM: 'Lembu',
+    bgColor: Color(0xFFF8BBD0),
+  ),
+  _Puzzle(
+    emoji: '🐔',
+    answer: 'Chicken',
+    answerBM: 'Ayam',
+    bgColor: Color(0xFFFFF9C4),
+  ),
+  _Puzzle(
+    emoji: '🐟',
+    answer: 'Fish',
+    answerBM: 'Ikan',
+    bgColor: Color(0xFF80D8FF),
+  ),
+  _Puzzle(
+    emoji: '🐝',
+    answer: 'Bee',
+    answerBM: 'Lebah',
+    bgColor: Color(0xFFFFEE58),
+  ),
+  _Puzzle(
+    emoji: '🐱',
+    answer: 'Cat',
+    answerBM: 'Kucing',
+    bgColor: Color(0xFFFFCDD2),
+  ),
+  _Puzzle(
+    emoji: '🐶',
+    answer: 'Dog',
+    answerBM: 'Anjing',
+    bgColor: Color(0xFFD7CCC8),
+  ),
+  _Puzzle(
+    emoji: '🐺',
+    answer: 'Wolf',
+    answerBM: 'Serigala',
+    bgColor: Color(0xFFCFD8DC),
+  ),
 ];
 
 class _PuzzleScreenState extends State<PuzzleScreen> {
   int _puzzleIndex = 0;
-  int _gridSize = 2;
+  int _gridSize = 3;
   late List<int?> _tiles;
   int? _emptyIndex;
   int _moves = 0;
@@ -109,47 +213,69 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     final col = index % _gridSize;
     final eRow = empty ~/ _gridSize;
     final eCol = empty % _gridSize;
-    final adjacent = (row == eRow && (col - eCol).abs() == 1) ||
+    final adjacent =
+        (row == eRow && (col - eCol).abs() == 1) ||
         (col == eCol && (row - eRow).abs() == 1);
     if (!adjacent) return;
+    var solvedNow = false;
     setState(() {
       _tiles[empty] = _tiles[index];
       _tiles[index] = null;
       _emptyIndex = index;
       _moves++;
-      if (_isSolved(_tiles)) {
-        _solved = true;
-        context.read<AudioService>().playCelebration(
-            enabled: context.read<ProgressService>().soundEnabled);
-      }
+      solvedNow = _isSolved(_tiles);
+      _solved = solvedNow;
     });
+    if (solvedNow) {
+      _completePuzzle();
+    }
+  }
+
+  Future<void> _completePuzzle() async {
+    final progressService = context.read<ProgressService>();
+    await progressService.completeChallenge(ChallengeMode.puzzle);
+    if (!mounted) {
+      return;
+    }
+    await context.read<AudioService>().playCelebration(
+      enabled: progressService.soundEnabled,
+    );
   }
 
   void _nextPuzzle() => setState(() {
-        _puzzleIndex = (_puzzleIndex + 1) % _puzzles.length;
-        _initPuzzle();
-      });
+    _puzzleIndex = (_puzzleIndex + 1) % _puzzles.length;
+    _initPuzzle();
+  });
 
   void _changeDifficulty(int size) => setState(() {
-        _gridSize = size;
-        _initPuzzle();
-      });
+    _gridSize = size;
+    _initPuzzle();
+  });
 
   @override
   Widget build(BuildContext context) {
     final language = context.watch<ProgressService>().language;
     final isMalay = language == AppLanguage.malay;
     final puzzle = _puzzles[_puzzleIndex];
-    const color = Color(0xFF6C5CE7);
+    const color = AppTheme.skyBlue;
 
     return Scaffold(
-      backgroundColor: color.withValues(alpha: 0.07),
+      backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: color,
+        backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
-        title: Text(
-          isMalay ? 'Teka-Teki Gambar' : 'Picture Puzzle',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isMalay ? 'Teka-Teki Gambar 🧩' : 'Picture Puzzle 🧩',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
+            Text(
+              '${isMalay ? 'Puzzle' : 'Puzzle'} ${_puzzleIndex + 1}/${_puzzles.length}  •  ${isMalay ? 'Langkah' : 'Moves'}: $_moves',
+              style: const TextStyle(fontSize: 11, color: Colors.white70),
+            ),
+          ],
         ),
         actions: [
           IconButton(
@@ -157,101 +283,192 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
             onPressed: _nextPuzzle,
             icon: const Icon(Icons.shuffle_rounded),
           ),
+          const Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: StarCounter()),
+          ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Level + move counter
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: Row(
-                children: [
-                  Text(isMalay ? 'Tahap:' : 'Level:',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  const SizedBox(width: 10),
-                  ...[
-                    (2, isMalay ? 'Mudah' : 'Easy'),
-                    (3, isMalay ? 'Susah' : 'Hard'),
-                  ].map((t) {
-                    final (s, label) = t;
-                    final sel = s == _gridSize;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(label),
-                        selected: sel,
-                        selectedColor: color,
-                        labelStyle: TextStyle(
-                          color: sel ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        onSelected: (_) => _changeDifficulty(s),
-                      ),
-                    );
-                  }),
-                  const Spacer(),
-                  Text(
-                    '${isMalay ? 'Langkah' : 'Moves'}: $_moves',
-                    style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
-
-            // Hint row
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38, height: 38,
-                    decoration: BoxDecoration(
-                      color: puzzle.bgColor,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: color.withValues(alpha: 0.5)),
-                    ),
-                    child: Center(child: Text(puzzle.emoji, style: const TextStyle(fontSize: 24))),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    isMalay ? 'Susun kepingan gambar ini!' : 'Arrange the picture pieces!',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-
-            // Board
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: _solved
-                        ? _SolvedOverlay(
-                            puzzle: puzzle,
-                            moves: _moves,
-                            isMalay: isMalay,
-                            color: color,
-                            onNext: _nextPuzzle,
-                            onRetry: () => setState(_initPuzzle),
-                          )
-                        : _PuzzleBoard(
-                            puzzle: puzzle,
-                            gridSize: _gridSize,
-                            tiles: _tiles,
-                            onTap: _tap,
-                            color: color,
+      body: BijakScene(
+        topColor: const Color(0xFFE9F8FF),
+        bottomColor: AppTheme.lightBlue,
+        showHills: false,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Progress bar + counter pill
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: (_puzzleIndex + 1) / _puzzles.length,
+                          minHeight: 13,
+                          backgroundColor: Colors.white,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppTheme.sunnyYellow,
                           ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.deepBlue,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Text(
+                        '${_puzzleIndex + 1}/${_puzzles.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Difficulty chips + hint row inside a white pill bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.deepBlue.withValues(alpha: 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // Emoji preview
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: puzzle.bgColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            puzzle.emoji,
+                            style: const TextStyle(fontSize: 22),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isMalay
+                              ? 'Susun kepingan gambar ini!'
+                              : 'Arrange the picture pieces!',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Difficulty chips
+                      for (final t in [
+                        (3, isMalay ? 'Mudah' : 'Easy'),
+                        (4, isMalay ? 'Susah' : 'Hard'),
+                      ]) ...[
+                        GestureDetector(
+                          onTap: () => _changeDifficulty(t.$1),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: t.$1 == _gridSize
+                                  ? AppTheme.skyBlue
+                                  : AppTheme.lightBlue,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              t.$2,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: t.$1 == _gridSize
+                                    ? Colors.white
+                                    : AppTheme.deepBlue,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                    ],
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 12),
-          ],
+              // Board inside white container
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.deepBlue.withValues(alpha: 0.14),
+                          blurRadius: 18,
+                          offset: const Offset(0, 9),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: _solved
+                            ? _SolvedOverlay(
+                                puzzle: puzzle,
+                                moves: _moves,
+                                isMalay: isMalay,
+                                color: color,
+                                onNext: _nextPuzzle,
+                                onRetry: () => setState(_initPuzzle),
+                              )
+                            : _PuzzleBoard(
+                                puzzle: puzzle,
+                                gridSize: _gridSize,
+                                tiles: _tiles,
+                                onTap: _tap,
+                                color: color,
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -278,61 +495,67 @@ class _PuzzleBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: puzzle.bgColor.withValues(alpha: 0.25),
+        color: puzzle.bgColor.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color, width: 3),
+        border: Border.all(
+          color: AppTheme.skyBlue.withValues(alpha: 0.35),
+          width: 2,
+        ),
       ),
       padding: const EdgeInsets.all(6),
-      child: LayoutBuilder(builder: (ctx, constraints) {
-        final gap = 4.0;
-        final tileSize = (constraints.maxWidth - 6 * 2 - gap * (gridSize - 1)) / gridSize;
+      child: LayoutBuilder(
+        builder: (ctx, constraints) {
+          final gap = 4.0;
+          final tileSize =
+              (constraints.maxWidth - 6 * 2 - gap * (gridSize - 1)) / gridSize;
 
-        return GridView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: gridSize,
-            crossAxisSpacing: gap,
-            mainAxisSpacing: gap,
-          ),
-          itemCount: gridSize * gridSize,
-          itemBuilder: (ctx2, index) {
-            final tileNum = tiles[index];
-            if (tileNum == null) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: puzzle.bgColor.withValues(alpha: 0.35),
+          return GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: gridSize,
+              crossAxisSpacing: gap,
+              mainAxisSpacing: gap,
+            ),
+            itemCount: gridSize * gridSize,
+            itemBuilder: (ctx2, index) {
+              final tileNum = tiles[index];
+              if (tileNum == null) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: puzzle.bgColor.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                );
+              }
+              return GestureDetector(
+                onTap: () => onTap(index),
+                child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: puzzle.bgColor,
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.18),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: _EmojiTile(
+                      emoji: puzzle.emoji,
+                      tileIndex: tileNum,
+                      gridSize: gridSize,
+                      tileSize: tileSize,
+                    ),
+                  ),
                 ),
               );
-            }
-            return GestureDetector(
-              onTap: () => onTap(index),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: puzzle.bgColor,
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.18),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: _EmojiTile(
-                    emoji: puzzle.emoji,
-                    tileIndex: tileNum,
-                    gridSize: gridSize,
-                    tileSize: tileSize,
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      }),
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -400,9 +623,19 @@ class _SolvedOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: puzzle.bgColor.withValues(alpha: 0.92),
+        color: Colors.white.withValues(alpha: 0.97),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color, width: 3),
+        border: Border.all(
+          color: AppTheme.skyBlue.withValues(alpha: 0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.deepBlue.withValues(alpha: 0.10),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -411,48 +644,64 @@ class _SolvedOverlay extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             '🎉 ${isMalay ? "Berjaya!" : "Solved!"}',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: color),
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: AppTheme.deepBlue,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             isMalay ? puzzle.answerBM : puzzle.answer,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.skyBlue,
+            ),
           ),
           Text(
             '${isMalay ? "Langkah" : "Moves"}: $moves',
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 18),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(children: [
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: onNext,
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: Text(isMalay ? 'Puzzle Seterusnya' : 'Next Puzzle'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            child: Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: onNext,
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                    label: Text(isMalay ? 'Puzzle Seterusnya' : 'Next Puzzle'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.skyBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.replay_rounded),
-                  label: Text(isMalay ? 'Cuba Lagi' : 'Try Again'),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.replay_rounded),
+                    label: Text(isMalay ? 'Cuba Lagi' : 'Try Again'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.skyBlue,
+                      side: const BorderSide(color: AppTheme.skyBlue, width: 2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
         ],
       ),

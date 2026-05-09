@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../models/app_language.dart';
 import '../services/audio_service.dart';
 import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
+import '../widgets/star_counter.dart';
 
 /// Belajar Anggota Badan — Learn Body Parts
 /// Malaysian kindergarten style for preschool children.
@@ -19,6 +22,7 @@ class LearnBodyPartsScreen extends StatefulWidget {
 class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     with TickerProviderStateMixin {
   int _current = 0;
+  bool _recordedInitial = false;
   late AnimationController _bounceController;
   late Animation<double> _bounceAnim;
   late AnimationController _pulseController;
@@ -28,7 +32,7 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     _BodyPart(
       malay: 'Kepala',
       english: 'Head',
-      arabic: 'رأس',
+      indonesian: 'Kepala',
       mandarin: '头 (Tóu)',
       tamil: 'தலை (Talai)',
       emoji: '🧠',
@@ -40,7 +44,7 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     _BodyPart(
       malay: 'Mata',
       english: 'Eyes',
-      arabic: 'عيون',
+      indonesian: 'Mata',
       mandarin: '眼睛 (Yǎnjīng)',
       tamil: 'கண்கள் (Kaṇkaḷ)',
       emoji: '👀',
@@ -52,7 +56,7 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     _BodyPart(
       malay: 'Hidung',
       english: 'Nose',
-      arabic: 'أنف',
+      indonesian: 'Hidung',
       mandarin: '鼻子 (Bízi)',
       tamil: 'மூக்கு (Mūkku)',
       emoji: '👃',
@@ -64,7 +68,7 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     _BodyPart(
       malay: 'Mulut',
       english: 'Mouth',
-      arabic: 'فم',
+      indonesian: 'Mulut',
       mandarin: '嘴巴 (Zuǐbā)',
       tamil: 'வாய் (Vāy)',
       emoji: '👄',
@@ -75,8 +79,8 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     ),
     _BodyPart(
       malay: 'Telinga',
-      english: 'Ear',
-      arabic: 'أذن',
+      english: 'Ears',
+      indonesian: 'Telinga',
       mandarin: '耳朵 (Ěrduǒ)',
       tamil: 'காது (Kātu)',
       emoji: '👂',
@@ -88,7 +92,7 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     _BodyPart(
       malay: 'Rambut',
       english: 'Hair',
-      arabic: 'شعر',
+      indonesian: 'Rambut',
       mandarin: '头发 (Tóufa)',
       tamil: 'முடி (Muṭi)',
       emoji: '💇',
@@ -98,21 +102,21 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
       icon: Icons.face_3_rounded,
     ),
     _BodyPart(
-      malay: 'Leher',
-      english: 'Neck',
-      arabic: 'رقبة',
-      mandarin: '脖子 (Bózi)',
-      tamil: 'கழுத்து (Kaḻuttu)',
-      emoji: '🦒',
-      bodyEmoji: '🧍',
-      fun: 'Leher menyambung kepala dengan badan!',
+      malay: 'Gigi',
+      english: 'Teeth',
+      indonesian: 'Gigi',
+      mandarin: '牙齿 (Yáchǐ)',
+      tamil: 'பற்கள் (Paṟkaḷ)',
+      emoji: '🦷',
+      bodyEmoji: '😁',
+      fun: 'Gigi membantu kita mengunyah makanan!',
       color: Color(0xFF00B894),
-      icon: Icons.sentiment_satisfied_alt_rounded,
+      icon: Icons.sentiment_very_satisfied_rounded,
     ),
     _BodyPart(
       malay: 'Bahu',
       english: 'Shoulder',
-      arabic: 'كتف',
+      indonesian: 'Bahu',
       mandarin: '肩膀 (Jiānbǎng)',
       tamil: 'தோள் (Tōḷ)',
       emoji: '💪',
@@ -123,8 +127,8 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     ),
     _BodyPart(
       malay: 'Tangan',
-      english: 'Hand',
-      arabic: 'يد',
+      english: 'Hands',
+      indonesian: 'Tangan',
       mandarin: '手 (Shǒu)',
       tamil: 'கை (Kai)',
       emoji: '✋',
@@ -135,8 +139,8 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     ),
     _BodyPart(
       malay: 'Jari',
-      english: 'Finger',
-      arabic: 'أصبع',
+      english: 'Fingers',
+      indonesian: 'Jari',
       mandarin: '手指 (Shǒuzhǐ)',
       tamil: 'விரல் (Viral)',
       emoji: '☝️',
@@ -147,8 +151,8 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     ),
     _BodyPart(
       malay: 'Perut',
-      english: 'Tummy',
-      arabic: 'بطن',
+      english: 'Stomach',
+      indonesian: 'Perut',
       mandarin: '肚子 (Dùzi)',
       tamil: 'வயிறு (Vayiṟu)',
       emoji: '🫃',
@@ -159,8 +163,8 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     ),
     _BodyPart(
       malay: 'Kaki',
-      english: 'Leg',
-      arabic: 'رِجل',
+      english: 'Legs',
+      indonesian: 'Kaki',
       mandarin: '腿 (Tuǐ)',
       tamil: 'கால் (Kāl)',
       emoji: '🦵',
@@ -171,8 +175,8 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     ),
     _BodyPart(
       malay: 'Lutut',
-      english: 'Knee',
-      arabic: 'ركبة',
+      english: 'Knees',
+      indonesian: 'Lutut',
       mandarin: '膝盖 (Xīgài)',
       tamil: 'முழங்கால் (Muḻankāl)',
       emoji: '🦿',
@@ -183,8 +187,8 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     ),
     _BodyPart(
       malay: 'Kaki (tapak)',
-      english: 'Foot',
-      arabic: 'قدم',
+      english: 'Feet',
+      indonesian: 'Telapak kaki',
       mandarin: '脚 (Jiǎo)',
       tamil: 'பாதம் (Pātam)',
       emoji: '🦶',
@@ -223,10 +227,20 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
 
   Color get _color => _parts[_current].color;
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_recordedInitial) {
+      _recordedInitial = true;
+      _recordCurrentLesson();
+    }
+  }
+
   void _next() {
     if (_current < _parts.length - 1) {
       setState(() => _current++);
       _bounceController.forward(from: 0);
+      _recordCurrentLesson();
     }
   }
 
@@ -234,7 +248,13 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     if (_current > 0) {
       setState(() => _current--);
       _bounceController.forward(from: 0);
+      _recordCurrentLesson();
     }
+  }
+
+  void _recordCurrentLesson() {
+    final item = _parts[_current];
+    context.read<ProgressService>().markModuleLesson('bodyparts', item.english);
   }
 
   Future<void> _speakIn(String word, String locale) async {
@@ -255,271 +275,353 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
     final isMalay = language == AppLanguage.malay;
     final isFirst = _current == 0;
     final isLast = _current == _parts.length - 1;
+    final mainWord = item.wordFor(language);
 
     return Scaffold(
-      backgroundColor: color.withValues(alpha: 0.07),
+      backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: color,
+        backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
-        title: Text(
-          isMalay ? 'Anggota Badan 🧍' : 'Body Parts 🧍',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Progress dots
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: List.generate(_parts.length, (i) {
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: i == _current ? 24 : 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: i == _current
-                            ? color
-                            : color.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    );
-                  }),
-                ),
+            Text(
+              isMalay ? 'Anggota Badan 🧍' : 'Body Parts 🧍',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
+            Text(
+              isMalay
+                  ? 'Bahagian ${_current + 1} dari ${_parts.length}'
+                  : 'Part ${_current + 1} of ${_parts.length}',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.white70,
               ),
             ),
-
-            // Main card
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Card(
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    side: BorderSide(color: color, width: 3),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
+          ],
+        ),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: StarCounter()),
+          ),
+        ],
+      ),
+      body: BijakScene(
+        topColor: const Color(0xFFE9F8FF),
+        bottomColor: AppTheme.lightBlue,
+        showHills: false,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Progress bar + counter pill
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: (_current + 1) / _parts.length,
+                          minHeight: 13,
+                          backgroundColor: Colors.white,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppTheme.sunnyYellow,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: Column(
-                      children: [
-                        // Big emoji with bounce
-                        ScaleTransition(
-                          scale: _bounceAnim,
-                          child: ScaleTransition(
-                            scale: _pulseAnim,
-                            child: Container(
-                              width: 140,
-                              height: 140,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: color.withValues(alpha: 0.4),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  item.emoji,
-                                  style: const TextStyle(fontSize: 72),
-                                ),
-                              ),
-                            ),
-                          ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.deepBlue,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Text(
+                        '${_current + 1}/${_parts.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                        const SizedBox(height: 14),
-
-                        // Malay word — BIG
-                        Text(
-                          item.malay,
+              // Instruction hint
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.13),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(item.icon, color: color, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          isMalay
+                              ? 'Tunjuk anggota badan kamu! ${item.fun}'
+                              : 'Point to yours! ${item.funEnglish}',
                           style: TextStyle(
-                            fontSize: 44,
-                            fontWeight: FontWeight.w900,
-                            color: color,
-                            letterSpacing: 0.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-
-                        // English word
-                        Text(
-                          item.english,
-                          style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: color.withValues(alpha: 0.65),
+                            color: color,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
 
-                        // Arabic word
-                        Text(
-                          item.arabic,
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: color.withValues(alpha: 0.55),
-                          ),
-                          textDirection: TextDirection.rtl,
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // Fun fact bubble
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: color.withValues(alpha: 0.3),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.lightbulb_rounded,
-                                color: color,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  item.fun,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: color,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Body pointer icon
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(item.icon, color: color, size: 32),
-                            const SizedBox(width: 8),
-                            Text(
-                              isMalay
-                                  ? 'Tunjuk anggota badan kamu!'
-                                  : 'Point to yours!',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: color.withValues(alpha: 0.75),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const Spacer(),
-
-                        // 5-language pronounce buttons
-                        _BodyPronounceButtons(
-                          onSpeak: _speakIn,
-                          item: item,
-                          color: color,
+              // White content container
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.deepBlue.withValues(alpha: 0.14),
+                          blurRadius: 18,
+                          offset: const Offset(0, 9),
                         ),
                       ],
                     ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 16,
+                      ),
+                      child: Column(
+                        children: [
+                          // Big emoji — bounce + pulse
+                          ScaleTransition(
+                            scale: _bounceAnim,
+                            child: ScaleTransition(
+                              scale: _pulseAnim,
+                              child: Container(
+                                width: 140,
+                                height: 140,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: color.withValues(alpha: 0.4),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    item.emoji,
+                                    style: const TextStyle(fontSize: 72),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Selected language word — BIG
+                          Text(
+                            mainWord,
+                            style: TextStyle(
+                              fontSize: 46,
+                              fontWeight: FontWeight.w900,
+                              color: color,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+
+                          if (mainWord != item.english)
+                            Text(
+                              item.english,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: color.withValues(alpha: 0.65),
+                              ),
+                            ),
+
+                          const SizedBox(height: 6),
+
+                          // Mandarin + Tamil row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _LangChip(
+                                flag: '🇨🇳',
+                                text: item.mandarin,
+                                color: color,
+                              ),
+                              const SizedBox(width: 8),
+                              _LangChip(
+                                flag: '🇮🇩',
+                                text: item.indonesian,
+                                color: color,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          _LangChip(
+                            flag: '🇮🇳',
+                            text: item.tamil,
+                            color: color,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Pronounce buttons
+                          _BodyPronounceButtons(
+                            onSpeak: _speakIn,
+                            item: item,
+                            color: color,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Navigation
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: isFirst ? null : _prev,
-                      icon: const Icon(Icons.arrow_back_ios_rounded),
-                      label: Text(
-                        isMalay ? 'Sebelum' : 'Back',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade200,
-                        foregroundColor: Colors.grey.shade700,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: isLast ? null : _next,
-                      label: Text(
-                        isMalay ? 'Seterusnya' : 'Next',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      icon: const Icon(Icons.arrow_forward_ios_rounded),
-                      iconAlignment: IconAlignment.end,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: color,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+              const SizedBox(height: 10),
 
-            if (isLast)
+              // Navigation buttons
               Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: Text(
-                  '🎉 Tahniah! Kamu dah kenal semua anggota badan! 🧍',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                  textAlign: TextAlign.center,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: isFirst ? null : _prev,
+                        icon: const Icon(Icons.arrow_back_ios_rounded),
+                        label: Text(
+                          isMalay ? 'Sebelum' : 'Back',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade200,
+                          foregroundColor: Colors.grey.shade700,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: isLast ? null : _next,
+                        label: Text(
+                          isMalay ? 'Seterusnya' : 'Next',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        icon: const Icon(Icons.arrow_forward_ios_rounded),
+                        iconAlignment: IconAlignment.end,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.skyBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-          ],
+
+              if (isLast)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Text(
+                    '🎉 Tahniah! Kamu dah kenal semua anggota badan! 🧍',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.deepBlue,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+/// Small chip showing a flag + translated word.
+class _LangChip extends StatelessWidget {
+  const _LangChip({
+    required this.flag,
+    required this.text,
+    required this.color,
+  });
+
+  final String flag;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(flag, style: const TextStyle(fontSize: 16)),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -540,18 +642,24 @@ class _BodyPronounceButtons extends StatelessWidget {
     (flag: '🇲🇾', label: 'BM', locale: 'ms-MY'),
     (flag: '🇬🇧', label: 'EN', locale: 'en-US'),
     (flag: '🇨🇳', label: '中文', locale: 'zh-CN'),
-    (flag: '🇸🇦', label: 'عربي', locale: 'ar-SA'),
+    (flag: '🇮🇩', label: 'ID', locale: 'id-ID'),
     (flag: '🇮🇳', label: 'தமிழ்', locale: 'ta-IN'),
   ];
 
   String _wordFor(String locale) {
     switch (locale) {
-      case 'ms-MY': return item.malay;
-      case 'en-US': return item.english;
-      case 'zh-CN': return item.mandarin;
-      case 'ar-SA': return item.arabic;
-      case 'ta-IN': return item.tamil;
-      default: return item.english;
+      case 'ms-MY':
+        return item.malay;
+      case 'en-US':
+        return item.english;
+      case 'zh-CN':
+        return item.mandarin;
+      case 'id-ID':
+        return item.indonesian;
+      case 'ta-IN':
+        return item.tamil;
+      default:
+        return item.english;
     }
   }
 
@@ -582,10 +690,16 @@ class _BodyPronounceButtons extends StatelessWidget {
                 borderRadius: BorderRadius.circular(50),
                 onTap: () => onSpeak(_wordFor(l.locale), l.locale),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(50),
-                    border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
+                    border: Border.all(
+                      color: color.withValues(alpha: 0.35),
+                      width: 1.5,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -618,7 +732,7 @@ class _BodyPart {
   const _BodyPart({
     required this.malay,
     required this.english,
-    required this.arabic,
+    required this.indonesian,
     required this.mandarin,
     required this.tamil,
     required this.emoji,
@@ -630,7 +744,7 @@ class _BodyPart {
 
   final String malay;
   final String english;
-  final String arabic;
+  final String indonesian;
   final String mandarin;
   final String tamil;
   final String emoji;
@@ -638,4 +752,16 @@ class _BodyPart {
   final String fun;
   final Color color;
   final IconData icon;
+
+  String wordFor(AppLanguage language) {
+    return switch (language) {
+      AppLanguage.malay => malay,
+      AppLanguage.english => english,
+      AppLanguage.mandarin => mandarin,
+      AppLanguage.tamil => tamil,
+      AppLanguage.indonesian => indonesian,
+    };
+  }
+
+  String get funEnglish => 'Say "$english" and point gently.';
 }

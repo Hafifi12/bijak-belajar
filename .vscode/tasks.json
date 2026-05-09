@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Screenshot All Screens",
+			"type": "shell",
+			"command": "/bin/zsh /tmp/ss_all.sh",
+			"isBackground": false
+		},
+		{
+			"label": "Build Release App Bundle",
+			"type": "shell",
+			"command": "flutter build appbundle --release && echo 'AAB located at: build/app/outputs/bundle/release/app-release.aab'",
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

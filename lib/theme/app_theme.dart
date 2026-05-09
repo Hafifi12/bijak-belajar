@@ -4,12 +4,23 @@ class AppTheme {
   const AppTheme._();
 
   // ── Palette ────────────────────────────────────────────────────
-  static const primary   = Color(0xFF7C4DFF); // vibrant purple
-  static const secondary = Color(0xFFFF6B6B); // coral red
-  static const accent    = Color(0xFFFFD93D); // sunny yellow
-  static const teal      = Color(0xFF1DD1A1); // fresh teal
-  static const bg        = Color(0xFFF8F0FF); // soft lavender white
-  static const ink       = Color(0xFF2D1B69); // deep purple ink
+  static const skyBlue = Color(0xFF1EA7FF);
+  static const deepBlue = Color(0xFF0648D9);
+  static const turquoise = Color(0xFF00C9A7);
+  static const sunnyYellow = Color(0xFFFFD21E);
+  static const appleRed = Color(0xFFFF4D4F);
+  static const leafGreen = Color(0xFF34C759);
+  static const purple = Color(0xFF7A5CFF);
+  static const cream = Color(0xFFFFF7E8);
+  static const lightBlue = Color(0xFFE9F8FF);
+  static const white = Color(0xFFFFFFFF);
+  static const ink = Color(0xFF05358F);
+
+  static const primary = deepBlue;
+  static const secondary = appleRed;
+  static const accent = sunnyYellow;
+  static const teal = turquoise;
+  static const bg = lightBlue;
 
   static ThemeData light() {
     final colorScheme = ColorScheme.fromSeed(
@@ -27,52 +38,71 @@ class AppTheme {
       fontFamily: 'Roboto',
       appBarTheme: AppBarTheme(
         centerTitle: false,
-        backgroundColor: bg,
+        backgroundColor: Colors.transparent,
         foregroundColor: ink,
         elevation: 0,
         scrolledUnderElevation: 0,
         titleTextStyle: const TextStyle(
           fontFamily: 'Roboto',
-          fontSize: 26,
+          fontSize: 24,
           fontWeight: FontWeight.w900,
           color: ink,
-          letterSpacing: -0.5,
         ),
       ),
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: 4,
-        shadowColor: primary.withValues(alpha: 0.15),
+        elevation: 8,
+        shadowColor: deepBlue.withValues(alpha: 0.16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(24)),
+          borderRadius: BorderRadius.all(Radius.circular(28)),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(88, 56),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: sunnyYellow,
+          foregroundColor: ink,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
         ),
       ),
       textTheme: const TextTheme(
         displaySmall: TextStyle(
-          color: ink, fontSize: 32, fontWeight: FontWeight.w900, height: 1.1,
+          color: ink,
+          fontSize: 34,
+          fontWeight: FontWeight.w900,
+          height: 1.08,
         ),
         headlineMedium: TextStyle(
-          color: ink, fontSize: 26, fontWeight: FontWeight.w900, height: 1.1,
+          color: ink,
+          fontSize: 25,
+          fontWeight: FontWeight.w900,
+          height: 1.1,
         ),
         titleLarge: TextStyle(
-          color: ink, fontSize: 20, fontWeight: FontWeight.w900,
+          color: ink,
+          fontSize: 20,
+          fontWeight: FontWeight.w900,
         ),
         titleMedium: TextStyle(
-          color: primary, fontSize: 14, fontWeight: FontWeight.w800,
-          letterSpacing: 1.2,
+          color: primary,
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
         ),
         bodyLarge: TextStyle(
-          color: ink, fontSize: 16, height: 1.4, fontWeight: FontWeight.w600,
+          color: ink,
+          fontSize: 16,
+          height: 1.36,
+          fontWeight: FontWeight.w700,
         ),
-        bodyMedium: TextStyle(color: Color(0xFF7B7B9D), fontSize: 13, height: 1.4,
-          fontWeight: FontWeight.w600),
+        bodyMedium: TextStyle(
+          color: Color(0xFF5E6FA3),
+          fontSize: 13,
+          height: 1.36,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class BigModeButton extends StatefulWidget {
   const BigModeButton({
     super.key,
@@ -36,9 +38,10 @@ class _BigModeButtonState extends State<BigModeButton>
       lowerBound: 0.0,
       upperBound: 1.0,
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -52,6 +55,7 @@ class _BigModeButtonState extends State<BigModeButton>
     _ctrl.reverse();
     widget.onTap();
   }
+
   void _onTapCancel() => _ctrl.reverse();
 
   @override
@@ -59,10 +63,8 @@ class _BigModeButtonState extends State<BigModeButton>
     final c = widget.color;
     return AnimatedBuilder(
       animation: _scale,
-      builder: (context, child) => Transform.scale(
-        scale: _scale.value,
-        child: child,
-      ),
+      builder: (context, child) =>
+          Transform.scale(scale: _scale.value, child: child),
       child: GestureDetector(
         onTapDown: _onTapDown,
         onTapUp: _onTapUp,
@@ -70,13 +72,18 @@ class _BigModeButtonState extends State<BigModeButton>
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 2),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            gradient: const LinearGradient(
+              colors: [Colors.white, AppTheme.cream],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: Colors.white, width: 3),
             boxShadow: [
               BoxShadow(
                 color: c.withValues(alpha: 0.25),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
@@ -96,7 +103,10 @@ class _BigModeButtonState extends State<BigModeButton>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
                     // Icon badge
@@ -105,11 +115,12 @@ class _BigModeButtonState extends State<BigModeButton>
                       height: 64,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [c, c.withValues(alpha: 0.7)],
+                          colors: [c.withValues(alpha: 0.92), c],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white, width: 2.5),
                         boxShadow: [
                           BoxShadow(
                             color: c.withValues(alpha: 0.4),
@@ -138,7 +149,7 @@ class _BigModeButtonState extends State<BigModeButton>
                             style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w900,
-                              color: const Color(0xFF2D1B69),
+                              color: AppTheme.ink,
                               height: 1.2,
                             ),
                           ),
@@ -147,8 +158,8 @@ class _BigModeButtonState extends State<BigModeButton>
                             widget.subtitle,
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade500,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF5E6FA3),
                               height: 1.3,
                             ),
                           ),
@@ -160,12 +171,13 @@ class _BigModeButtonState extends State<BigModeButton>
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: c.withValues(alpha: 0.12),
+                        color: AppTheme.sunnyYellow,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white, width: 2),
                       ),
                       child: Icon(
                         Icons.arrow_forward_ios_rounded,
-                        color: c,
+                        color: AppTheme.ink,
                         size: 16,
                       ),
                     ),

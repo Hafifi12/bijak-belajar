@@ -1,95 +1,325 @@
-import 'package:flutter/material.dart';
+import 'dart:math';
 
-import '../utils/constants.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../theme/app_theme.dart';
 import 'parent_settings_screen.dart';
 
 class ParentGateScreen extends StatefulWidget {
   const ParentGateScreen({super.key});
-
   static const routeName = '/parent-gate';
 
   @override
   State<ParentGateScreen> createState() => _ParentGateScreenState();
 }
 
-class _ParentGateScreenState extends State<ParentGateScreen> {
-  final TextEditingController _answerController = TextEditingController();
+class _ParentGateScreenState extends State<ParentGateScreen>
+    with SingleTickerProviderStateMixin {
+  final TextEditingController _ctrl = TextEditingController();
   String? _error;
+  late int _a, _b, _answer;
+  late AnimationController _shakeCtrl;
+  late Animation<double> _shakeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateChallenge();
+    _shakeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _shakeAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0, end: -12), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -12, end: 12), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 12, end: -8), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 8, end: 0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _shakeCtrl, curve: Curves.easeInOut));
+  }
+
+  void _generateChallenge() {
+    final rng = Random();
+    _a = rng.nextInt(9) + 2;
+    _b = rng.nextInt(9) + 2;
+    _answer = _a + _b;
+  }
 
   @override
   void dispose() {
-    _answerController.dispose();
+    _ctrl.dispose();
+    _shakeCtrl.dispose();
     super.dispose();
+  }
+
+  void _check() {
+    if (_ctrl.text.trim() == '$_answer') {
+      HapticFeedback.lightImpact();
+      Navigator.of(context).pushReplacementNamed(ParentSettingsScreen.routeName);
+    } else {
+      HapticFeedback.heavyImpact();
+      setState(() => _error = 'Not quite — try again! 🤔');
+      _ctrl.clear();
+      _shakeCtrl.forward(from: 0);
+      _generateChallenge();
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Parent Check')),
-      body: SafeArea(
-        child: ListView(
-          padding: AppConstants.pagePadding,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0648D9), Color(0xFF1EA7FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // ── Top bar ─────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
                   children: [
-                    Text(
-                      'For grown-ups',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                      tooltip: 'Back',
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Enter the answer to open parent settings.',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: 22),
-                    Text(
-                      'What is 4 + 3?',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _answerController,
-                      autofocus: true,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        hintText: 'Answer',
-                        errorText: _error,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    const Expanded(
+                      child: Text(
+                        'Grown-Ups Only',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.3,
                         ),
                       ),
-                      onSubmitted: (_) => _checkAnswer(),
                     ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: _checkAnswer,
-                      icon: const Icon(Icons.lock_open_rounded),
-                      label: const Text('Open Settings'),
-                    ),
+                    const SizedBox(width: 48),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              // ── Hero ────────────────────────────────────────────
+              const Spacer(),
+              const _ShieldBadge(),
+              const SizedBox(height: 12),
+              const Text(
+                'Parent & Teacher Access',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Solve the sum to unlock settings',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+
+              // ── Card ────────────────────────────────────────────
+              AnimatedBuilder(
+                animation: _shakeAnim,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(_shakeAnim.value, 0),
+                  child: child,
+                ),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.18),
+                        blurRadius: 32,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Math challenge display
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 22),
+                        decoration: BoxDecoration(
+                          color: AppTheme.sunnyYellow,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              '$_a + $_b = ?',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 44,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.ink,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'What is the answer?',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.ink.withValues(alpha: 0.55),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Input
+                      TextField(
+                        controller: _ctrl,
+                        autofocus: true,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.ink,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: '—',
+                          hintStyle: TextStyle(color: Colors.grey.shade300, fontSize: 32),
+                          errorText: _error,
+                          errorStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(color: Colors.grey.shade200, width: 2),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(color: AppTheme.skyBlue, width: 2.5),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(color: AppTheme.appleRed, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(color: AppTheme.appleRed, width: 2.5),
+                          ),
+                        ),
+                        onSubmitted: (_) => _check(),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // CTA button
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _check,
+                          icon: const Icon(Icons.lock_open_rounded, size: 22),
+                          label: const Text('Unlock Settings'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppTheme.deepBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Spacer(),
+
+              // ── Footer note ─────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
+                child: Text(
+                  'This simple maths check keeps settings safe from little fingers 🧒',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  void _checkAnswer() {
-    if (_answerController.text.trim() == '7') {
-      Navigator.of(
-        context,
-      ).pushReplacementNamed(ParentSettingsScreen.routeName);
-      return;
-    }
+class _ShieldBadge extends StatefulWidget {
+  const _ShieldBadge();
 
-    setState(() {
-      _error = 'Try again';
-    });
+  @override
+  State<_ShieldBadge> createState() => _ShieldBadgeState();
+}
+
+class _ShieldBadgeState extends State<_ShieldBadge>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))
+      ..repeat(reverse: true);
+    _pulse = Tween<double>(begin: 0.92, end: 1.06).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _pulse,
+      child: Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withValues(alpha: 0.15),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 3),
+        ),
+        child: const Icon(Icons.shield_rounded, color: Colors.white, size: 56),
+      ),
+    );
   }
 }
