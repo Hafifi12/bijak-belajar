@@ -6,10 +6,15 @@ import 'package:provider/provider.dart';
 import '../data/badge_data.dart';
 import '../models/app_language.dart';
 import '../models/challenge.dart';
+import '../models/train_mode.dart';
 import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_text.dart';
 import '../widgets/badge_card.dart';
+import 'learning_path_screen.dart';
+import 'memory_category_screen.dart';
+import 'puzzle_screen.dart';
+import 'train_sort_screen.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -47,10 +52,6 @@ class _ProgressScreenState extends State<ProgressScreen>
     final language = progress.language;
     final isMalay = language == AppLanguage.malay;
 
-    final modules = _buildModules(isMalay, progress);
-    final bestModule = _bestModule(modules);
-    final suggestedNext = _suggestedNext(modules, isMalay);
-
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
@@ -72,28 +73,10 @@ class _ProgressScreenState extends State<ProgressScreen>
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: _InsightRow(
-                  bestModule: bestModule,
-                  suggestedNext: suggestedNext,
+                child: _SyllabusProgressShortcut(
+                  progress: progress,
                   isMalay: isMalay,
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                child: _SectionHeader(
-                  emoji: '📊',
-                  title: isMalay
-                      ? 'Kemajuan Mengikut Modul'
-                      : 'Progress by Module',
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: _ModuleProgressGrid(modules: modules),
               ),
             ),
             SliverToBoxAdapter(
@@ -142,93 +125,6 @@ class _ProgressScreenState extends State<ProgressScreen>
       ),
     );
   }
-
-  List<_ModuleData> _buildModules(bool isMalay, ProgressService progress) {
-    return [
-      _ModuleData(
-        emoji: '🔢',
-        name: isMalay ? 'Nombor' : 'Numbers',
-        done: progress.getModuleLessons('numbers'),
-        total: 100,
-        lastLesson: progress.getLastLesson('numbers'),
-        color: AppTheme.appleRed,
-      ),
-      _ModuleData(
-        emoji: '🔤',
-        name: isMalay ? 'Huruf' : 'Letters',
-        done: progress.getModuleLessons('letters'),
-        total: 26,
-        lastLesson: progress.getLastLesson('letters'),
-        color: AppTheme.turquoise,
-      ),
-      _ModuleData(
-        emoji: '🌙',
-        name: 'Jawi',
-        done: progress.getModuleLessons('jawi'),
-        total: 28,
-        lastLesson: progress.getLastLesson('jawi'),
-        color: AppTheme.leafGreen,
-      ),
-      _ModuleData(
-        emoji: '🧍',
-        name: isMalay ? 'Anggota\nBadan' : 'Body\nParts',
-        done: progress.getModuleLessons('bodyparts'),
-        total: 14,
-        lastLesson: progress.getLastLesson('bodyparts'),
-        color: AppTheme.purple,
-      ),
-      _ModuleData(
-        emoji: '🧮',
-        name: isMalay ? 'Matematik' : 'Math',
-        done: progress.getModuleLessons('math'),
-        total: 50,
-        lastLesson: progress.getLastLesson('math'),
-        color: const Color(0xFFFF9F1C),
-      ),
-      _ModuleData(
-        emoji: '🎨',
-        name: isMalay ? 'Mewarna' : 'Colour',
-        done: progress.coloringSessions,
-        total: 40,
-        lastLesson: '',
-        color: const Color(0xFFFF9F43),
-      ),
-    ];
-  }
-
-  _ModuleData? _bestModule(List<_ModuleData> modules) {
-    return modules.where((m) => m.done > 0).fold<_ModuleData?>(null, (best, m) {
-      if (best == null) {
-        return m;
-      }
-      return m.pct > best.pct ? m : best;
-    });
-  }
-
-  String _suggestedNext(List<_ModuleData> modules, bool isMalay) {
-    final incomplete = modules.where((m) => m.done < m.total).toList()
-      ..sort((a, b) => b.done.compareTo(a.done));
-    if (incomplete.isEmpty) {
-      return isMalay ? 'Semua modul selesai! 🎉' : 'All modules complete! 🎉';
-    }
-    final next = incomplete.first;
-    return '${next.emoji} ${next.name.replaceAll('\n', ' ')} — ${next.done + 1}/${next.total}';
-  }
-}
-
-class _ModuleData {
-  const _ModuleData({
-    required this.emoji,
-    required this.name,
-    required this.done,
-    required this.total,
-    required this.lastLesson,
-    required this.color,
-  });
-  final String emoji, name, lastLesson;
-  final int done, total;
-  final Color color;
-  double get pct => total > 0 ? (done / total).clamp(0.0, 1.0) : 0.0;
 }
 
 // ── Star Hero Banner ──────────────────────────────────────────────────────────
@@ -476,102 +372,135 @@ class _HeroBubble extends StatelessWidget {
   }
 }
 
-// ── Insight Row ────────────────────────────────────────────────────────────────
-class _InsightRow extends StatelessWidget {
-  const _InsightRow({
-    required this.bestModule,
-    required this.suggestedNext,
+// ── Syllabus Shortcut ─────────────────────────────────────────────────────────
+class _SyllabusProgressShortcut extends StatelessWidget {
+  const _SyllabusProgressShortcut({
+    required this.progress,
     required this.isMalay,
   });
-  final _ModuleData? bestModule;
-  final String suggestedNext;
+
+  final ProgressService progress;
   final bool isMalay;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        if (bestModule != null) ...[
-          Expanded(
-            child: _InsightCard(
-              icon: '🏅',
-              title: isMalay ? 'Terbaik' : 'Best At',
-              body:
-                  '${bestModule!.emoji} ${bestModule!.name.replaceAll('\n', ' ')} (${(bestModule!.pct * 100).round()}%)',
-              color: bestModule!.color,
-            ),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      elevation: 5,
+      shadowColor: AppTheme.skyBlue.withValues(alpha: 0.18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () =>
+            Navigator.of(context).pushNamed(LearningPathScreen.routeName),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppTheme.skyBlue.withValues(alpha: 0.25)),
           ),
-          const SizedBox(width: 10),
-        ],
-        Expanded(
-          child: _InsightCard(
-            icon: '💡',
-            title: isMalay ? 'Cadangan Seterusnya' : 'Suggested Next',
-            body: suggestedNext,
-            color: AppTheme.skyBlue,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _InsightCard extends StatelessWidget {
-  const _InsightCard({
-    required this.icon,
-    required this.title,
-    required this.body,
-    required this.color,
-  });
-  final String icon, title, body;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Row(
             children: [
-              Text(icon, style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: color,
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.skyBlue, AppTheme.purple],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: Text('📚', style: TextStyle(fontSize: 27)),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isMalay ? 'Kemajuan Sukatan' : 'Syllabus Progress',
+                      style: const TextStyle(
+                        color: AppTheme.ink,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      isMalay
+                          ? 'Lihat kemajuan modul lengkap di Laluan Pembelajaran.'
+                          : 'See full module progress in the Learning Path.',
+                      style: const TextStyle(
+                        color: Color(0xFF68789F),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        _MiniProgressPill(
+                          label:
+                              '⭐ ${progress.stars} ${isMalay ? "bintang" : "stars"}',
+                        ),
+                        _MiniProgressPill(
+                          label:
+                              '✅ ${progress.completedChallenges} ${isMalay ? "aktiviti" : "activities"}',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: AppTheme.skyBlue.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: AppTheme.skyBlue,
+                  size: 20,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            body,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.ink,
-              height: 1.3,
-            ),
-          ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniProgressPill extends StatelessWidget {
+  const _MiniProgressPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppTheme.lightBlue,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppTheme.skyBlue.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppTheme.ink,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }
@@ -601,99 +530,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Module Progress Grid with ring indicators ──────────────────────────────────
-class _ModuleProgressGrid extends StatelessWidget {
-  const _ModuleProgressGrid({required this.modules});
-  final List<_ModuleData> modules;
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 0.85,
-      children: modules.map((m) => _ModuleRingTile(module: m)).toList(),
-    );
-  }
-}
-
-class _ModuleRingTile extends StatelessWidget {
-  const _ModuleRingTile({required this.module});
-  final _ModuleData module;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label:
-          '${module.name.replaceAll('\n', ' ')}: ${module.done} of ${module.total} complete.',
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: module.color.withValues(alpha: 0.18),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 58,
-              height: 58,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox.expand(
-                    child: CircularProgressIndicator(
-                      value: module.pct,
-                      strokeWidth: 5,
-                      backgroundColor: module.color.withValues(alpha: 0.15),
-                      valueColor: AlwaysStoppedAnimation<Color>(module.color),
-                      strokeCap: StrokeCap.round,
-                    ),
-                  ),
-                  Text(module.emoji, style: const TextStyle(fontSize: 26)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              module.name,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                color: AppTheme.ink,
-                height: 1.1,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              '${module.done}/${module.total}',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: module.color,
-              ),
-            ),
-            if (module.pct >= 1.0)
-              const Text('✅', style: TextStyle(fontSize: 14)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ── Activity Stats ─────────────────────────────────────────────────────────────
 class _ActivityStatsRow extends StatelessWidget {
   const _ActivityStatsRow({required this.progress, required this.isMalay});
@@ -708,80 +544,109 @@ class _ActivityStatsRow extends StatelessWidget {
         isMalay ? 'Tren\nNombor' : 'Number\nTrain',
         progress.countFor(ChallengeMode.numberTrain),
         AppTheme.appleRed,
+        () => Navigator.of(context).pushNamed(
+          TrainSortScreen.routeName,
+          arguments: const TrainSortArgs(mode: TrainMode.numbers),
+        ),
       ),
       _ActivityStat(
         '🚃',
         isMalay ? 'Tren\nHuruf' : 'Letter\nTrain',
         progress.countFor(ChallengeMode.letterTrain),
         AppTheme.turquoise,
+        () => Navigator.of(context).pushNamed(
+          TrainSortScreen.routeName,
+          arguments: const TrainSortArgs(mode: TrainMode.letters),
+        ),
       ),
       _ActivityStat(
         '🃏',
         isMalay ? 'Permainan\nMemori' : 'Memory\nGame',
         progress.countFor(ChallengeMode.memory),
         AppTheme.purple,
+        () => Navigator.of(context).pushNamed(MemoryCategoryScreen.routeName),
       ),
       _ActivityStat(
         '🧩',
         isMalay ? 'Teka-Teki\nGambar' : 'Puzzle\nGame',
         progress.countFor(ChallengeMode.puzzle),
         AppTheme.leafGreen,
+        () => Navigator.of(context).pushNamed(PuzzleScreen.routeName),
       ),
     ];
     return Row(
-      children: stats
-          .map(
-            (s) => Expanded(
-              child: Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
+      children: [
+        for (var index = 0; index < stats.length; index++) ...[
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                right: index == stats.length - 1 ? 0 : 8,
+              ),
+              child: Semantics(
+                button: true,
+                label:
+                    '${stats[index].label.replaceAll('\n', ' ')}: ${stats[index].count}',
+                child: Material(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: s.color.withValues(alpha: 0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Text(s.emoji, style: const TextStyle(fontSize: 28)),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${s.count}',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: s.color,
+                  elevation: 4,
+                  shadowColor: stats[index].color.withValues(alpha: 0.2),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: stats[index].onTap,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Column(
+                        children: [
+                          Text(
+                            stats[index].emoji,
+                            style: const TextStyle(fontSize: 28),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${stats[index].count}',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: stats[index].color,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            stats[index].label,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.ink,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      s.label,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.ink,
-                        height: 1.2,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          )
-          .toList(),
+          ),
+        ],
+      ],
     );
   }
 }
 
 class _ActivityStat {
-  const _ActivityStat(this.emoji, this.label, this.count, this.color);
+  const _ActivityStat(
+    this.emoji,
+    this.label,
+    this.count,
+    this.color,
+    this.onTap,
+  );
+
   final String emoji, label;
   final int count;
   final Color color;
+  final VoidCallback onTap;
 }

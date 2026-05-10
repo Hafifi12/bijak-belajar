@@ -13,9 +13,10 @@ import '../widgets/star_counter.dart';
 import 'reward_screen.dart';
 
 class MemoryGameArgs {
-  const MemoryGameArgs({required this.category});
+  const MemoryGameArgs({required this.category, this.stage = MemoryStage.easy});
 
   final MemoryCategory category;
+  final MemoryStage stage;
 }
 
 class MemoryGameScreen extends StatefulWidget {
@@ -28,9 +29,8 @@ class MemoryGameScreen extends StatefulWidget {
 }
 
 class _MemoryGameScreenState extends State<MemoryGameScreen> {
-  static const _previewDuration = Duration(seconds: 4);
-
   late MemoryCategory _category;
+  late MemoryStage _stage;
   List<_MemoryCardEntry> _cards = const [];
   final Set<String> _faceUp = {};
   final Set<String> _matched = {};
@@ -50,6 +50,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
 
     final args = ModalRoute.of(context)?.settings.arguments as MemoryGameArgs?;
     _category = args?.category ?? MemoryCategory.animals;
+    _stage = args?.stage ?? MemoryStage.easy;
     _ready = true;
     _startNewGame();
   }
@@ -84,6 +85,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
             children: [
               _MemoryHeader(
                 category: category,
+                stage: _stage,
                 matchedPairs: matchedPairs,
                 totalPairs: totalPairs,
                 previewing: _previewing,
@@ -93,19 +95,28 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final columns = constraints.maxWidth >= 560 ? 4 : 3;
+                    final columns = _stage.gridSize;
+                    final spacing = switch (_stage) {
+                      MemoryStage.easy => 10.0,
+                      MemoryStage.normal => 8.0,
+                      MemoryStage.medium => 6.0,
+                      MemoryStage.high => 2.0,
+                    };
+                    final compact = _stage.gridSize >= 5;
+                    final ultraCompact = _stage.gridSize >= 10;
 
                     return GridView.builder(
                       itemCount: _cards.length,
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: columns,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
+                        mainAxisSpacing: spacing,
+                        crossAxisSpacing: spacing,
                         childAspectRatio: 0.82,
                       ),
                       itemBuilder: (context, index) {
                         final entry = _cards[index];
                         final visible =
+                            entry.bonus ||
                             _faceUp.contains(entry.instanceId) ||
                             _matched.contains(entry.instanceId);
 
@@ -115,6 +126,8 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
                           matched: _matched.contains(entry.instanceId),
                           categoryColor: category.color,
                           language: language,
+                          compact: compact,
+                          ultraCompact: ultraCompact,
                           onTap: () => _tapCard(entry),
                         );
                       },
@@ -132,10 +145,19 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   void _startNewGame() {
     final gameToken = ++_gameToken;
     final entries = <_MemoryCardEntry>[];
-    for (final item in memoryItemsFor(_category)) {
+    for (final item in memoryItemsFor(_category, pairCount: _stage.pairCount)) {
       entries
         ..add(_MemoryCardEntry(instanceId: '${item.id}_a', item: item))
         ..add(_MemoryCardEntry(instanceId: '${item.id}_b', item: item));
+    }
+    if (_stage.hasBonusCard) {
+      entries.add(
+        const _MemoryCardEntry(
+          instanceId: 'bonus_star',
+          item: MemoryItem(id: 'bonus_star', label: 'Bonus Star', symbol: '⭐'),
+          bonus: true,
+        ),
+      );
     }
     entries.shuffle();
 
@@ -155,14 +177,18 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   }
 
   Future<void> _hidePreview(int gameToken) async {
-    await Future<void>.delayed(_previewDuration);
+    await Future<void>.delayed(_stage.previewDuration);
 
     if (!mounted || gameToken != _gameToken || _completed) {
       return;
     }
 
     setState(() {
-      _faceUp.clear();
+      _faceUp
+        ..clear()
+        ..addAll(
+          _cards.where((entry) => entry.bonus).map((entry) => entry.instanceId),
+        );
       _busy = false;
       _previewing = false;
     });
@@ -170,6 +196,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
 
   Future<void> _tapCard(_MemoryCardEntry entry) async {
     if (_busy ||
+        entry.bonus ||
         _previewing ||
         _completed ||
         _faceUp.contains(entry.instanceId) ||
@@ -200,7 +227,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
         _firstCardId = null;
       });
 
-      if (_matched.length == _cards.length) {
+      if (_matched.length == _cards.where((entry) => !entry.bonus).length) {
         await _completeGame();
       }
       return;
@@ -252,7 +279,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
       arguments: RewardArgs(
         modeLabel: AppText.ui('memoryGame', progressService.language),
         nextRoute: MemoryGameScreen.routeName,
-        nextArguments: MemoryGameArgs(category: _category),
+        nextArguments: MemoryGameArgs(category: _category, stage: _stage),
         badge: badge,
       ),
     );
@@ -262,6 +289,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
 class _MemoryHeader extends StatelessWidget {
   const _MemoryHeader({
     required this.category,
+    required this.stage,
     required this.matchedPairs,
     required this.totalPairs,
     required this.previewing,
@@ -269,6 +297,7 @@ class _MemoryHeader extends StatelessWidget {
   });
 
   final MemoryCategory category;
+  final MemoryStage stage;
   final int matchedPairs;
   final int totalPairs;
   final bool previewing;
@@ -276,6 +305,8 @@ class _MemoryHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMalay = language == AppLanguage.malay;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -303,7 +334,7 @@ class _MemoryHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '$matchedPairs / $totalPairs ${AppText.ui('pairs', language)}',
+                    '${stage.boardLabel(isMalay: isMalay)}  •  $matchedPairs / $totalPairs ${AppText.ui('pairs', language)}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -325,6 +356,8 @@ class _MemoryTile extends StatelessWidget {
     required this.matched,
     required this.categoryColor,
     required this.language,
+    required this.compact,
+    required this.ultraCompact,
     required this.onTap,
   });
 
@@ -333,6 +366,8 @@ class _MemoryTile extends StatelessWidget {
   final bool matched;
   final Color categoryColor;
   final AppLanguage language;
+  final bool compact;
+  final bool ultraCompact;
   final VoidCallback onTap;
 
   @override
@@ -348,7 +383,7 @@ class _MemoryTile extends StatelessWidget {
         color: visible ? Colors.white : categoryColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: borderColor, width: 3),
+          side: BorderSide(color: borderColor, width: ultraCompact ? 1.2 : 3),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -362,8 +397,13 @@ class _MemoryTile extends StatelessWidget {
                     matched: matched,
                     color: categoryColor,
                     language: language,
+                    compact: compact,
+                    ultraCompact: ultraCompact,
                   )
-                : const _HiddenCard(key: ValueKey('hidden')),
+                : _HiddenCard(
+                    key: const ValueKey('hidden'),
+                    ultraCompact: ultraCompact,
+                  ),
           ),
         ),
       ),
@@ -372,12 +412,18 @@ class _MemoryTile extends StatelessWidget {
 }
 
 class _HiddenCard extends StatelessWidget {
-  const _HiddenCard({super.key});
+  const _HiddenCard({super.key, required this.ultraCompact});
+
+  final bool ultraCompact;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Icon(Icons.question_mark_rounded, color: Colors.white, size: 42),
+    return Center(
+      child: Icon(
+        Icons.question_mark_rounded,
+        color: Colors.white,
+        size: ultraCompact ? 16 : 42,
+      ),
     );
   }
 }
@@ -389,39 +435,50 @@ class _VisibleCard extends StatelessWidget {
     required this.matched,
     required this.color,
     required this.language,
+    required this.compact,
+    required this.ultraCompact,
   });
 
   final MemoryItem item;
   final bool matched;
   final Color color;
   final AppLanguage language;
+  final bool compact;
+  final bool ultraCompact;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(ultraCompact ? 2 : (compact ? 5 : 8)),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
             child: Center(
-              child: _MemoryItemArt(item: item, color: color),
-            ),
-          ),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              AppText.memoryLabel(item, language),
-              maxLines: 1,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: 17,
-                color: matched
-                    ? const Color(0xFF2E7D32)
-                    : const Color(0xFF24304F),
+              child: _MemoryItemArt(
+                item: item,
+                color: color,
+                compact: compact,
+                ultraCompact: ultraCompact,
               ),
             ),
           ),
+          if (!ultraCompact) ...[
+            SizedBox(height: compact ? 2 : 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                AppText.memoryLabel(item, language),
+                maxLines: 1,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontSize: compact ? 11 : 17,
+                  color: matched
+                      ? const Color(0xFF2E7D32)
+                      : const Color(0xFF24304F),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -429,10 +486,17 @@ class _VisibleCard extends StatelessWidget {
 }
 
 class _MemoryItemArt extends StatelessWidget {
-  const _MemoryItemArt({required this.item, required this.color});
+  const _MemoryItemArt({
+    required this.item,
+    required this.color,
+    required this.compact,
+    required this.ultraCompact,
+  });
 
   final MemoryItem item;
   final Color color;
+  final bool compact;
+  final bool ultraCompact;
 
   @override
   Widget build(BuildContext context) {
@@ -444,33 +508,52 @@ class _MemoryItemArt extends StatelessWidget {
     if (symbol != null) {
       return FittedBox(
         fit: BoxFit.scaleDown,
-        child: Text(symbol, style: const TextStyle(fontSize: 54)),
+        child: Text(
+          symbol,
+          style: TextStyle(fontSize: ultraCompact ? 22 : (compact ? 34 : 54)),
+        ),
       );
     }
 
     if (displayColor != null) {
       return Container(
-        width: 52,
-        height: 52,
+        width: ultraCompact ? 20 : (compact ? 32 : 52),
+        height: ultraCompact ? 20 : (compact ? 32 : 52),
         decoration: BoxDecoration(
           color: displayColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFF24304F), width: 3),
+          borderRadius: BorderRadius.circular(ultraCompact ? 4 : 8),
+          border: Border.all(
+            color: const Color(0xFF24304F),
+            width: ultraCompact ? 1 : 3,
+          ),
         ),
       );
     }
 
     if (shapeKind != null) {
-      return ShapeDisplay(shape: shapeKind, size: 56, color: color);
+      return ShapeDisplay(
+        shape: shapeKind,
+        size: ultraCompact ? 20 : (compact ? 34 : 56),
+        color: color,
+      );
     }
 
-    return Icon(icon ?? Icons.star_rounded, size: 50, color: color);
+    return Icon(
+      icon ?? Icons.star_rounded,
+      size: ultraCompact ? 20 : (compact ? 32 : 50),
+      color: color,
+    );
   }
 }
 
 class _MemoryCardEntry {
-  const _MemoryCardEntry({required this.instanceId, required this.item});
+  const _MemoryCardEntry({
+    required this.instanceId,
+    required this.item,
+    this.bonus = false,
+  });
 
   final String instanceId;
   final MemoryItem item;
+  final bool bonus;
 }

@@ -505,7 +505,6 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     final isMalay = language == AppLanguage.malay;
     final isFirst = _current == 0;
     final isLast = _current == _numbers.length - 1;
-    final showDots = _current < 20; // dots only for 1–20
 
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
@@ -632,6 +631,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                             color: color,
                             listenLabel: isMalay ? 'Dengar' : 'Listen',
                             sayPrompt: isMalay ? 'Sekarang sebut:' : 'Now say:',
+                            micLabel: isMalay ? 'Saya sebut!' : 'I said it!',
                             word: _wordForLanguage(item, language),
                             onSpeak: () {
                               final word = _wordForLanguage(item, language);
@@ -647,11 +647,19 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                                     locale: locale,
                                   );
                             },
+                            onPractice: () => _practiceSpeaking(
+                              context,
+                              isMalay: isMalay,
+                              color: color,
+                            ),
                           ),
-                          if (showDots) ...[
-                            const SizedBox(height: 12),
-                            _DotsDisplay(count: item.number, color: color),
-                          ],
+                          const SizedBox(height: 12),
+                          _CountingObjectsPanel(
+                            count: item.number,
+                            color: color,
+                            objectEmoji: item.emoji,
+                            isMalay: isMalay,
+                          ),
                           const SizedBox(height: 14),
                           _NumberPronounceButtons(
                             onSpeak: _speakIn,
@@ -749,6 +757,33 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
         ),
       ),
     );
+  }
+
+  void _practiceSpeaking(
+    BuildContext context, {
+    required bool isMalay,
+    required Color color,
+  }) {
+    final progress = context.read<ProgressService>();
+    context.read<AudioService>().playEffect(
+      'correct',
+      enabled: progress.soundEnabled,
+    );
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: color,
+          content: Text(
+            isMalay
+                ? 'Bagus! Suara kamu hebat. Cuba sebut sekali lagi.'
+                : 'Great voice! Try saying it one more time.',
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+          duration: const Duration(milliseconds: 1400),
+        ),
+      );
   }
 }
 
@@ -859,15 +894,19 @@ class _SayTogetherCard extends StatelessWidget {
     required this.color,
     required this.listenLabel,
     required this.sayPrompt,
+    required this.micLabel,
     required this.word,
     required this.onSpeak,
+    required this.onPractice,
   });
 
   final Color color;
   final String listenLabel;
   final String sayPrompt;
+  final String micLabel;
   final String word;
   final VoidCallback onSpeak;
+  final VoidCallback onPractice;
 
   @override
   Widget build(BuildContext context) {
@@ -911,14 +950,42 @@ class _SayTogetherCard extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
+          Semantics(
+            button: true,
+            label: micLabel,
+            child: Material(
               color: AppTheme.sunnyYellow,
-              shape: BoxShape.circle,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onPractice,
+                child: SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.mic_rounded,
+                        color: AppTheme.ink,
+                        size: 25,
+                      ),
+                      Text(
+                        micLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.fade,
+                        softWrap: false,
+                        style: const TextStyle(
+                          color: AppTheme.ink,
+                          fontSize: 7,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            child: const Icon(Icons.mic_rounded, color: AppTheme.ink, size: 28),
           ),
         ],
       ),
@@ -1001,48 +1068,195 @@ class _WordTable extends StatelessWidget {
   }
 }
 
-// ── Counting dots (shown for 1–20) ────────────────────────────────────────────
-class _DotsDisplay extends StatelessWidget {
-  const _DotsDisplay({required this.count, required this.color});
+// ── Counting objects ─────────────────────────────────────────────────────────
+class _CountingObjectsPanel extends StatefulWidget {
+  const _CountingObjectsPanel({
+    required this.count,
+    required this.color,
+    required this.objectEmoji,
+    required this.isMalay,
+  });
+
   final int count;
   final Color color;
+  final String objectEmoji;
+  final bool isMalay;
+
+  @override
+  State<_CountingObjectsPanel> createState() => _CountingObjectsPanelState();
+}
+
+class _CountingObjectsPanelState extends State<_CountingObjectsPanel> {
+  final ScrollController _scrollController = ScrollController();
+  int _counted = 0;
+
+  @override
+  void didUpdateWidget(covariant _CountingObjectsPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.count != widget.count) {
+      _counted = 0;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(0);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final rows = <Widget>[];
-    var remaining = count;
-    while (remaining > 0) {
-      final rowCount = remaining > 5 ? 5 : remaining;
-      remaining -= rowCount;
-      rows.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              rowCount,
-              (_) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.3),
-                      blurRadius: 3,
-                      offset: const Offset(0, 2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = (constraints.maxWidth / 44).floor().clamp(5, 8).toInt();
+        final rows = (widget.count / columns).ceil();
+        final gridHeight = rows <= 4 ? rows * 46.0 : 190.0;
+        final scrollable = rows > 4;
+
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: widget.color.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: widget.color.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.touch_app_rounded, color: widget.color, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.isMalay
+                          ? 'Sentuh objek untuk mengira'
+                          : 'Tap objects to count',
+                      style: const TextStyle(
+                        color: AppTheme.ink,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: widget.color,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '$_counted/${widget.count}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  if (_counted > 0) ...[
+                    const SizedBox(width: 6),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: widget.isMalay ? 'Kira semula' : 'Count again',
+                      onPressed: () => setState(() => _counted = 0),
+                      icon: Icon(Icons.replay_rounded, color: widget.color),
                     ),
                   ],
+                ],
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: gridHeight,
+                child: Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: scrollable,
+                  child: GridView.builder(
+                    controller: _scrollController,
+                    primary: false,
+                    physics: scrollable
+                        ? const BouncingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    itemCount: widget.count,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
+                    itemBuilder: (context, index) {
+                      final number = index + 1;
+                      final counted = index < _counted;
+                      return Semantics(
+                        button: true,
+                        selected: counted,
+                        label: widget.isMalay
+                            ? 'Objek nombor $number'
+                            : 'Object number $number',
+                        child: Material(
+                          color: Colors.transparent,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () => setState(() => _counted = number),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              decoration: BoxDecoration(
+                                color: counted ? widget.color : Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: widget.color.withValues(alpha: 0.55),
+                                  width: counted ? 2.5 : 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: widget.color.withValues(
+                                      alpha: counted ? 0.30 : 0.10,
+                                    ),
+                                    blurRadius: counted ? 8 : 3,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  widget.objectEmoji,
+                                  style: TextStyle(fontSize: counted ? 21 : 18),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
+              if (scrollable) ...[
+                const SizedBox(height: 8),
+                Text(
+                  widget.isMalay
+                      ? 'Skrol untuk lihat semua ${widget.count} objek.'
+                      : 'Scroll to see all ${widget.count} objects.',
+                  style: TextStyle(
+                    color: widget.color,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ],
           ),
-        ),
-      );
-    }
-    return Column(mainAxisSize: MainAxisSize.min, children: rows);
+        );
+      },
+    );
   }
 }
 
@@ -1058,125 +1272,12 @@ class _NumberPronounceButtons extends StatelessWidget {
   final _NumberItem item;
   final Color color;
 
-  static String arabicWord(int n) {
-    const words = [
-      '',
-      'واحد',
-      'اثنان',
-      'ثلاثة',
-      'أربعة',
-      'خمسة',
-      'ستة',
-      'سبعة',
-      'ثمانية',
-      'تسعة',
-      'عشرة',
-      'أحد عشر',
-      'اثنا عشر',
-      'ثلاثة عشر',
-      'أربعة عشر',
-      'خمسة عشر',
-      'ستة عشر',
-      'سبعة عشر',
-      'ثمانية عشر',
-      'تسعة عشر',
-      'عشرون',
-      'واحد وعشرون',
-      'اثنان وعشرون',
-      'ثلاثة وعشرون',
-      'أربعة وعشرون',
-      'خمسة وعشرون',
-      'ستة وعشرون',
-      'سبعة وعشرون',
-      'ثمانية وعشرون',
-      'تسعة وعشرون',
-      'ثلاثون',
-      'واحد وثلاثون',
-      'اثنان وثلاثون',
-      'ثلاثة وثلاثون',
-      'أربعة وثلاثون',
-      'خمسة وثلاثون',
-      'ستة وثلاثون',
-      'سبعة وثلاثون',
-      'ثمانية وثلاثون',
-      'تسعة وثلاثون',
-      'أربعون',
-      'واحد وأربعون',
-      'اثنان وأربعون',
-      'ثلاثة وأربعون',
-      'أربعة وأربعون',
-      'خمسة وأربعون',
-      'ستة وأربعون',
-      'سبعة وأربعون',
-      'ثمانية وأربعون',
-      'تسعة وأربعون',
-      'خمسون',
-      'واحد وخمسون',
-      'اثنان وخمسون',
-      'ثلاثة وخمسون',
-      'أربعة وخمسون',
-      'خمسة وخمسون',
-      'ستة وخمسون',
-      'سبعة وخمسون',
-      'ثمانية وخمسون',
-      'تسعة وخمسون',
-      'ستون',
-      'واحد وستون',
-      'اثنان وستون',
-      'ثلاثة وستون',
-      'أربعة وستون',
-      'خمسة وستون',
-      'ستة وستون',
-      'سبعة وستون',
-      'ثمانية وستون',
-      'تسعة وستون',
-      'سبعون',
-      'واحد وسبعون',
-      'اثنان وسبعون',
-      'ثلاثة وسبعون',
-      'أربعة وسبعون',
-      'خمسة وسبعون',
-      'ستة وسبعون',
-      'سبعة وسبعون',
-      'ثمانية وسبعون',
-      'تسعة وسبعون',
-      'ثمانون',
-      'واحد وثمانون',
-      'اثنان وثمانون',
-      'ثلاثة وثمانون',
-      'أربعة وثمانون',
-      'خمسة وثمانون',
-      'ستة وثمانون',
-      'سبعة وثمانون',
-      'ثمانية وثمانون',
-      'تسعة وثمانون',
-      'تسعون',
-      'واحد وتسعون',
-      'اثنان وتسعون',
-      'ثلاثة وتسعون',
-      'أربعة وتسعون',
-      'خمسة وتسعون',
-      'ستة وتسعون',
-      'سبعة وتسعون',
-      'ثمانية وتسعون',
-      'تسعة وتسعون',
-      'مئة',
-    ];
-    return n < words.length ? words[n] : '$n';
-  }
-
   @override
   Widget build(BuildContext context) {
     final langs = [
       (flag: '🇲🇾', label: 'BM', word: item.malay, locale: 'ms-MY'),
       (flag: '🇬🇧', label: 'EN', word: item.english, locale: 'en-US'),
       (flag: '🇨🇳', label: '中文', word: item.mandarin, locale: 'zh-CN'),
-      (
-        flag: '🇸🇦',
-        label: 'عربي',
-        word: arabicWord(item.number),
-        locale: 'ar-SA',
-      ),
       (flag: '🇮🇩', label: 'ID', word: item.indonesian, locale: 'id-ID'),
       (flag: '🇮🇳', label: 'தமிழ்', word: item.tamil, locale: 'ta-IN'),
     ];

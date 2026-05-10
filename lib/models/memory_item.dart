@@ -4,6 +4,59 @@ import 'challenge.dart';
 
 enum MemoryCategory { animals, shapes, colors }
 
+enum MemoryStage { easy, normal, medium, high }
+
+extension MemoryStageDetails on MemoryStage {
+  int get gridSize {
+    switch (this) {
+      case MemoryStage.easy:
+        return 3;
+      case MemoryStage.normal:
+        return 4;
+      case MemoryStage.medium:
+        return 5;
+      case MemoryStage.high:
+        return 10;
+    }
+  }
+
+  int get totalCards => gridSize * gridSize;
+
+  int get pairCount => totalCards ~/ 2;
+
+  bool get hasBonusCard => totalCards.isOdd;
+
+  Duration get previewDuration {
+    switch (this) {
+      case MemoryStage.easy:
+        return const Duration(seconds: 4);
+      case MemoryStage.normal:
+        return const Duration(seconds: 5);
+      case MemoryStage.medium:
+        return const Duration(seconds: 7);
+      case MemoryStage.high:
+        return const Duration(seconds: 12);
+    }
+  }
+
+  String label({required bool isMalay}) {
+    switch (this) {
+      case MemoryStage.easy:
+        return isMalay ? 'Mudah' : 'Easy';
+      case MemoryStage.normal:
+        return isMalay ? 'Biasa' : 'Normal';
+      case MemoryStage.medium:
+        return isMalay ? 'Sederhana' : 'Medium';
+      case MemoryStage.high:
+        return isMalay ? 'Tinggi' : 'High';
+    }
+  }
+
+  String boardLabel({required bool isMalay}) {
+    return '${gridSize}x$gridSize ${label(isMalay: isMalay)}';
+  }
+}
+
 extension MemoryCategoryDetails on MemoryCategory {
   String get title {
     switch (this) {

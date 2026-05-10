@@ -18,6 +18,15 @@ class MathPracticeScreen extends StatelessWidget {
 
   static const _topics = [
     _MathTopic(
+      labelMs: 'Kira Objek 🔢',
+      labelEn: 'Counting 🔢',
+      subtitleMs: 'Kira bintang, buah dan haiwan',
+      subtitleEn: 'Count stars, fruits and animals',
+      op: MathOp.count,
+      color: Color(0xFF00C9A7),
+      icon: Icons.format_list_numbered_rounded,
+    ),
+    _MathTopic(
       labelMs: 'Tambah ➕',
       labelEn: 'Addition ➕',
       subtitleMs: 'Latihan tambah nombor',
@@ -52,6 +61,33 @@ class MathPracticeScreen extends StatelessWidget {
       op: MathOp.divide,
       color: Color(0xFF48DBFB),
       icon: Icons.more_horiz_rounded,
+    ),
+    _MathTopic(
+      labelMs: 'Besar atau Kecil ⚖️',
+      labelEn: 'Bigger or Smaller ⚖️',
+      subtitleMs: 'Pilih nombor yang betul',
+      subtitleEn: 'Pick the correct number',
+      op: MathOp.compare,
+      color: Color(0xFF7A5CFF),
+      icon: Icons.compare_arrows_rounded,
+    ),
+    _MathTopic(
+      labelMs: 'Nombor Hilang ❓',
+      labelEn: 'Missing Number ❓',
+      subtitleMs: 'Lengkapkan susunan nombor',
+      subtitleEn: 'Complete the number pattern',
+      op: MathOp.missing,
+      color: Color(0xFF34C759),
+      icon: Icons.help_outline_rounded,
+    ),
+    _MathTopic(
+      labelMs: 'Pasangan Nombor 🔟',
+      labelEn: 'Number Bonds 🔟',
+      subtitleMs: 'Cari nombor yang melengkapkan',
+      subtitleEn: 'Find the number that completes it',
+      op: MathOp.bond,
+      color: Color(0xFFFFD21E),
+      icon: Icons.link_rounded,
     ),
     _MathTopic(
       labelMs: 'Campur Semua 🎲',
@@ -411,8 +447,15 @@ class _MathQuizScreenState extends State<MathQuizScreen>
   }
 
   void _generateQuestion() {
+    final isMalay =
+        context.read<ProgressService>().language == AppLanguage.malay;
     setState(() {
-      _q = _Question.generate(op: widget.op, level: widget.level, rng: _rng);
+      _q = _Question.generate(
+        op: widget.op,
+        level: widget.level,
+        rng: _rng,
+        isMalay: isMalay,
+      );
       _answered = false;
       _selectedOption = null;
     });
@@ -450,6 +493,14 @@ class _MathQuizScreenState extends State<MathQuizScreen>
       setState(() => _questionIndex++);
       _generateQuestion();
     } else {
+      await progress.markModuleLesson(
+        'math',
+        _opLabel(
+          widget.op,
+          progress.language == AppLanguage.malay,
+          widget.level,
+        ),
+      );
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -482,10 +533,7 @@ class _MathQuizScreenState extends State<MathQuizScreen>
           children: [
             Text(
               _opLabel(widget.op, isMalay, widget.level),
-              style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 17,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
             ),
             Text(
               '${isMalay ? 'Soalan' : 'Question'} ${_questionIndex + 1} / $_totalQuestions  •  $_score ⭐',
@@ -556,8 +604,9 @@ class _MathQuizScreenState extends State<MathQuizScreen>
                   children: List.generate(_totalQuestions, (i) {
                     Color dotColor;
                     if (i < _answers.length) {
-                      dotColor =
-                          _answers[i] ? AppTheme.leafGreen : AppTheme.appleRed;
+                      dotColor = _answers[i]
+                          ? AppTheme.leafGreen
+                          : AppTheme.appleRed;
                     } else if (i == _questionIndex) {
                       dotColor = color;
                     } else {
@@ -617,10 +666,15 @@ class _MathQuizScreenState extends State<MathQuizScreen>
                       ),
                       child: Column(
                         children: [
-                          Text(
-                            _q.emoji,
-                            style: const TextStyle(fontSize: 46),
-                          ),
+                          Text(_q.emoji, style: const TextStyle(fontSize: 46)),
+                          if (_q.visualCount != null) ...[
+                            const SizedBox(height: 10),
+                            _CountingObjectGrid(
+                              emoji: _q.emoji,
+                              count: _q.visualCount!,
+                              color: color,
+                            ),
+                          ],
                           const SizedBox(height: 12),
                           Text(
                             _q.questionText,
@@ -642,6 +696,15 @@ class _MathQuizScreenState extends State<MathQuizScreen>
                                 fontStyle: FontStyle.italic,
                               ),
                               textAlign: TextAlign.center,
+                            ),
+                          ],
+                          if (_answered) ...[
+                            const SizedBox(height: 12),
+                            _AnswerFeedback(
+                              correct:
+                                  _selectedOption != null &&
+                                  _q.options[_selectedOption!] == _q.answer,
+                              isMalay: isMalay,
                             ),
                           ],
                         ],
@@ -672,7 +735,9 @@ class _MathQuizScreenState extends State<MathQuizScreen>
                     Color borderColor = color.withValues(alpha: 0.4);
 
                     if (_answered && _selectedOption == idx) {
-                      btnColor = isCorrect ? AppTheme.leafGreen : AppTheme.appleRed;
+                      btnColor = isCorrect
+                          ? AppTheme.leafGreen
+                          : AppTheme.appleRed;
                       textColor = Colors.white;
                       borderColor = btnColor;
                     } else if (_answered && isCorrect) {
@@ -722,6 +787,8 @@ class _MathQuizScreenState extends State<MathQuizScreen>
   String _opLabel(MathOp op, bool isMalay, int level) {
     final levelStr = isMalay ? 'Tahap $level' : 'Level $level';
     switch (op) {
+      case MathOp.count:
+        return '${isMalay ? 'Kira Objek' : 'Counting'} — $levelStr';
       case MathOp.add:
         return '${isMalay ? 'Tambah' : 'Addition'} — $levelStr';
       case MathOp.subtract:
@@ -730,9 +797,90 @@ class _MathQuizScreenState extends State<MathQuizScreen>
         return '${isMalay ? 'Darab' : 'Multiply'} — $levelStr';
       case MathOp.divide:
         return '${isMalay ? 'Bahagi' : 'Divide'} — $levelStr';
+      case MathOp.compare:
+        return '${isMalay ? 'Besar atau Kecil' : 'Bigger or Smaller'} — $levelStr';
+      case MathOp.missing:
+        return '${isMalay ? 'Nombor Hilang' : 'Missing Number'} — $levelStr';
+      case MathOp.bond:
+        return '${isMalay ? 'Pasangan Nombor' : 'Number Bonds'} — $levelStr';
       case MathOp.mixed:
         return '${isMalay ? 'Campur Semua' : 'Mixed'} — $levelStr';
     }
+  }
+}
+
+class _CountingObjectGrid extends StatelessWidget {
+  const _CountingObjectGrid({
+    required this.emoji,
+    required this.count,
+    required this.color,
+  });
+
+  final String emoji;
+  final int count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 120),
+      child: SingleChildScrollView(
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 6,
+          runSpacing: 6,
+          children: List.generate(
+            count,
+            (index) => Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withValues(alpha: 0.22)),
+              ),
+              child: Center(
+                child: Text(emoji, style: const TextStyle(fontSize: 20)),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AnswerFeedback extends StatelessWidget {
+  const _AnswerFeedback({required this.correct, required this.isMalay});
+
+  final bool correct;
+  final bool isMalay;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = correct
+        ? (isMalay ? 'Hebat! Jawapan betul!' : 'Great job! Correct!')
+        : (isMalay ? 'Hampir betul! Cuba lagi.' : 'Almost there! Try again.');
+    final feedbackColor = correct ? AppTheme.leafGreen : AppTheme.appleRed;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: feedbackColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: feedbackColor.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: feedbackColor,
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
   }
 }
 
@@ -908,14 +1056,14 @@ class MathResultScreen extends StatelessWidget {
                         child: ElevatedButton.icon(
                           onPressed: () =>
                               Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (_) => MathQuizScreen(
-                                op: op,
-                                color: color,
-                                level: level,
+                                MaterialPageRoute(
+                                  builder: (_) => MathQuizScreen(
+                                    op: op,
+                                    color: color,
+                                    level: level,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
                           icon: const Icon(Icons.refresh_rounded),
                           label: Text(
                             isMalay ? 'Cuba Lagi' : 'Try Again',
@@ -952,7 +1100,9 @@ class MathResultScreen extends StatelessWidget {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                               side: const BorderSide(
-                                  color: AppTheme.skyBlue, width: 2),
+                                color: AppTheme.skyBlue,
+                                width: 2,
+                              ),
                             ),
                             elevation: 0,
                           ),
@@ -971,7 +1121,17 @@ class MathResultScreen extends StatelessWidget {
 }
 
 // ── Question generator ────────────────────────────────────────────────────────
-enum MathOp { add, subtract, multiply, divide, mixed }
+enum MathOp {
+  count,
+  add,
+  subtract,
+  multiply,
+  divide,
+  compare,
+  missing,
+  bond,
+  mixed,
+}
 
 class _Question {
   const _Question({
@@ -980,6 +1140,7 @@ class _Question {
     required this.options,
     required this.emoji,
     this.hint,
+    this.visualCount,
   });
 
   final String questionText;
@@ -987,6 +1148,7 @@ class _Question {
   final List<int> options;
   final String emoji;
   final String? hint;
+  final int? visualCount;
 
   static const _emojis = [
     '🍎',
@@ -1015,18 +1177,45 @@ class _Question {
     required MathOp op,
     required int level,
     required Random rng,
+    required bool isMalay,
   }) {
-    final effectiveOp = op == MathOp.mixed ? MathOp.values[rng.nextInt(4)] : op;
+    const mixedOps = [
+      MathOp.count,
+      MathOp.add,
+      MathOp.subtract,
+      MathOp.multiply,
+      MathOp.divide,
+      MathOp.compare,
+      MathOp.missing,
+      MathOp.bond,
+    ];
+    final effectiveOp = op == MathOp.mixed
+        ? mixedOps[rng.nextInt(mixedOps.length)]
+        : op;
 
     int a, b, answer;
     String q, hint;
+    int? visualCount;
+    final seededOptions = <int>{};
+    final emoji = _emojis[rng.nextInt(_emojis.length)];
 
     switch (effectiveOp) {
+      case MathOp.count:
+        final maxCount = [8, 12, 20][level - 1];
+        answer = rng.nextInt(maxCount) + 1;
+        q = isMalay ? 'Ada berapa?' : 'How many?';
+        hint = isMalay ? 'Kira satu demi satu.' : 'Count them one by one.';
+        visualCount = answer;
       case MathOp.add:
-        final range = [10, 20, 50][level - 1];
-        a = rng.nextInt(range) + 1;
-        b = rng.nextInt(range) + 1;
-        answer = a + b;
+        final maxSum = [10, 20, 50][level - 1];
+        answer = rng.nextInt(maxSum - 1) + 2;
+        a = rng.nextInt(answer - 1) + 1;
+        b = answer - a;
+        if (level == 3 && rng.nextBool()) {
+          a = rng.nextInt(maxSum) + 1;
+          b = rng.nextInt(maxSum) + 1;
+          answer = a + b;
+        }
         q = '$a  +  $b  =  ?';
         hint = '';
       case MathOp.subtract:
@@ -1042,14 +1231,63 @@ class _Question {
         b = rng.nextInt(maxT) + 1;
         answer = a * b;
         q = '$a  ×  $b  =  ?';
-        hint = level == 1 ? '$a + $a + ... ($b kali)' : '';
+        hint = level == 1
+            ? (isMalay ? '$a + $a + ... ($b kali)' : '$a + $a + ... ($b times)')
+            : '';
       case MathOp.divide:
         final maxT = [5, 5, 12][level - 1];
         b = rng.nextInt(maxT - 1) + 2;
         answer = rng.nextInt(maxT) + 1;
         a = b * answer;
         q = '$a  ÷  $b  =  ?';
-        hint = level == 1 ? 'Berapa kumpulan $b dalam $a?' : '';
+        hint = level == 1
+            ? (isMalay
+                  ? 'Berapa kumpulan $b dalam $a?'
+                  : 'How many groups of $b are in $a?')
+            : '';
+      case MathOp.compare:
+        final range = [10, 20, 50][level - 1];
+        a = rng.nextInt(range) + 1;
+        do {
+          b = rng.nextInt(range) + 1;
+        } while (b == a);
+        final askBigger = rng.nextBool();
+        answer = askBigger ? max(a, b) : min(a, b);
+        q = isMalay
+            ? 'Pilih nombor yang ${askBigger ? 'lebih besar' : 'lebih kecil'}:\n$a atau $b'
+            : 'Pick the ${askBigger ? 'bigger' : 'smaller'} number:\n$a or $b';
+        hint = isMalay ? 'Bandingkan dua nombor.' : 'Compare the two numbers.';
+        seededOptions
+          ..add(a)
+          ..add(b);
+      case MathOp.missing:
+        final stepChoices = switch (level) {
+          1 => const [1],
+          2 => const [1, 2],
+          _ => const [2, 5, 10],
+        };
+        final step = stepChoices[rng.nextInt(stepChoices.length)];
+        final startMax = [7, 14, 35][level - 1];
+        final start = rng.nextInt(startMax) + 1;
+        final sequence = List.generate(4, (index) => start + index * step);
+        final missingIndex = rng.nextInt(2) + 1;
+        answer = sequence[missingIndex];
+        q = sequence
+            .asMap()
+            .entries
+            .map((entry) => entry.key == missingIndex ? '?' : '${entry.value}')
+            .join(',  ');
+        hint = isMalay
+            ? 'Cari nombor dalam susunan.'
+            : 'Find the number in the pattern.';
+      case MathOp.bond:
+        final target = [5, 10, 20][level - 1];
+        a = rng.nextInt(target - 1) + 1;
+        answer = target - a;
+        q = '$a  +  ?  =  $target';
+        hint = isMalay
+            ? 'Nombor apa yang melengkapkan $target?'
+            : 'What number makes $target?';
       case MathOp.mixed:
         // Should not reach here
         a = 1;
@@ -1060,12 +1298,11 @@ class _Question {
     }
 
     // Generate 4 unique options including answer
-    final opts = <int>{answer};
+    final opts = <int>{answer, ...seededOptions.where((value) => value >= 0)};
     while (opts.length < 4) {
       final delta = rng.nextInt(10) + 1;
-      opts.add(
-        rng.nextBool() ? answer + delta : (answer - delta).abs().clamp(0, 999),
-      );
+      final candidate = rng.nextBool() ? answer + delta : answer - delta;
+      opts.add(candidate >= 0 ? candidate : rng.nextInt(max(answer + 8, 10)));
     }
     final optList = opts.toList()..shuffle(rng);
 
@@ -1073,8 +1310,9 @@ class _Question {
       questionText: q,
       answer: answer,
       options: optList,
-      emoji: _emojis[rng.nextInt(_emojis.length)],
+      emoji: emoji,
       hint: hint.isEmpty ? null : hint,
+      visualCount: visualCount,
     );
   }
 }
