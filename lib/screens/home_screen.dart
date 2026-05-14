@@ -267,7 +267,13 @@ class _HomeHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const StarCounter(large: false),
+                  const Column(
+                    children: [
+                      StarCounter(large: false),
+                      SizedBox(height: 6),
+                      _CuteBadge(),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -681,7 +687,7 @@ class _ModuleTileState extends State<_ModuleTile>
                   gradient: LinearGradient(
                     colors: [
                       widget.color,
-                      widget.color.withValues(alpha: 0.72),
+                      widget.color.withValues(alpha: 0.75),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -701,6 +707,11 @@ class _ModuleTileState extends State<_ModuleTile>
                           shape: BoxShape.circle,
                         ),
                       ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Text(widget.emoji, style: const TextStyle(fontSize: 16)),
                     ),
                     Text(
                       widget.symbol,
@@ -729,8 +740,12 @@ class _ModuleTileState extends State<_ModuleTile>
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          widget.emoji,
-                          style: const TextStyle(fontSize: 12),
+                          '${(pct * 100).round()}%',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                     ),
@@ -767,7 +782,25 @@ class _ModuleTileState extends State<_ModuleTile>
                         ),
                       ),
                       const Spacer(),
-                      // Progress bar
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.favorite_rounded,
+                            size: 10,
+                            color: Color(0xFFFF5B96),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${widget.done}/${widget.total}',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: widget.color,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
@@ -811,7 +844,7 @@ class _BigNavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color,
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(22),
       elevation: 5,
       shadowColor: color.withValues(alpha: 0.35),
@@ -821,6 +854,11 @@ class _BigNavButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color, color.withValues(alpha: 0.78)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: Colors.white, width: 2.5),
           ),
@@ -1027,6 +1065,29 @@ class _IconBtn extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+}
+
+class _CuteBadge extends StatelessWidget {
+  const _CuteBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF0B8),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Text(
+        'Cutie Mode ✨',
+        style: TextStyle(
+          fontSize: 8,
+          fontWeight: FontWeight.w900,
+          color: AppTheme.ink,
+        ),
       ),
     );
   }
