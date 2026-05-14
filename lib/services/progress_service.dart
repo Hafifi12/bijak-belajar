@@ -125,8 +125,9 @@ class ProgressService extends ChangeNotifier {
   }
 
   Future<void> incrementColoringSessions() async {
+    final prefs = _preferences ??= await SharedPreferences.getInstance();
     _coloringSessions++;
-    await _preferences?.setInt(_coloringSessionsKey, _coloringSessions);
+    await prefs.setInt(_coloringSessionsKey, _coloringSessions);
     notifyListeners();
   }
 

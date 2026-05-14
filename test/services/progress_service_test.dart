@@ -53,6 +53,9 @@ void main() {
     await progressService.completeChallenge(ChallengeMode.numberTrain);
     await progressService.completeChallenge(ChallengeMode.letterTrain);
     await progressService.completeChallenge(ChallengeMode.memory);
+    await progressService.markModuleLesson('numbers', '1');
+    await progressService.markModuleLesson('letters', 'A');
+    await progressService.incrementColoringSessions();
 
     await progressService.resetProgress();
 
@@ -61,9 +64,31 @@ void main() {
     expect(progressService.countFor(ChallengeMode.numberTrain), 0);
     expect(progressService.countFor(ChallengeMode.letterTrain), 0);
     expect(progressService.countFor(ChallengeMode.memory), 0);
+    expect(progressService.getModuleLessons('numbers'), 0);
+    expect(progressService.getModuleLessons('letters'), 0);
+    expect(progressService.getLastLesson('numbers'), '');
+    expect(progressService.getLastLesson('letters'), '');
+    expect(progressService.coloringSessions, 0);
     expect(progressService.backgroundMusicEnabled, isTrue);
     expect(progressService.soundEnabled, isFalse);
     expect(progressService.voiceEnabled, isFalse);
+
+    final reloaded = ProgressService();
+    await reloaded.load();
+
+    expect(reloaded.stars, 0);
+    expect(reloaded.completedChallenges, 0);
+    expect(reloaded.countFor(ChallengeMode.numberTrain), 0);
+    expect(reloaded.countFor(ChallengeMode.letterTrain), 0);
+    expect(reloaded.countFor(ChallengeMode.memory), 0);
+    expect(reloaded.getModuleLessons('numbers'), 0);
+    expect(reloaded.getModuleLessons('letters'), 0);
+    expect(reloaded.getLastLesson('numbers'), '');
+    expect(reloaded.getLastLesson('letters'), '');
+    expect(reloaded.coloringSessions, 0);
+    expect(reloaded.backgroundMusicEnabled, isTrue);
+    expect(reloaded.soundEnabled, isFalse);
+    expect(reloaded.voiceEnabled, isFalse);
   });
 
   test('module lessons are counted once and persist locally', () async {
@@ -86,7 +111,7 @@ void main() {
     expect(reloaded.stars, 2);
   });
 
-  test('stores selected Indonesian language locally', () async {
+  test('stores selected Bahasa Indonesia language locally', () async {
     final progressService = ProgressService();
     await progressService.load();
 
@@ -96,5 +121,18 @@ void main() {
     await reloaded.load();
 
     expect(reloaded.language, AppLanguage.indonesian);
+  });
+
+  test('persists coloring sessions when incremented before load', () async {
+    final progressService = ProgressService();
+
+    await progressService.incrementColoringSessions();
+
+    expect(progressService.coloringSessions, 1);
+
+    final reloaded = ProgressService();
+    await reloaded.load();
+
+    expect(reloaded.coloringSessions, 1);
   });
 }

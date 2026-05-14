@@ -249,13 +249,18 @@ class _HomeHeader extends StatelessWidget {
                         _LearningSteps(isMalay: isMalay),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFE4F6),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            isMalay ? '✨ Misi hari ini: pilih 1 aktiviti!' : '✨ Today's mission: pick 1 activity!',
+                            isMalay
+                                ? '✨ Misi hari ini: pilih 1 aktiviti!'
+                                : "✨ Today's mission: pick 1 activity!",
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -389,11 +394,7 @@ class _ContinueLearningBanner extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
-                        gradient: const LinearGradient(
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFF8FD)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -419,20 +420,12 @@ class _ContinueLearningBanner extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
-                      gradient: const LinearGradient(
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFF8FD)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+                      color: Colors.white,
                     ),
                   ),
                   const Icon(
                     Icons.arrow_forward_ios_rounded,
-                    gradient: const LinearGradient(
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFF8FD)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+                    color: Colors.white,
                     size: 16,
                   ),
                 ],
@@ -475,7 +468,15 @@ class _LearningSteps extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < steps.length; i++) ...[
-          _StepDot(emoji: steps[i].emoji, label: steps[i].label, color: [const Color(0xFFFFD9EC), const Color(0xFFD6F3FF), const Color(0xFFFFF0B8)][i]),
+          _StepDot(
+            emoji: steps[i].emoji,
+            label: steps[i].label,
+            color: [
+              const Color(0xFFFFD9EC),
+              const Color(0xFFD6F3FF),
+              const Color(0xFFFFF0B8),
+            ][i],
+          ),
           if (i < steps.length - 1)
             const Icon(
               Icons.arrow_forward_ios_rounded,
@@ -489,7 +490,11 @@ class _LearningSteps extends StatelessWidget {
 }
 
 class _StepDot extends StatelessWidget {
-  const _StepDot({required this.emoji, required this.label, required this.color});
+  const _StepDot({
+    required this.emoji,
+    required this.label,
+    required this.color,
+  });
   final String emoji;
   final String label;
   final Color color;
@@ -539,7 +544,6 @@ class _SectionChip extends StatelessWidget {
   final String emoji;
   final String label;
   final Color color;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -550,7 +554,10 @@ class _SectionChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(50),
-            border: Border.all(color: color.withValues(alpha: 0.45), width: 1.4),
+            border: Border.all(
+              color: color.withValues(alpha: 0.45),
+              width: 1.4,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -711,17 +718,16 @@ class _ModuleTileState extends State<_ModuleTile>
                     Positioned(
                       top: 8,
                       left: 8,
-                      child: Text(widget.emoji, style: const TextStyle(fontSize: 16)),
+                      child: Text(
+                        widget.emoji,
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ),
                     Text(
                       widget.symbol,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        gradient: const LinearGradient(
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFF8FD)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+                        color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                         height: 1.1,
@@ -734,7 +740,10 @@ class _ModuleTileState extends State<_ModuleTile>
                       bottom: 4,
                       left: 4,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(10),
@@ -875,11 +884,7 @@ class _BigNavButton extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
-                        gradient: const LinearGradient(
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFF8FD)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+                        color: Colors.white,
                       ),
                     ),
                     Text(
@@ -901,11 +906,7 @@ class _BigNavButton extends StatelessWidget {
                 ),
                 child: const Icon(
                   Icons.arrow_forward_rounded,
-                  gradient: const LinearGradient(
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFF8FD)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+                  color: Colors.white,
                   size: 18,
                 ),
               ),
