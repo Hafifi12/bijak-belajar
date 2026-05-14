@@ -30,17 +30,22 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppTheme.lightBlue,
       bottomNavigationBar: _BottomBar(isMalay: isMalay),
       body: BijakScene(
-        topColor: AppTheme.skyBlue,
-        bottomColor: AppTheme.lightBlue,
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: _HomeHeader(isMalay: isMalay, progress: progress),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
+        topColor: const Color(0xFF8ED8FF),
+        bottomColor: const Color(0xFFF6F0FF),
+        child: Stack(
+          children: [
+            const Positioned(top: 68, left: 12, child: _FloatingBubble(size: 44)),
+            const Positioned(top: 168, right: 18, child: _FloatingBubble(size: 28)),
+            const Positioned(top: 318, left: -10, child: _FloatingBubble(size: 36)),
+            CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _HomeHeader(isMalay: isMalay, progress: progress),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
                   // ─── LEARN section ──────────────────────────────────────
                   _SectionChip(
                     emoji: '📖',
@@ -148,9 +153,11 @@ class HomeScreen extends StatelessWidget {
                     ).pushNamed(GamesHubScreen.routeName),
                   ),
 
-                  const SizedBox(height: 8),
-                ]),
-              ),
+                      const SizedBox(height: 8),
+                    ]),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -200,14 +207,18 @@ class _HomeHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.92),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFFEFF), Color(0xFFF6F9FF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.ink.withValues(alpha: 0.12),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    color: const Color(0xFF7A5CFF).withValues(alpha: 0.2),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
@@ -621,7 +632,11 @@ class _ModuleTileState extends State<_ModuleTile>
         onTapCancel: () => _ctrl.reverse(),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFFFFF), Color(0xFFFFFBFF)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: Colors.white, width: 2.5),
             boxShadow: [
@@ -649,9 +664,17 @@ class _ModuleTileState extends State<_ModuleTile>
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: Stack(
+                  child: Stack(
                   alignment: Alignment.center,
                   children: [
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Text(
+                        widget.emoji,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
                     Positioned(
                       top: -14,
                       right: -14,
@@ -690,7 +713,7 @@ class _ModuleTileState extends State<_ModuleTile>
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          widget.emoji,
+                          '✨',
                           style: const TextStyle(fontSize: 12),
                         ),
                       ),
@@ -885,7 +908,11 @@ class _BottomBar extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFFFFF), Color(0xFFF7F5FF)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(color: Colors.white, width: 2.5),
           boxShadow: [
@@ -976,10 +1003,38 @@ class _IconBtn extends StatelessWidget {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
+          color: Colors.white.withValues(alpha: 0.24),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
         ),
         child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+}
+
+class _FloatingBubble extends StatelessWidget {
+  const _FloatingBubble({required this.size});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0.45),
+              Colors.white.withValues(alpha: 0.16),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
+        ),
       ),
     );
   }
