@@ -460,16 +460,6 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     );
   }
 
-  Future<void> _speakIn(String word, String locale) async {
-    final progress = context.read<ProgressService>();
-    final audio = context.read<AudioService>();
-    await audio.speakLocale(
-      word,
-      enabled: progress.voiceEnabled,
-      locale: locale,
-    );
-  }
-
   String _wordForLanguage(_NumberItem item, AppLanguage language) {
     return switch (language) {
       AppLanguage.malay => item.malay,
@@ -480,8 +470,14 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     };
   }
 
-  String _audioPathFor(_NumberItem item, AppLanguage language) {
-    return 'numbers/${language.code}/${item.number}.mp3';
+  Future<void> _speakIn(String word, String locale) async {
+    final progress = context.read<ProgressService>();
+    final audio = context.read<AudioService>();
+    await audio.speakLocale(
+      word,
+      enabled: progress.voiceEnabled,
+      locale: locale,
+    );
   }
 
   String _levelLabel(int n, bool isMalay) {
@@ -588,8 +584,8 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                 child: _FocusInstruction(
                   color: color,
                   text: isMalay
-                      ? 'Dengar perkataan, kira objek, kemudian sebut kuat-kuat.'
-                      : 'Listen to the word, count the objects, then say it aloud.',
+                      ? 'Baca perkataan, kira objek, kemudian cuba sebut sendiri.'
+                      : 'Read the word, count the objects, then try saying it yourself.',
                 ),
               ),
               const SizedBox(height: 8),
@@ -627,31 +623,19 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                           const SizedBox(height: 14),
                           _WordTable(item: item, color: color),
                           const SizedBox(height: 12),
-                          _SayTogetherCard(
+                          _ReadNumberCard(
                             color: color,
-                            listenLabel: isMalay ? 'Dengar' : 'Listen',
-                            sayPrompt: isMalay ? 'Sekarang sebut:' : 'Now say:',
-                            micLabel: isMalay ? 'Saya sebut!' : 'I said it!',
+                            prompt: isMalay
+                                ? 'Baca nombor ini:'
+                                : 'Read this number:',
                             word: _wordForLanguage(item, language),
-                            onSpeak: () {
-                              final word = _wordForLanguage(item, language);
-                              final locale = language.ttsLocale;
-                              context
-                                  .read<AudioService>()
-                                  .playOfflinePronunciation(
-                                    assetPath: _audioPathFor(item, language),
-                                    enabled: context
-                                        .read<ProgressService>()
-                                        .voiceEnabled,
-                                    fallbackText: word,
-                                    locale: locale,
-                                  );
-                            },
-                            onPractice: () => _practiceSpeaking(
-                              context,
-                              isMalay: isMalay,
-                              color: color,
-                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _NumberPronunciationPanel(
+                            item: item,
+                            color: color,
+                            isMalay: isMalay,
+                            onSpeak: _speakIn,
                           ),
                           const SizedBox(height: 12),
                           _CountingObjectsPanel(
@@ -659,12 +643,6 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                             color: color,
                             objectEmoji: item.emoji,
                             isMalay: isMalay,
-                          ),
-                          const SizedBox(height: 14),
-                          _NumberPronounceButtons(
-                            onSpeak: _speakIn,
-                            item: item,
-                            color: color,
                           ),
                           const SizedBox(height: 4),
                         ],
@@ -757,33 +735,6 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
         ),
       ),
     );
-  }
-
-  void _practiceSpeaking(
-    BuildContext context, {
-    required bool isMalay,
-    required Color color,
-  }) {
-    final progress = context.read<ProgressService>();
-    context.read<AudioService>().playEffect(
-      'correct',
-      enabled: progress.soundEnabled,
-    );
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: color,
-          content: Text(
-            isMalay
-                ? 'Bagus! Suara kamu hebat. Cuba sebut sekali lagi.'
-                : 'Great voice! Try saying it one more time.',
-            style: const TextStyle(fontWeight: FontWeight.w900),
-          ),
-          duration: const Duration(milliseconds: 1400),
-        ),
-      );
   }
 }
 
@@ -889,24 +840,16 @@ class _NumberStage extends StatelessWidget {
   }
 }
 
-class _SayTogetherCard extends StatelessWidget {
-  const _SayTogetherCard({
+class _ReadNumberCard extends StatelessWidget {
+  const _ReadNumberCard({
     required this.color,
-    required this.listenLabel,
-    required this.sayPrompt,
-    required this.micLabel,
+    required this.prompt,
     required this.word,
-    required this.onSpeak,
-    required this.onPractice,
   });
 
   final Color color;
-  final String listenLabel;
-  final String sayPrompt;
-  final String micLabel;
+  final String prompt;
   final String word;
-  final VoidCallback onSpeak;
-  final VoidCallback onPractice;
 
   @override
   Widget build(BuildContext context) {
@@ -919,19 +862,35 @@ class _SayTogetherCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          BluePillButton(
-            label: listenLabel,
-            icon: Icons.volume_up_rounded,
-            onPressed: onSpeak,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.22),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.menu_book_rounded,
+              color: Colors.white,
+              size: 25,
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  sayPrompt,
-                  style: TextStyle(
+                  prompt,
+                  style: const TextStyle(
                     color: AppTheme.ink,
                     fontSize: 12,
                     fontWeight: FontWeight.w900,
@@ -948,43 +907,6 @@ class _SayTogetherCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-          Semantics(
-            button: true,
-            label: micLabel,
-            child: Material(
-              color: AppTheme.sunnyYellow,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: onPractice,
-                child: SizedBox(
-                  width: 52,
-                  height: 52,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.mic_rounded,
-                        color: AppTheme.ink,
-                        size: 25,
-                      ),
-                      Text(
-                        micLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.fade,
-                        softWrap: false,
-                        style: const TextStyle(
-                          color: AppTheme.ink,
-                          fontSize: 7,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
           ),
         ],
@@ -1260,87 +1182,128 @@ class _CountingObjectsPanelState extends State<_CountingObjectsPanel> {
   }
 }
 
-// ── 5-language number pronounce buttons ───────────────────────────────────────
-class _NumberPronounceButtons extends StatelessWidget {
-  const _NumberPronounceButtons({
-    required this.onSpeak,
+// ── 5-language pronunciation display ─────────────────────────────────────────
+class _NumberPronunciationPanel extends StatelessWidget {
+  const _NumberPronunciationPanel({
     required this.item,
     required this.color,
+    required this.isMalay,
+    required this.onSpeak,
   });
 
-  final Future<void> Function(String word, String locale) onSpeak;
   final _NumberItem item;
   final Color color;
+  final bool isMalay;
+  final Future<void> Function(String word, String locale) onSpeak;
 
   @override
   Widget build(BuildContext context) {
-    final langs = [
+    final rows = [
       (flag: '🇲🇾', label: 'BM', word: item.malay, locale: 'ms-MY'),
       (flag: '🇬🇧', label: 'EN', word: item.english, locale: 'en-US'),
       (flag: '🇨🇳', label: '中文', word: item.mandarin, locale: 'zh-CN'),
-      (flag: '🇮🇩', label: 'ID', word: item.indonesian, locale: 'id-ID'),
       (flag: '🇮🇳', label: 'தமிழ்', word: item.tamil, locale: 'ta-IN'),
+      (flag: '🇮🇩', label: 'ID', word: item.indonesian, locale: 'id-ID'),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            '🔊 Sebut dalam:',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
-            ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: color.withValues(alpha: 0.18), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-        ),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: langs.map((l) {
-            return Material(
-              color: color.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(50),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(50),
-                onTap: () => onSpeak(l.word, l.locale),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.35),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(l.flag, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 6),
-                      Text(
-                        l.label,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: color,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.volume_up_rounded, size: 15, color: color),
-                    ],
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.record_voice_over_rounded, color: color, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isMalay
+                      ? 'Belajar sebutan 5 bahasa'
+                      : 'Learn 5-language words',
+                  style: const TextStyle(
+                    color: AppTheme.ink,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
-            );
-          }).toList(),
-        ),
-      ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final row in rows)
+                Material(
+                  color: color.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => onSpeak(row.word, row.locale),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 46),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(row.flag, style: const TextStyle(fontSize: 17)),
+                          const SizedBox(width: 6),
+                          Text(
+                            row.label,
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 126),
+                            child: Text(
+                              row.word,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.ink,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(Icons.volume_up_rounded, size: 16, color: color),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
