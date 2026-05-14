@@ -27,11 +27,11 @@ class HomeScreen extends StatelessWidget {
     final isMalay = progress.language == AppLanguage.malay;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: const Color(0xFFF2FAFF),
       bottomNavigationBar: _BottomBar(isMalay: isMalay),
       body: BijakScene(
-        topColor: AppTheme.skyBlue,
-        bottomColor: AppTheme.lightBlue,
+        topColor: const Color(0xFF7EDBFF),
+        bottomColor: const Color(0xFFF2FAFF),
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
@@ -200,14 +200,18 @@ class _HomeHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.92),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFFFFF), Color(0xFFFFF4FB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.ink.withValues(alpha: 0.12),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    color: AppTheme.purple.withValues(alpha: 0.14),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
@@ -232,8 +236,8 @@ class _HomeHeader extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           isMalay
-                              ? 'Apa yang kita nak belajar hari ini? 🌟'
-                              : 'What shall we learn today? 🌟',
+                              ? 'Jom pilih pengembaraan comel hari ini! 🌈'
+                              : 'Let\'s pick a cute adventure today! 🌈',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -508,9 +512,9 @@ class _SectionChip extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.14),
+            color: color.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(50),
-            border: Border.all(color: color.withValues(alpha: 0.35)),
+            border: Border.all(color: color.withValues(alpha: 0.45), width: 1.2),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -621,7 +625,11 @@ class _ModuleTileState extends State<_ModuleTile>
         onTapCancel: () => _ctrl.reverse(),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFFFFF), Color(0xFFF8FCFF)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: Colors.white, width: 2.5),
             boxShadow: [
@@ -661,6 +669,17 @@ class _ModuleTileState extends State<_ModuleTile>
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      left: 10,
+                      child: Text(
+                        '✨',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -772,7 +791,7 @@ class _BigNavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color,
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(22),
       elevation: 5,
       shadowColor: color.withValues(alpha: 0.35),
@@ -782,6 +801,11 @@ class _BigNavButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color, color.withValues(alpha: 0.78)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: Colors.white, width: 2.5),
           ),

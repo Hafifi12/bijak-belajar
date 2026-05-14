@@ -15,6 +15,9 @@ class AppTheme {
   static const lightBlue = Color(0xFFE9F8FF);
   static const white = Color(0xFFFFFFFF);
   static const ink = Color(0xFF05358F);
+  static const bubblePink = Color(0xFFFF86C8);
+  static const peach = Color(0xFFFFC58F);
+  static const mint = Color(0xFFB8FFE1);
 
   static const primary = deepBlue;
   static const secondary = appleRed;
@@ -34,7 +37,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: bg,
+      scaffoldBackgroundColor: const Color(0xFFF2FAFF),
       fontFamily: 'Roboto',
       appBarTheme: AppBarTheme(
         centerTitle: false,
@@ -51,10 +54,11 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: 8,
-        shadowColor: deepBlue.withValues(alpha: 0.16),
+        elevation: 10,
+        shadowColor: deepBlue.withValues(alpha: 0.14),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(28)),
+          borderRadius: BorderRadius.all(Radius.circular(30)),
+          side: BorderSide(color: Color(0xFFE5F0FF), width: 2),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
