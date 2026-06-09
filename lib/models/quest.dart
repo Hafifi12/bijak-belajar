@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'app_language.dart';
+
 enum QuestType {
   completeLesson,
   playGame,
@@ -18,8 +20,14 @@ class DailyQuest {
     required this.type,
     required this.title,
     required this.titleMalay,
+    this.titleMandarin,
+    this.titleTamil,
+    this.titleIndonesian,
     required this.description,
     required this.descriptionMalay,
+    this.descriptionMandarin,
+    this.descriptionTamil,
+    this.descriptionIndonesian,
     required this.emoji,
     required this.rewardStars,
     required this.requiredCount,
@@ -27,13 +35,50 @@ class DailyQuest {
 
   final String id;
   final QuestType type;
+
+  // ── Titles ──────────────────────────────────────────────────────
+  /// English title (also the fallback for any missing language).
   final String title;
   final String titleMalay;
+  final String? titleMandarin;
+  final String? titleTamil;
+  final String? titleIndonesian;
+
+  // ── Descriptions ────────────────────────────────────────────────
+  /// English description (also the fallback for any missing language).
   final String description;
   final String descriptionMalay;
+  final String? descriptionMandarin;
+  final String? descriptionTamil;
+  final String? descriptionIndonesian;
+
   final String emoji;
   final int rewardStars;
   final int requiredCount;
+
+  // ── Localization helpers ─────────────────────────────────────────
+
+  /// Returns the title for [lang], falling back to English if not provided.
+  String localizedTitle(AppLanguage lang) {
+    switch (lang) {
+      case AppLanguage.malay:       return titleMalay;
+      case AppLanguage.mandarin:    return titleMandarin ?? title;
+      case AppLanguage.tamil:       return titleTamil ?? title;
+      case AppLanguage.indonesian:  return titleIndonesian ?? title;
+      case AppLanguage.english:     return title;
+    }
+  }
+
+  /// Returns the description for [lang], falling back to English if not provided.
+  String localizedDescription(AppLanguage lang) {
+    switch (lang) {
+      case AppLanguage.malay:       return descriptionMalay;
+      case AppLanguage.mandarin:    return descriptionMandarin ?? description;
+      case AppLanguage.tamil:       return descriptionTamil ?? description;
+      case AppLanguage.indonesian:  return descriptionIndonesian ?? description;
+      case AppLanguage.english:     return description;
+    }
+  }
 }
 
 const List<DailyQuest> allQuests = [

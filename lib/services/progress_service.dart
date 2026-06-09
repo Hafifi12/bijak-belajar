@@ -33,6 +33,10 @@ class ProgressService extends ChangeNotifier {
     'math',
   ];
 
+  // ── Schema version ─────────────────────────────────────────────
+  static const _schemaVersionKey = 'schema_version';
+  static const _currentSchemaVersion = 1;
+
   // ── New keys ───────────────────────────────────────────────────
   static const _streakKey = 'current_streak';
   static const _longestStreakKey = 'longest_streak';
@@ -42,6 +46,16 @@ class ProgressService extends ChangeNotifier {
 
   // ── State ──────────────────────────────────────────────────────
   SharedPreferences? _preferences;
+
+  /// Safe accessor — throws [StateError] if [load()] has not been called yet.
+  SharedPreferences get _prefs {
+    assert(
+      _preferences != null,
+      'ProgressService.load() must be called before mutating state',
+    );
+    if (_preferences == null) throw StateError('ProgressService not initialised');
+    return _preferences!;
+  }
 
   int _stars = 0;
   int _completedChallenges = 0;
@@ -139,6 +153,13 @@ class ProgressService extends ChangeNotifier {
     _preferences = await SharedPreferences.getInstance();
     final prefs = _preferences!;
 
+    // ── Schema migration ───────────────────────────────────────
+    final storedVersion = prefs.getInt(_schemaVersionKey) ?? 0;
+    if (storedVersion < _currentSchemaVersion) {
+      await _migrate(prefs, from: storedVersion);
+      await prefs.setInt(_schemaVersionKey, _currentSchemaVersion);
+    }
+
     _stars = prefs.getInt(_starsKey) ?? 0;
     _completedChallenges = prefs.getInt(_completedKey) ?? 0;
     _badgeIds
@@ -174,18 +195,23 @@ class ProgressService extends ChangeNotifier {
     final savedQuestDate = prefs.getString(_questDateKey) ?? '';
     final savedProgress = prefs.getStringList(_questProgressKey);
     if (savedProgress != null && savedProgress.length == 3) {
-      _questProgress = savedProgress.map(int.parse).toList();
+      try {
+        _questProgress = savedProgress.map(int.parse).toList();
+      } catch (e) {
+        debugPrint('[ProgressService] Quest progress parse failed — resetting to [0,0,0]. Error: $e');
+        _questProgress = [0, 0, 0];
+      }
     }
     _questDate = savedQuestDate;
 
-    _checkStreak();
+    await _checkStreak();
     _checkAllBadges(); // Award any badges earned from previous sessions
     notifyListeners();
   }
 
   // ── markModuleLesson ─────────────────────────────────────────
   Future<void> markModuleLesson(String moduleId, String lessonLabel) async {
-    final prefs = _preferences ??= await SharedPreferences.getInstance();
+    final prefs = _prefs;
     final seenLessons = _moduleSeenLessons.putIfAbsent(moduleId, () => {});
     final isNewLesson = seenLessons.add(lessonLabel);
     if (isNewLesson) {
@@ -217,7 +243,7 @@ class ProgressService extends ChangeNotifier {
 
   // ── incrementColoringSessions ─────────────────────────────────
   Future<void> incrementColoringSessions() async {
-    final prefs = _preferences ??= await SharedPreferences.getInstance();
+    final prefs = _prefs;
     _coloringSessions++;
     await prefs.setInt(_coloringSessionsKey, _coloringSessions);
     _updateQuestProgress(QuestType.doColoring);
@@ -310,7 +336,7 @@ class ProgressService extends ChangeNotifier {
     }
 
     await _save();
-    final prefs = _preferences ??= await SharedPreferences.getInstance();
+    final prefs = _prefs;
     for (final key in _trackedModules) {
       await prefs.remove('$_modulePrefix$key');
       await prefs.remove('$_moduleSeenPrefix$key');
@@ -329,7 +355,18 @@ class ProgressService extends ChangeNotifier {
 
   // ── Private helpers ───────────────────────────────────────────
 
-  void _checkStreak() {
+  /// Runs all pending schema migrations in order.
+  ///
+  /// To add a future migration:
+  ///   if (from < 2) { /* v1→v2 changes */ }
+  Future<void> _migrate(SharedPreferences prefs, {required int from}) async {
+    // v0 → v1: No structural key changes needed. The schema version key itself
+    // is now written by load() after this method returns.
+    // TODO: Add further migrations below as the schema evolves.
+    debugPrint('[ProgressService] Migrated schema v$from → v$_currentSchemaVersion');
+  }
+
+  Future<void> _checkStreak() async {
     final today = _todayString();
     if (_lastLoginDate == today) return;
 
@@ -345,9 +382,9 @@ class ProgressService extends ChangeNotifier {
 
     final prefs = _preferences;
     if (prefs != null) {
-      prefs.setInt(_streakKey, _currentStreak);
-      prefs.setInt(_longestStreakKey, _longestStreak);
-      prefs.setString(_lastLoginDateKey, _lastLoginDate);
+      await prefs.setInt(_streakKey, _currentStreak);
+      await prefs.setInt(_longestStreakKey, _longestStreak);
+      await prefs.setString(_lastLoginDateKey, _lastLoginDate);
     }
   }
 
@@ -432,7 +469,7 @@ class ProgressService extends ChangeNotifier {
   }
 
   Future<void> _saveQuestProgress() async {
-    final prefs = _preferences ??= await SharedPreferences.getInstance();
+    final prefs = _prefs;
     await prefs.setString(_questDateKey, _questDate);
     await prefs.setStringList(
       _questProgressKey,
@@ -441,7 +478,7 @@ class ProgressService extends ChangeNotifier {
   }
 
   Future<void> _save() async {
-    final prefs = _preferences ??= await SharedPreferences.getInstance();
+    final prefs = _prefs;
     await prefs.setInt(_starsKey, _stars);
     await prefs.setInt(_completedKey, _completedChallenges);
     await prefs.setStringList(_badgesKey, _badgeIds.toList());

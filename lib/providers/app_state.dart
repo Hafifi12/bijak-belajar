@@ -74,3 +74,11 @@ final appStateProvider = Provider<AppState>((ref) {
     unlockedBadges: ps.badgeIds.toList(),
   );
 });
+
+/// Granular provider for voice-enabled state.
+/// Widgets that only need this flag should watch here instead of
+/// [progressServiceProvider], so they rebuild only when voice toggles —
+/// not on every XP gain, badge unlock, or streak update.
+final voiceEnabledProvider = Provider<bool>(
+  (ref) => ref.watch(progressServiceProvider).voiceEnabled,
+);

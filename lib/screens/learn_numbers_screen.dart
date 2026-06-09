@@ -528,28 +528,38 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
-        // Continues the emoji "flight" started from the module card on the
-        // Learning Path screen — same Hero tag, same emoji.
-        leading: Center(
-          child: Hero(
-            tag: 'module-emoji-${LearnNumbersScreen.routeName}',
-            child: const Text('🔢', style: TextStyle(fontSize: 26)),
-          ),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        // Hero continues the emoji "flight" from the Learning Path card.
+        // Moved from leading into the title row so the back button can occupy leading.
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              isMalay ? 'Nombor 1–100' : 'Numbers 1–100',
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            Hero(
+              tag: 'module-emoji-${LearnNumbersScreen.routeName}',
+              child: const Text('🔢', style: TextStyle(fontSize: 26)),
             ),
-            Text(
-              _levelLabel(_current + 1, isMalay),
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.white70,
-              ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isMalay ? 'Nombor 1–100' : 'Numbers 1–100',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                ),
+                Text(
+                  _levelLabel(_current + 1, isMalay),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

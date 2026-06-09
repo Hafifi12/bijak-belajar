@@ -108,17 +108,25 @@ class MathPracticeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        // Continues the emoji "flight" started from the module card on the
-        // Learning Path screen — same Hero tag, same emoji.
-        leading: Center(
-          child: Hero(
-            tag: 'module-emoji-${MathPracticeScreen.routeName}',
-            child: const Text('🧮', style: TextStyle(fontSize: 26)),
-          ),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
         ),
-        title: Text(
-          isMalay ? 'Latihan Matematik 🧮' : 'Maths Practice 🧮',
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+        // Hero continues the emoji "flight" from the Learning Path card.
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Hero(
+              tag: 'module-emoji-${MathPracticeScreen.routeName}',
+              child: const Text('🧮', style: TextStyle(fontSize: 26)),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isMalay ? 'Latihan Matematik' : 'Maths Practice',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
+          ],
         ),
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,

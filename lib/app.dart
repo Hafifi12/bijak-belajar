@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'utils/route_observer.dart';
 import 'screens/coloring_screen.dart';
 import 'screens/find_explorer_screen.dart';
 import 'screens/games_hub_screen.dart';

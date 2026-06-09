@@ -25,6 +25,11 @@ class ParentSettingsScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
+        ),
         title: Text(AppText.ui('parentSettings', language)),
       ),
       body: BijakScene(

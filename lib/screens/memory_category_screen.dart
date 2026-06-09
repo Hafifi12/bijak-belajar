@@ -20,7 +20,14 @@ class MemoryCategoryScreen extends ConsumerWidget {
     final language = ref.watch(progressServiceProvider).language;
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppText.ui('memoryGame', language))),
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
+        ),
+        title: Text(AppText.ui('memoryGame', language)),
+      ),
       body: SafeArea(
         child: ListView(
           padding: AppConstants.pagePadding,

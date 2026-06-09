@@ -264,6 +264,11 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

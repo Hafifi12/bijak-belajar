@@ -6,6 +6,7 @@ import '../models/quest.dart';
 import '../providers/app_state.dart';
 import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/route_observer.dart';
 import '../widgets/badge_unlock_overlay.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/mascot_widget.dart';
@@ -22,8 +23,6 @@ import 'level_up_screen.dart';
 import 'math_practice_screen.dart';
 import 'parent_gate_screen.dart';
 import 'progress_screen.dart';
-
-final RouteObserver<PageRoute> appRouteObserver = RouteObserver<PageRoute>();
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -155,7 +154,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                     color: const Color(0xFFE84393),
                   ),
                   const SizedBox(height: 10),
-                  _DailyQuestsCard(isMalay: isMalay, progress: progress),
+                  _DailyQuestsCard(language: progress.language, progress: progress),
 
                   const SizedBox(height: 22),
 
@@ -641,10 +640,10 @@ class _ContinueModule {
 // ─────────────────────────────────────────────────────────────────────────────
 class _DailyQuestsCard extends StatelessWidget {
   const _DailyQuestsCard({
-    required this.isMalay,
+    required this.language,
     required this.progress,
   });
-  final bool isMalay;
+  final AppLanguage language;
   final ProgressService progress;
 
   @override
@@ -705,7 +704,7 @@ class _DailyQuestsCard extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  isMalay ? q.titleMalay : q.title,
+                                  q.localizedTitle(language),
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w900,
@@ -744,7 +743,7 @@ class _DailyQuestsCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            isMalay ? q.descriptionMalay : q.description,
+                            q.localizedDescription(language),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -1141,7 +1140,9 @@ class _BottomBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final progress = ref.watch(progressServiceProvider);
+    // Watch only voiceEnabled — does not rebuild on XP/badge/streak changes.
+    final voiceEnabled = ref.watch(voiceEnabledProvider);
+    final progress = ref.read(progressServiceProvider);
     final items = [
       _NavItem(
         icon: Icons.home_rounded,
@@ -1163,12 +1164,12 @@ class _BottomBar extends ConsumerWidget {
         onTap: () => Navigator.of(context).pushNamed(ProgressScreen.routeName),
       ),
       _NavItem(
-        icon: progress.voiceEnabled
+        icon: voiceEnabled
             ? Icons.volume_up_rounded
             : Icons.volume_off_rounded,
         label: isMalay ? 'Suara' : 'Voice',
-        selected: progress.voiceEnabled,
-        onTap: () => progress.setVoiceEnabled(!progress.voiceEnabled),
+        selected: voiceEnabled,
+        onTap: () => progress.setVoiceEnabled(!voiceEnabled),
       ),
       _NavItem(
         icon: Icons.settings_rounded,

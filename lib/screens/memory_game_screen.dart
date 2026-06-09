@@ -64,6 +64,11 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
+        ),
         title: Text(AppText.categoryTitle(category, language)),
         actions: [
           IconButton(

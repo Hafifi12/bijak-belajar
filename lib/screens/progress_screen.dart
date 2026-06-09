@@ -59,6 +59,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
+        ),
         title: Text(
           isMalay ? '🏆 Kemajuan Saya' : '🏆 My Progress',
           style: const TextStyle(fontWeight: FontWeight.w900),

@@ -59,18 +59,8 @@ class AudioService {
     }
   }
 
-  /// Play a pre-recorded pronunciation asset or fall back to TTS.
-  Future<void> playOfflinePronunciation({
-    required String assetPath,
-    required bool enabled,
-    required String fallbackText,
-    required String locale,
-  }) async {
-    if (!enabled) return;
-    // Asset-based playback is deferred to a future release.
-    // For now, always speak via TTS — identical user experience.
-    await speakLocale(fallbackText, enabled: enabled, locale: locale);
-  }
+  // REMOVED: playOfflinePronunciation — replaced with speakLocale at all call sites.
+  // Use speakLocale(text, enabled: enabled, locale: locale) directly.
 
   /// Play a short celebration sound.
   Future<void> playCelebration({required bool enabled}) async {

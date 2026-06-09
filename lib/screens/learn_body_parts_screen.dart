@@ -186,7 +186,7 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
       photoAsset: 'assets/images/body_parts/knees.png',
     ),
     _BodyPart(
-      malay: 'Kaki (tapak)',
+      malay: 'Tapak Kaki',
       english: 'Feet',
       indonesian: 'Telapak kaki',
       mandarin: '脚 (Jiǎo)',
@@ -291,30 +291,39 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
-        // Continues the emoji "flight" started from the module card on the
-        // Learning Path screen — same Hero tag, same emoji.
-        leading: Center(
-          child: Hero(
-            tag: 'module-emoji-${LearnBodyPartsScreen.routeName}',
-            child: const Text('🧍', style: TextStyle(fontSize: 26)),
-          ),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        // Hero continues the emoji "flight" from the Learning Path card.
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              isMalay ? 'Anggota Badan 🧍' : 'Body Parts 🧍',
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            Hero(
+              tag: 'module-emoji-${LearnBodyPartsScreen.routeName}',
+              child: const Text('🧍', style: TextStyle(fontSize: 26)),
             ),
-            Text(
-              isMalay
-                  ? 'Bahagian ${_current + 1} dari ${_parts.length}'
-                  : 'Part ${_current + 1} of ${_parts.length}',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.white70,
-              ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isMalay ? 'Anggota Badan' : 'Body Parts',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                ),
+                Text(
+                  isMalay
+                      ? 'Bahagian ${_current + 1} dari ${_parts.length}'
+                      : 'Part ${_current + 1} of ${_parts.length}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -490,28 +499,39 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
 
                           const SizedBox(height: 6),
 
-                          // Mandarin + Tamil row
+                          // All other languages — 2×2 grid
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              _LangChip(
+                                flag: '🇲🇾',
+                                text: item.malay,
+                                color: color,
+                              ),
+                              const SizedBox(width: 8),
                               _LangChip(
                                 flag: '🇨🇳',
                                 text: item.mandarin,
                                 color: color,
                               ),
-                              const SizedBox(width: 8),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
                               _LangChip(
                                 flag: '🇮🇩',
                                 text: item.indonesian,
                                 color: color,
                               ),
+                              const SizedBox(width: 8),
+                              _LangChip(
+                                flag: '🇮🇳',
+                                text: item.tamil,
+                                color: color,
+                              ),
                             ],
-                          ),
-                          const SizedBox(height: 6),
-                          _LangChip(
-                            flag: '🇮🇳',
-                            text: item.tamil,
-                            color: color,
                           ),
 
                           const SizedBox(height: 16),
@@ -1513,20 +1533,17 @@ class _BodyPronounceButtons extends ConsumerWidget {
   ];
 
   String _wordFor(String locale) {
-    switch (locale) {
-      case 'ms-MY':
-        return item.malay;
-      case 'en-US':
-        return item.english;
-      case 'zh-CN':
-        return item.mandarin;
-      case 'id-ID':
-        return item.indonesian;
-      case 'ta-IN':
-        return item.tamil;
-      default:
-        return item.english;
-    }
+    final raw = switch (locale) {
+      'ms-MY' => item.malay,
+      'en-US' => item.english,
+      'zh-CN' => item.mandarin,
+      'id-ID' => item.indonesian,
+      'ta-IN' => item.tamil,
+      _ => item.english,
+    };
+    // Strip parenthetical romanisation (e.g. "头 (Tóu)" → "头",
+    // "தலை (Talai)" → "தலை") so TTS engines only receive the target script.
+    return raw.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
   }
 
   @override

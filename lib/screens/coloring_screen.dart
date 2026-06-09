@@ -41,10 +41,10 @@ class ColoringScreen extends ConsumerWidget {
         _Subject('🐔', 'Ayam', 'Chicken'),
         _Subject('🦋', 'Kupu-kupu', 'Butterfly'),
         _Subject('🐸', 'Katak', 'Frog'),
-        _Subject('🐙', 'Sotong', 'Octopus'),
+        _Subject('🐙', 'Sotong Kurita', 'Octopus'),
         _Subject('🦄', 'Kuda Bertanduk', 'Unicorn'),
         _Subject('🐢', 'Kura-kura', 'Turtle'),
-        _Subject('🦊', 'Musang', 'Fox'),
+        _Subject('🦊', 'Rubah', 'Fox'),
       ],
     ),
     _ColoringCategory(
@@ -75,8 +75,8 @@ class ColoringScreen extends ConsumerWidget {
       subjects: [
         _Subject('🔴', 'Bulatan', 'Circle'),
         _Subject('🟦', 'Segi Empat', 'Square'),
-        _Subject('🔺', 'Segitiga', 'Triangle'),
-        _Subject('⬛', 'Empat Segi', 'Rectangle'),
+        _Subject('🔺', 'Segi Tiga', 'Triangle'),
+        _Subject('⬛', 'Segi Empat Tepat', 'Rectangle'),
         _Subject('⭐', 'Bintang', 'Star'),
         _Subject('❤️', 'Hati', 'Heart'),
         _Subject('💎', 'Berlian', 'Diamond'),
@@ -116,17 +116,25 @@ class ColoringScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFFF9F43),
         foregroundColor: Colors.white,
-        // Continues the emoji "flight" started from the module card on the
-        // Learning Path screen — same Hero tag, same emoji.
-        leading: Center(
-          child: Hero(
-            tag: 'module-emoji-${ColoringScreen.routeName}',
-            child: const Text('🎨', style: TextStyle(fontSize: 26)),
-          ),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
         ),
-        title: Text(
-          isMalay ? 'Jom Mewarna! 🎨' : 'Let\'s Colour! 🎨',
-          style: const TextStyle(fontWeight: FontWeight.w900),
+        // Hero continues the emoji "flight" from the Learning Path card.
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Hero(
+              tag: 'module-emoji-${ColoringScreen.routeName}',
+              child: const Text('🎨', style: TextStyle(fontSize: 26)),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isMalay ? 'Jom Mewarna!' : "Let's Colour!",
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ],
         ),
       ),
       body: CustomScrollView(
@@ -149,10 +157,7 @@ class ColoringScreen extends ConsumerWidget {
                     isMalay: isMalay,
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => _SubjectPickerScreen(
-                          category: cat,
-                          isMalay: isMalay,
-                        ),
+                        builder: (_) => _SubjectPickerScreen(category: cat),
                       ));
                     },
                   );
@@ -327,15 +332,14 @@ class _CategoryCard extends ConsumerWidget {
 // Subject picker — choose WHAT to colour
 // ─────────────────────────────────────────────────────────────────────────────
 class _SubjectPickerScreen extends ConsumerWidget {
-  const _SubjectPickerScreen({
-    required this.category,
-    required this.isMalay,
-  });
+  const _SubjectPickerScreen({required this.category});
   final _ColoringCategory category;
-  final bool isMalay;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final language = ref.watch(progressServiceProvider).language;
+    final isMalay = language == AppLanguage.malay;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8E7),
       appBar: AppBar(
@@ -366,7 +370,6 @@ class _SubjectPickerScreen extends ConsumerWidget {
                 builder: (_) => ColoringCanvasScreen(
                   subject: sub,
                   color: category.color,
-                  isMalay: isMalay,
                 ),
               ));
             },
@@ -444,11 +447,9 @@ class ColoringCanvasScreen extends ConsumerStatefulWidget {
     super.key,
     required this.subject,
     required this.color,
-    required this.isMalay,
   });
-  final dynamic subject; // changed to dynamic as _Subject is private
+  final _Subject subject;
   final Color color;
-  final bool isMalay;
 
   @override
   ConsumerState<ColoringCanvasScreen> createState() => _ColoringCanvasScreenState();
@@ -461,6 +462,14 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
   double _strokeWidth = 18.0;
   bool _isEraser = false;
   bool _saved = false;
+
+  // Zoom + pan state
+  double _scale = 1.0;
+  Offset _offset = Offset.zero;
+  Offset _startFocalPoint = Offset.zero;
+  Offset _startOffset = Offset.zero;
+  double _startScale = 1.0;
+  bool _isDrawGesture = false;
 
   late AnimationController _starController;
   late Animation<double> _starAnim;
@@ -496,26 +505,46 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     super.dispose();
   }
 
-  void _onPanUpdate(DragUpdateDetails details, BoxConstraints constraints) {
-    setState(() {
-      final box = context.findRenderObject() as RenderBox;
-      final local = box.globalToLocal(details.globalPosition);
-      if (local.dx >= 0 &&
-          local.dy >= 0 &&
-          local.dx <= constraints.maxWidth &&
-          local.dy <= constraints.maxHeight) {
-        _points.add(_DrawPoint(
-          offset: local,
-          color: _isEraser ? Colors.white : _selectedColor,
-          strokeWidth: _isEraser ? _strokeWidth * 2 : _strokeWidth,
-        ));
-      }
-    });
+  void _onScaleStart(ScaleStartDetails details) {
+    _startFocalPoint = details.localFocalPoint;
+    _startOffset = _offset;
+    _startScale = _scale;
+    _isDrawGesture = details.pointerCount == 1;
   }
 
-  void _onPanEnd(DragEndDetails _) {
-    setState(() => _points.add(null)); // separator
+  void _onScaleUpdate(ScaleUpdateDetails details) {
+    if (details.pointerCount >= 2) {
+      // Two-finger pinch: zoom + pan around focal point.
+      _isDrawGesture = false;
+      final newScale = (_startScale * details.scale).clamp(0.8, 5.0);
+      final sceneF = (_startFocalPoint - _startOffset) / _startScale;
+      setState(() {
+        _scale = newScale;
+        _offset = details.localFocalPoint - sceneF * newScale;
+      });
+    } else if (_isDrawGesture) {
+      // Single finger: convert screen → canvas coordinates, then draw.
+      final p = (details.localFocalPoint - _offset) / _scale;
+      setState(() {
+        _points.add(_DrawPoint(
+          offset: p,
+          color: _isEraser ? Colors.white : _selectedColor,
+          // Keep visual stroke width constant regardless of zoom level.
+          strokeWidth: (_isEraser ? _strokeWidth * 2 : _strokeWidth) / _scale,
+        ));
+      });
+    }
   }
+
+  void _onScaleEnd(ScaleEndDetails details) {
+    if (_isDrawGesture) setState(() => _points.add(null));
+    _isDrawGesture = false;
+  }
+
+  void _resetZoom() => setState(() {
+        _scale = 1.0;
+        _offset = Offset.zero;
+      });
 
   void _clear() {
     setState(() {
@@ -526,25 +555,26 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
 
   void _celebrate() async {
     final ps = ref.read(progressServiceProvider);
+    final isMalay = ps.language == AppLanguage.malay;
     await ps.incrementColoringSessions();
     await ps.addStars(1);
+    if (!mounted) return;
     setState(() => _saved = true);
     _starController.forward(from: 0);
-    if (mounted) {
-      showDialog(
-        context: context,
-        builder: (_) => _CelebrationDialog(
-          isMalay: widget.isMalay,
-          subjectEmoji: widget.subject.emoji,
-          label: widget.isMalay ? widget.subject.labelMs : widget.subject.labelEn,
-        ),
-      );
-    }
+    showDialog(
+      context: context,
+      builder: (_) => _CelebrationDialog(
+        isMalay: isMalay,
+        subjectEmoji: widget.subject.emoji,
+        label: isMalay ? widget.subject.labelMs : widget.subject.labelEn,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isMalay = widget.isMalay;
+    final language = ref.watch(progressServiceProvider).language;
+    final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFFBF0),
@@ -570,106 +600,119 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
       ),
       body: Column(
         children: [
-          // ── Subject label ──
-          Container(
-            color: widget.color.withValues(alpha: 0.1),
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: Row(
+          // ── Canvas ──
+          Expanded(
+            child: Stack(
               children: [
-                Text(widget.subject.emoji, style: const TextStyle(fontSize: 28)),
-                const SizedBox(width: 10),
-                Text(
-                  isMalay ? widget.subject.labelMs : widget.subject.labelEn,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: widget.color,
+                // Zoomable drawing surface.
+                // GestureDetector is OUTSIDE the transform so localFocalPoint
+                // is in screen space; we convert to canvas space manually.
+                GestureDetector(
+                  onScaleStart: _onScaleStart,
+                  onScaleUpdate: _onScaleUpdate,
+                  onScaleEnd: _onScaleEnd,
+                  onDoubleTap: _resetZoom,
+                  child: ClipRect(
+                    child: Transform(
+                      transform: Matrix4.identity()
+                        ..translate(_offset.dx, _offset.dy)
+                        ..scale(_scale),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Layer 1 — white canvas background
+                          Container(color: Colors.white),
+
+                          // Layer 2 — persistent guide illustration.
+                          Center(
+                            child: Opacity(
+                              opacity: 0.18,
+                              child: Text(
+                                widget.subject.emoji,
+                                style: const TextStyle(fontSize: 240),
+                              ),
+                            ),
+                          ),
+
+                          // Layer 3 — drawn strokes
+                          CustomPaint(
+                            painter: _DrawingPainter(_points),
+                            child: const SizedBox.expand(),
+                          ),
+
+                          // Layer 4 — "draw here" hint; vanishes after first stroke
+                          if (_points.isEmpty)
+                            Align(
+                              alignment: const Alignment(0, 0.65),
+                              child: Text(
+                                isMalay ? '👆 Lukis di sini!' : '👆 Draw here!',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFFBBBBBB),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  isMalay ? '🖌 Lukis & Warna!' : '🖌 Draw & Colour!',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF7A7A9A),
+
+                // Zoom badge — tap to reset. Lives in screen space so it
+                // doesn't scale with the canvas.
+                if (_scale > 1.05)
+                  Positioned(
+                    right: 12,
+                    top: 12,
+                    child: GestureDetector(
+                      onTap: _resetZoom,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.zoom_out_map_rounded,
+                                color: Colors.white, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${_scale.toStringAsFixed(1)}×',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+
+                // Celebration star burst — screen space, not transformed.
+                if (_saved)
+                  IgnorePointer(
+                    child: AnimatedBuilder(
+                      animation: _starAnim,
+                      builder: (_, __) => _StarBurst(
+                        progress: _starAnim.value,
+                        color: widget.color,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
 
-          // ── Canvas ──
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return GestureDetector(
-                  onPanUpdate: (d) => _onPanUpdate(d, constraints),
-                  onPanEnd: _onPanEnd,
-                  child: Stack(
-                    children: [
-                      // White drawing area
-                      Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        color: Colors.white,
-                        child: CustomPaint(
-                          painter: _DrawingPainter(_points),
-                        ),
-                      ),
-                      // Faint guide illustration (subject emoji centred)
-                      if (_points.isEmpty)
-                        Center(
-                          child: Opacity(
-                            opacity: 0.08,
-                            child: Text(
-                              widget.subject.emoji,
-                              style: const TextStyle(fontSize: 180),
-                            ),
-                          ),
-                        ),
-                      // Instruction overlay
-                      if (_points.isEmpty)
-                        Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(height: 200),
-                              Text(
-                                isMalay
-                                    ? '👆 Lukis di sini!'
-                                    : '👆 Draw here!',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFFCCCCCC),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      // Star burst on save
-                      if (_saved)
-                        IgnorePointer(
-                          child: AnimatedBuilder(
-                            animation: _starAnim,
-                            builder: (_, __) => _StarBurst(
-                              progress: _starAnim.value,
-                              color: widget.color,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // ── Stroke size ──
+          // ── Stroke size + eraser ──
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
               children: [
                 Text(
@@ -691,7 +734,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                   ),
                 ),
                 _ToolButton(
-                  icon: _isEraser ? Icons.brush_rounded : Icons.auto_fix_normal_rounded,
+                  icon: _isEraser
+                      ? Icons.brush_rounded
+                      : Icons.auto_fix_normal_rounded,
                   label: _isEraser
                       ? (isMalay ? 'Berus' : 'Brush')
                       : (isMalay ? 'Pemadam' : 'Eraser'),
@@ -702,9 +747,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
             ),
           ),
 
-          // ── Colour palette ──
+          // ── Colour palette — bigger swatches for small fingers ──
           Container(
-            height: 70,
+            height: 86,
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
@@ -717,9 +762,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
             ),
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               itemCount: _palette.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, i) {
                 final c = _palette[i];
                 final isSelected = !_isEraser && _selectedColor == c;
@@ -730,20 +775,20 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                   }),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    width: isSelected ? 50 : 42,
-                    height: isSelected ? 50 : 42,
+                    width: isSelected ? 66 : 58,
+                    height: isSelected ? 66 : 58,
                     decoration: BoxDecoration(
                       color: c,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: isSelected ? Colors.black87 : Colors.black12,
-                        width: isSelected ? 3 : 1,
+                        width: isSelected ? 4 : 1.5,
                       ),
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: c.withValues(alpha: 0.5),
-                                blurRadius: 10,
+                                color: c.withValues(alpha: 0.55),
+                                blurRadius: 12,
                               )
                             ]
                           : [],

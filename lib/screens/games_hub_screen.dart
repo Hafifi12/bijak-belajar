@@ -25,6 +25,11 @@ class GamesHubScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF7C4DFF),
         foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: 'Back',
+        ),
         title: Text(
           isMalay ? 'Permainan & Aktiviti 🎮' : 'Games & Activities 🎮',
           style: const TextStyle(fontWeight: FontWeight.w900),
