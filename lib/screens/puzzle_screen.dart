@@ -1,23 +1,23 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
 import '../models/challenge.dart';
-import '../services/audio_service.dart';
-import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
 
-class PuzzleScreen extends StatefulWidget {
+class PuzzleScreen extends ConsumerStatefulWidget {
   const PuzzleScreen({super.key});
 
   static const routeName = '/puzzle';
 
   @override
-  State<PuzzleScreen> createState() => _PuzzleScreenState();
+  ConsumerState<PuzzleScreen> createState() => _PuzzleScreenState();
 }
 
 class _Puzzle {
@@ -156,7 +156,7 @@ const _puzzles = <_Puzzle>[
   ),
 ];
 
-class _PuzzleScreenState extends State<PuzzleScreen> {
+class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
   int _puzzleIndex = 0;
   int _gridSize = 3;
   late List<int?> _tiles;
@@ -232,12 +232,12 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   }
 
   Future<void> _completePuzzle() async {
-    final progressService = context.read<ProgressService>();
+    final progressService = ref.read(progressServiceProvider);
     await progressService.completeChallenge(ChallengeMode.puzzle);
     if (!mounted) {
       return;
     }
-    await context.read<AudioService>().playCelebration(
+    await ref.read(audioServiceProvider).playCelebration(
       enabled: progressService.soundEnabled,
     );
   }
@@ -254,7 +254,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+    final language = ref.watch(progressServiceProvider).language;
     final isMalay = language == AppLanguage.malay;
     final puzzle = _puzzles[_puzzleIndex];
     const color = AppTheme.skyBlue;
@@ -476,7 +476,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 }
 
 // ── Board ─────────────────────────────────────────────────────────────────────
-class _PuzzleBoard extends StatelessWidget {
+class _PuzzleBoard extends ConsumerWidget {
   const _PuzzleBoard({
     required this.puzzle,
     required this.gridSize,
@@ -492,7 +492,7 @@ class _PuzzleBoard extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: puzzle.bgColor.withValues(alpha: 0.18),
@@ -561,7 +561,7 @@ class _PuzzleBoard extends StatelessWidget {
 }
 
 // ── Tile: shows cropped region of the emoji ───────────────────────────────────
-class _EmojiTile extends StatelessWidget {
+class _EmojiTile extends ConsumerWidget {
   const _EmojiTile({
     required this.emoji,
     required this.tileIndex,
@@ -575,7 +575,7 @@ class _EmojiTile extends StatelessWidget {
   final double tileSize;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final fullSize = tileSize * gridSize;
     final col = tileIndex % gridSize;
     final row = tileIndex ~/ gridSize;
@@ -602,7 +602,7 @@ class _EmojiTile extends StatelessWidget {
 }
 
 // ── Solved overlay ────────────────────────────────────────────────────────────
-class _SolvedOverlay extends StatelessWidget {
+class _SolvedOverlay extends ConsumerWidget {
   const _SolvedOverlay({
     required this.puzzle,
     required this.moves,
@@ -620,7 +620,7 @@ class _SolvedOverlay extends StatelessWidget {
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.97),

@@ -1,7 +1,9 @@
 import '../models/app_language.dart';
 import '../models/challenge.dart';
 import '../models/explorer_item.dart';
+import '../models/level.dart';
 import '../models/memory_item.dart';
+import '../models/quest.dart';
 import '../models/train_mode.dart';
 
 class AppText {
@@ -12,6 +14,34 @@ class AppText {
         _uiText[key]?[_fallbackLanguage(language)] ??
         _uiText[key]?[AppLanguage.english] ??
         key;
+  }
+
+  /// "{n} stars to Level {l}" localized with substitution.
+  static String starsToLevel(int stars, int nextLevel, AppLanguage language) {
+    return ui('starsToLevel', language)
+        .replaceAll('{n}', '$stars')
+        .replaceAll('{l}', '$nextLevel');
+  }
+
+  /// Localized level title (falls back to the level's English title).
+  static String levelTitle(AppLevel level, AppLanguage language) {
+    return _levelTitles[level.level]?[language] ??
+        _levelTitles[level.level]?[_fallbackLanguage(language)] ??
+        level.title;
+  }
+
+  /// Localized quest title (falls back to the quest's English title).
+  static String questTitle(DailyQuest quest, AppLanguage language) {
+    return _questTitles[quest.id]?[language] ??
+        _questTitles[quest.id]?[_fallbackLanguage(language)] ??
+        quest.title;
+  }
+
+  /// Localized quest description (falls back to the quest's English text).
+  static String questDescription(DailyQuest quest, AppLanguage language) {
+    return _questDescriptions[quest.id]?[language] ??
+        _questDescriptions[quest.id]?[_fallbackLanguage(language)] ??
+        quest.description;
   }
 
   static String challengeTitle(Challenge challenge, AppLanguage language) {
@@ -462,6 +492,183 @@ const _uiText = <String, Map<AppLanguage, String>>{
     AppLanguage.malay: 'Sebut arahan dan perkataan',
     AppLanguage.mandarin: '朗读提示和词语',
     AppLanguage.tamil: 'வழிகாட்டல்களையும் சொற்களையும் உச்சரி',
+    AppLanguage.indonesian: 'Ucapkan petunjuk dan kata',
+  },
+  // ── Home screen UI (added for full multi-language coverage) ───────────────
+  'todaysQuests': {
+    AppLanguage.english: "TODAY'S QUESTS",
+    AppLanguage.malay: 'MISI HARI INI',
+    AppLanguage.mandarin: '今日任务',
+    AppLanguage.tamil: 'இன்றைய பணிகள்',
+    AppLanguage.indonesian: 'MISI HARI INI',
+  },
+  'learn': {
+    AppLanguage.english: 'LEARN',
+    AppLanguage.malay: 'BELAJAR',
+    AppLanguage.mandarin: '学习',
+    AppLanguage.tamil: 'கற்க',
+    AppLanguage.indonesian: 'BELAJAR',
+  },
+  'games': {
+    AppLanguage.english: 'GAMES',
+    AppLanguage.malay: 'PERMAINAN',
+    AppLanguage.mandarin: '游戏',
+    AppLanguage.tamil: 'விளையாட்டு',
+    AppLanguage.indonesian: 'PERMAINAN',
+  },
+  'numbers': {
+    AppLanguage.english: 'Numbers',
+    AppLanguage.malay: 'Nombor',
+    AppLanguage.mandarin: '数字',
+    AppLanguage.tamil: 'எண்கள்',
+    AppLanguage.indonesian: 'Angka',
+  },
+  'letters': {
+    AppLanguage.english: 'Letters',
+    AppLanguage.malay: 'Huruf',
+    AppLanguage.mandarin: '字母',
+    AppLanguage.tamil: 'எழுத்துக்கள்',
+    AppLanguage.indonesian: 'Huruf',
+  },
+  'jawi': {
+    AppLanguage.english: 'Jawi',
+    AppLanguage.malay: 'Jawi',
+    AppLanguage.mandarin: '爪夷文',
+    AppLanguage.tamil: 'ஜாவி',
+    AppLanguage.indonesian: 'Jawi',
+  },
+  'letters28': {
+    AppLanguage.english: '28 Letters',
+    AppLanguage.malay: '28 Huruf',
+    AppLanguage.mandarin: '28 个字母',
+    AppLanguage.tamil: '28 எழுத்துக்கள்',
+    AppLanguage.indonesian: '28 Huruf',
+  },
+  'bodyParts': {
+    AppLanguage.english: 'Body Parts',
+    AppLanguage.malay: 'Anggota Badan',
+    AppLanguage.mandarin: '身体部位',
+    AppLanguage.tamil: 'உடல் உறுப்புகள்',
+    AppLanguage.indonesian: 'Anggota Tubuh',
+  },
+  'bodyPartsTwoLine': {
+    AppLanguage.english: 'Body\nParts',
+    AppLanguage.malay: 'Anggota\nBadan',
+    AppLanguage.mandarin: '身体\n部位',
+    AppLanguage.tamil: 'உடல்\nஉறுப்புகள்',
+    AppLanguage.indonesian: 'Anggota\nTubuh',
+  },
+  'parts14': {
+    AppLanguage.english: '14 Parts',
+    AppLanguage.malay: '14 Bahagian',
+    AppLanguage.mandarin: '14 个部位',
+    AppLanguage.tamil: '14 உறுப்புகள்',
+    AppLanguage.indonesian: '14 Bagian',
+  },
+  'math': {
+    AppLanguage.english: 'Math',
+    AppLanguage.malay: 'Matematik',
+    AppLanguage.mandarin: '数学',
+    AppLanguage.tamil: 'கணிதம்',
+    AppLanguage.indonesian: 'Matematika',
+  },
+  'addSubtract': {
+    AppLanguage.english: 'Add & Subtract',
+    AppLanguage.malay: 'Tambah & Tolak',
+    AppLanguage.mandarin: '加法和减法',
+    AppLanguage.tamil: 'கூட்டல் & கழித்தல்',
+    AppLanguage.indonesian: 'Tambah & Kurang',
+  },
+  'colour': {
+    AppLanguage.english: 'Colour',
+    AppLanguage.malay: 'Mewarna',
+    AppLanguage.mandarin: '涂色',
+    AppLanguage.tamil: 'வண்ணம்',
+    AppLanguage.indonesian: 'Mewarnai',
+  },
+  'drawPaint': {
+    AppLanguage.english: 'Draw & Paint',
+    AppLanguage.malay: 'Lukis & Warna',
+    AppLanguage.mandarin: '画画和涂色',
+    AppLanguage.tamil: 'வரைதல் & வண்ணம்',
+    AppLanguage.indonesian: 'Menggambar & Mewarnai',
+  },
+  'allGames': {
+    AppLanguage.english: 'All Games & Activities',
+    AppLanguage.malay: 'Semua Permainan',
+    AppLanguage.mandarin: '所有游戏与活动',
+    AppLanguage.tamil: 'அனைத்து விளையாட்டுகள் & செயல்கள்',
+    AppLanguage.indonesian: 'Semua Game & Aktivitas',
+  },
+  'allGamesSub': {
+    AppLanguage.english: 'Memory, Puzzle, Number Train & Letter Train',
+    AppLanguage.malay: 'Memori, Teka-Teki, Tren Nombor & Huruf',
+    AppLanguage.mandarin: '记忆、拼图、数字火车和字母火车',
+    AppLanguage.tamil: 'நினைவு, புதிர், எண் ரயில் & எழுத்து ரயில்',
+    AppLanguage.indonesian: 'Memori, Puzzle, Kereta Angka & Huruf',
+  },
+  'homeGreeting': {
+    AppLanguage.english: '👋 Hi, smart learner!',
+    AppLanguage.malay: '👋 Hai, anak bijak!',
+    AppLanguage.mandarin: '👋 你好，聪明的小朋友！',
+    AppLanguage.tamil: '👋 வணக்கம், புத்திசாலி குழந்தை!',
+    AppLanguage.indonesian: '👋 Hai, anak pintar!',
+  },
+  'levelWord': {
+    AppLanguage.english: 'Level',
+    AppLanguage.malay: 'Tahap',
+    AppLanguage.mandarin: '等级',
+    AppLanguage.tamil: 'நிலை',
+    AppLanguage.indonesian: 'Level',
+  },
+  'starsToLevel': {
+    AppLanguage.english: '{n} stars to Level {l}',
+    AppLanguage.malay: '{n} bintang ke Tahap {l}',
+    AppLanguage.mandarin: '还差 {n} 颗星到等级 {l}',
+    AppLanguage.tamil: 'நிலை {l}க்கு {n} நட்சத்திரங்கள்',
+    AppLanguage.indonesian: '{n} bintang ke Level {l}',
+  },
+  'continueLearning': {
+    AppLanguage.english: '▶ Continue Learning',
+    AppLanguage.malay: '▶ Teruskan Belajar',
+    AppLanguage.mandarin: '▶ 继续学习',
+    AppLanguage.tamil: '▶ தொடர்ந்து கற்க',
+    AppLanguage.indonesian: '▶ Lanjut Belajar',
+  },
+  'navHome': {
+    AppLanguage.english: 'Home',
+    AppLanguage.malay: 'Utama',
+    AppLanguage.mandarin: '首页',
+    AppLanguage.tamil: 'முகப்பு',
+    AppLanguage.indonesian: 'Beranda',
+  },
+  'navSyllabus': {
+    AppLanguage.english: 'Syllabus',
+    AppLanguage.malay: 'Sukatan',
+    AppLanguage.mandarin: '课程',
+    AppLanguage.tamil: 'பாடத்திட்டம்',
+    AppLanguage.indonesian: 'Silabus',
+  },
+  'navProgress': {
+    AppLanguage.english: 'Progress',
+    AppLanguage.malay: 'Kemajuan',
+    AppLanguage.mandarin: '进度',
+    AppLanguage.tamil: 'முன்னேற்றம்',
+    AppLanguage.indonesian: 'Kemajuan',
+  },
+  'navVoice': {
+    AppLanguage.english: 'Voice',
+    AppLanguage.malay: 'Suara',
+    AppLanguage.mandarin: '语音',
+    AppLanguage.tamil: 'குரல்',
+    AppLanguage.indonesian: 'Suara',
+  },
+  'navSettings': {
+    AppLanguage.english: 'Settings',
+    AppLanguage.malay: 'Tetapan',
+    AppLanguage.mandarin: '设置',
+    AppLanguage.tamil: 'அமைப்புகள்',
+    AppLanguage.indonesian: 'Pengaturan',
   },
 };
 
@@ -1383,5 +1590,187 @@ const _labels = <String, Map<AppLanguage, String>>{
     AppLanguage.malay: 'Serangga',
     AppLanguage.mandarin: '虫子',
     AppLanguage.tamil: 'பூச்சி',
+  },
+};
+
+// ── Level titles (EN/MS from models/level.dart; ZH/TA/ID added here) ─────────
+const _levelTitles = <int, Map<AppLanguage, String>>{
+  1: {
+    AppLanguage.english: 'Tiny Learner', AppLanguage.malay: 'Pelajar Cilik',
+    AppLanguage.mandarin: '小小学习者', AppLanguage.tamil: 'சிறு கற்பவர்',
+    AppLanguage.indonesian: 'Pelajar Cilik',
+  },
+  2: {
+    AppLanguage.english: 'Little Explorer', AppLanguage.malay: 'Penjelajah Kecil',
+    AppLanguage.mandarin: '小探险家', AppLanguage.tamil: 'சிறிய ஆய்வாளர்',
+    AppLanguage.indonesian: 'Penjelajah Kecil',
+  },
+  3: {
+    AppLanguage.english: 'Star Finder', AppLanguage.malay: 'Pencari Bintang',
+    AppLanguage.mandarin: '寻星者', AppLanguage.tamil: 'நட்சத்திர தேடுபவர்',
+    AppLanguage.indonesian: 'Pencari Bintang',
+  },
+  4: {
+    AppLanguage.english: 'Smart Scholar', AppLanguage.malay: 'Sarjana Bijak',
+    AppLanguage.mandarin: '聪明学者', AppLanguage.tamil: 'புத்திசாலி அறிஞர்',
+    AppLanguage.indonesian: 'Cendekiawan Pintar',
+  },
+  5: {
+    AppLanguage.english: 'Bright Champion', AppLanguage.malay: 'Juara Cerah',
+    AppLanguage.mandarin: '闪亮冠军', AppLanguage.tamil: 'பிரகாச வீரர்',
+    AppLanguage.indonesian: 'Juara Cerdas',
+  },
+  6: {
+    AppLanguage.english: 'Wise Wizard', AppLanguage.malay: 'Ahli Sihir Bijak',
+    AppLanguage.mandarin: '智慧巫师', AppLanguage.tamil: 'ஞான மந்திரவாதி',
+    AppLanguage.indonesian: 'Penyihir Bijak',
+  },
+  7: {
+    AppLanguage.english: 'Super Star', AppLanguage.malay: 'Bintang Super',
+    AppLanguage.mandarin: '超级明星', AppLanguage.tamil: 'சூப்பர் நட்சத்திரம்',
+    AppLanguage.indonesian: 'Bintang Super',
+  },
+  8: {
+    AppLanguage.english: 'Knowledge Hero', AppLanguage.malay: 'Wira Ilmu',
+    AppLanguage.mandarin: '知识英雄', AppLanguage.tamil: 'அறிவு வீரர்',
+    AppLanguage.indonesian: 'Pahlawan Ilmu',
+  },
+  9: {
+    AppLanguage.english: 'Learning Legend', AppLanguage.malay: 'Legenda Belajar',
+    AppLanguage.mandarin: '学习传奇', AppLanguage.tamil: 'கற்றல் புராணம்',
+    AppLanguage.indonesian: 'Legenda Belajar',
+  },
+  10: {
+    AppLanguage.english: 'Master Explorer', AppLanguage.malay: 'Penjelajah Master',
+    AppLanguage.mandarin: '探险大师', AppLanguage.tamil: 'மாஸ்டர் ஆய்வாளர்',
+    AppLanguage.indonesian: 'Penjelajah Master',
+  },
+};
+
+// ── Daily-quest titles (keyed by quest id) ──────────────────────────────────
+const _questTitles = <String, Map<AppLanguage, String>>{
+  'q_lesson_2': {
+    AppLanguage.english: 'Lesson Champ', AppLanguage.malay: 'Juara Pelajaran',
+    AppLanguage.mandarin: '课程冠军', AppLanguage.tamil: 'பாட வீரர்',
+    AppLanguage.indonesian: 'Juara Pelajaran',
+  },
+  'q_game_1': {
+    AppLanguage.english: 'Game Time!', AppLanguage.malay: 'Masa Bermain!',
+    AppLanguage.mandarin: '游戏时间！', AppLanguage.tamil: 'விளையாட்டு நேரம்!',
+    AppLanguage.indonesian: 'Waktu Bermain!',
+  },
+  'q_numbers_3': {
+    AppLanguage.english: 'Number Explorer', AppLanguage.malay: 'Penjelajah Nombor',
+    AppLanguage.mandarin: '数字探险家', AppLanguage.tamil: 'எண் ஆய்வாளர்',
+    AppLanguage.indonesian: 'Penjelajah Angka',
+  },
+  'q_letters_3': {
+    AppLanguage.english: 'ABC Hero', AppLanguage.malay: 'Wira ABC',
+    AppLanguage.mandarin: '字母英雄', AppLanguage.tamil: 'ABC வீரர்',
+    AppLanguage.indonesian: 'Pahlawan ABC',
+  },
+  'q_math_3': {
+    AppLanguage.english: 'Math Whiz', AppLanguage.malay: 'Ahli Matematik',
+    AppLanguage.mandarin: '数学高手', AppLanguage.tamil: 'கணித மேதை',
+    AppLanguage.indonesian: 'Jago Matematika',
+  },
+  'q_jawi_2': {
+    AppLanguage.english: 'Jawi Scholar', AppLanguage.malay: 'Sarjana Jawi',
+    AppLanguage.mandarin: '爪夷文学者', AppLanguage.tamil: 'ஜாவி அறிஞர்',
+    AppLanguage.indonesian: 'Cendekiawan Jawi',
+  },
+  'q_memory_1': {
+    AppLanguage.english: 'Memory Master', AppLanguage.malay: 'Master Ingatan',
+    AppLanguage.mandarin: '记忆大师', AppLanguage.tamil: 'நினைவு மாஸ்டர்',
+    AppLanguage.indonesian: 'Master Ingatan',
+  },
+  'q_body_2': {
+    AppLanguage.english: 'Body Explorer', AppLanguage.malay: 'Penjelajah Badan',
+    AppLanguage.mandarin: '身体探险家', AppLanguage.tamil: 'உடல் ஆய்வாளர்',
+    AppLanguage.indonesian: 'Penjelajah Tubuh',
+  },
+  'q_color_1': {
+    AppLanguage.english: 'Young Artist', AppLanguage.malay: 'Artis Muda',
+    AppLanguage.mandarin: '小小艺术家', AppLanguage.tamil: 'இளம் கலைஞர்',
+    AppLanguage.indonesian: 'Seniman Muda',
+  },
+  'q_lesson_5': {
+    AppLanguage.english: 'Super Student', AppLanguage.malay: 'Pelajar Super',
+    AppLanguage.mandarin: '超级学生', AppLanguage.tamil: 'சூப்பர் மாணவர்',
+    AppLanguage.indonesian: 'Pelajar Super',
+  },
+};
+
+// ── Daily-quest descriptions (keyed by quest id) ────────────────────────────
+const _questDescriptions = <String, Map<AppLanguage, String>>{
+  'q_lesson_2': {
+    AppLanguage.english: 'Complete 2 lessons in any module',
+    AppLanguage.malay: 'Siapkan 2 pelajaran dalam mana-mana modul',
+    AppLanguage.mandarin: '完成任意模块的 2 节课',
+    AppLanguage.tamil: 'எந்த தொகுதியிலும் 2 பாடங்களை முடிக்கவும்',
+    AppLanguage.indonesian: 'Selesaikan 2 pelajaran di modul mana pun',
+  },
+  'q_game_1': {
+    AppLanguage.english: 'Complete 1 game',
+    AppLanguage.malay: 'Selesaikan 1 permainan',
+    AppLanguage.mandarin: '完成 1 个游戏',
+    AppLanguage.tamil: '1 விளையாட்டை முடிக்கவும்',
+    AppLanguage.indonesian: 'Selesaikan 1 permainan',
+  },
+  'q_numbers_3': {
+    AppLanguage.english: 'Learn 3 new numbers',
+    AppLanguage.malay: 'Belajar 3 nombor baru',
+    AppLanguage.mandarin: '学习 3 个新数字',
+    AppLanguage.tamil: '3 புதிய எண்களைக் கற்கவும்',
+    AppLanguage.indonesian: 'Pelajari 3 angka baru',
+  },
+  'q_letters_3': {
+    AppLanguage.english: 'Learn 3 new letters',
+    AppLanguage.malay: 'Belajar 3 huruf baru',
+    AppLanguage.mandarin: '学习 3 个新字母',
+    AppLanguage.tamil: '3 புதிய எழுத்துக்களைக் கற்கவும்',
+    AppLanguage.indonesian: 'Pelajari 3 huruf baru',
+  },
+  'q_math_3': {
+    AppLanguage.english: 'Solve 3 math problems',
+    AppLanguage.malay: 'Selesaikan 3 soalan matematik',
+    AppLanguage.mandarin: '解答 3 道数学题',
+    AppLanguage.tamil: '3 கணிதக் கணக்குகளைத் தீர்க்கவும்',
+    AppLanguage.indonesian: 'Selesaikan 3 soal matematika',
+  },
+  'q_jawi_2': {
+    AppLanguage.english: 'Learn 2 Jawi letters',
+    AppLanguage.malay: 'Belajar 2 huruf Jawi',
+    AppLanguage.mandarin: '学习 2 个爪夷字母',
+    AppLanguage.tamil: '2 ஜாவி எழுத்துக்களைக் கற்கவும்',
+    AppLanguage.indonesian: 'Pelajari 2 huruf Jawi',
+  },
+  'q_memory_1': {
+    AppLanguage.english: 'Play Memory Game once',
+    AppLanguage.malay: 'Main Permainan Memori sekali',
+    AppLanguage.mandarin: '玩一次记忆游戏',
+    AppLanguage.tamil: 'நினைவு விளையாட்டை ஒருமுறை விளையாடவும்',
+    AppLanguage.indonesian: 'Main Game Memori sekali',
+  },
+  'q_body_2': {
+    AppLanguage.english: 'Learn 2 body parts',
+    AppLanguage.malay: 'Belajar 2 anggota badan',
+    AppLanguage.mandarin: '学习 2 个身体部位',
+    AppLanguage.tamil: '2 உடல் உறுப்புகளைக் கற்கவும்',
+    AppLanguage.indonesian: 'Pelajari 2 anggota tubuh',
+  },
+  'q_color_1': {
+    AppLanguage.english: 'Do 1 coloring activity',
+    AppLanguage.malay: 'Lakukan 1 aktiviti mewarna',
+    AppLanguage.mandarin: '完成 1 个涂色活动',
+    AppLanguage.tamil: '1 வண்ணமிடும் செயலைச் செய்யவும்',
+    AppLanguage.indonesian: 'Lakukan 1 aktivitas mewarnai',
+  },
+  'q_lesson_5': {
+    AppLanguage.english: 'Complete 5 lessons today',
+    AppLanguage.malay: 'Siapkan 5 pelajaran hari ini',
+    AppLanguage.mandarin: '今天完成 5 节课',
+    AppLanguage.tamil: 'இன்று 5 பாடங்களை முடிக்கவும்',
+    AppLanguage.indonesian: 'Selesaikan 5 pelajaran hari ini',
   },
 };

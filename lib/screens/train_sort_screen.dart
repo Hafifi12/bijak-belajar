@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_language.dart';
 import '../models/train_mode.dart';
-import '../services/audio_service.dart';
-import '../services/progress_service.dart';
 import '../utils/app_text.dart';
 import '../widgets/star_counter.dart';
 import 'home_screen.dart';
@@ -16,16 +16,16 @@ class TrainSortArgs {
   final TrainMode mode;
 }
 
-class TrainSortScreen extends StatefulWidget {
+class TrainSortScreen extends ConsumerStatefulWidget {
   const TrainSortScreen({super.key});
 
   static const routeName = '/train-sort';
 
   @override
-  State<TrainSortScreen> createState() => _TrainSortScreenState();
+  ConsumerState<TrainSortScreen> createState() => _TrainSortScreenState();
 }
 
-class _TrainSortScreenState extends State<TrainSortScreen>
+class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _trainController;
   late TrainMode _mode;
@@ -90,7 +90,7 @@ class _TrainSortScreenState extends State<TrainSortScreen>
 
   @override
   Widget build(BuildContext context) {
-    final progress = context.watch<ProgressService>();
+    final progress = ref.watch(progressServiceProvider);
     final language = progress.language;
     final nextValue = _placed.length < _targetOrder.length
         ? _targetOrder[_placed.length]
@@ -130,6 +130,9 @@ class _TrainSortScreenState extends State<TrainSortScreen>
                 animation: _trainController,
                 placed: _placed,
                 targetOrder: _targetOrder,
+                // Lets a child drag a choice car straight onto the next
+                // empty slot instead of only tapping it.
+                onCarDropped: _choose,
               ),
               const SizedBox(height: 14),
               if (_wrongValue != null)
@@ -201,8 +204,8 @@ class _TrainSortScreenState extends State<TrainSortScreen>
       return;
     }
 
-    final progressService = context.read<ProgressService>();
-    final audioService = context.read<AudioService>();
+    final progressService = ref.read(progressServiceProvider);
+    final audioService = ref.read(audioServiceProvider);
     final expected = _targetOrder[_placed.length];
 
     if (value != expected) {
@@ -238,8 +241,8 @@ class _TrainSortScreenState extends State<TrainSortScreen>
   Future<void> _completeRound() async {
     if (_completed) return;
 
-    final progressService = context.read<ProgressService>();
-    final audioService = context.read<AudioService>();
+    final progressService = ref.read(progressServiceProvider);
+    final audioService = ref.read(audioServiceProvider);
 
     setState(() { _completed = true; });
 
@@ -320,7 +323,7 @@ class _TrainSortScreenState extends State<TrainSortScreen>
   }
 }
 
-class _TrainHeader extends StatelessWidget {
+class _TrainHeader extends ConsumerWidget {
   const _TrainHeader({
     required this.mode,
     required this.nextValue,
@@ -336,7 +339,7 @@ class _TrainHeader extends StatelessWidget {
   final int totalCount;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -379,21 +382,23 @@ class _TrainHeader extends StatelessWidget {
   }
 }
 
-class _TrainTrack extends StatelessWidget {
+class _TrainTrack extends ConsumerWidget {
   const _TrainTrack({
     required this.mode,
     required this.animation,
     required this.placed,
     required this.targetOrder,
+    required this.onCarDropped,
   });
 
   final TrainMode mode;
   final Animation<double> animation;
   final List<String> placed;
   final List<String> targetOrder;
+  final ValueChanged<String> onCarDropped;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       height: 104,
       decoration: BoxDecoration(
@@ -429,6 +434,10 @@ class _TrainTrack extends StatelessWidget {
                     _TrainCarSlot(
                       value: index < placed.length ? placed[index] : null,
                       color: mode.color,
+                      // Only the next empty slot accepts a dropped car —
+                      // dropping the right one completes that step.
+                      isNextSlot: index == placed.length,
+                      onCarDropped: index == placed.length ? onCarDropped : null,
                     ),
                   ],
                 ],
@@ -441,13 +450,13 @@ class _TrainTrack extends StatelessWidget {
   }
 }
 
-class _Engine extends StatelessWidget {
+class _Engine extends ConsumerWidget {
   const _Engine({required this.color});
 
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       width: 58,
       height: 54,
@@ -461,24 +470,37 @@ class _Engine extends StatelessWidget {
   }
 }
 
-class _TrainCarSlot extends StatelessWidget {
-  const _TrainCarSlot({required this.value, required this.color});
+class _TrainCarSlot extends ConsumerWidget {
+  const _TrainCarSlot({
+    required this.value,
+    required this.color,
+    this.isNextSlot = false,
+    this.onCarDropped,
+  });
 
   final String? value;
   final Color color;
+  final bool isNextSlot;
+  final ValueChanged<String>? onCarDropped;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final filled = value != null;
-    return Container(
+
+    Widget slot({bool highlighted = false}) => AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
       width: 42,
       height: 50,
       decoration: BoxDecoration(
-        color: filled ? Colors.white : Colors.white.withValues(alpha: 0.55),
+        color: highlighted
+            ? color.withValues(alpha: 0.22)
+            : (filled ? Colors.white : Colors.white.withValues(alpha: 0.55)),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: filled ? color : const Color(0xFFB5C3DE),
-          width: 3,
+          color: highlighted
+              ? color
+              : (filled ? color : const Color(0xFFB5C3DE)),
+          width: highlighted ? 4 : 3,
         ),
       ),
       child: Center(
@@ -488,10 +510,21 @@ class _TrainCarSlot extends StatelessWidget {
         ),
       ),
     );
+
+    if (!isNextSlot || onCarDropped == null) return slot();
+
+    // The "next" empty slot doubles as a drop target — dragging the matching
+    // choice car here completes the step the same way tapping it does.
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (_) => true,
+      onAcceptWithDetails: (details) => onCarDropped!(details.data),
+      builder: (context, candidates, rejects) =>
+          slot(highlighted: candidates.isNotEmpty),
+    );
   }
 }
 
-class _TrainChoiceCar extends StatelessWidget {
+class _TrainChoiceCar extends ConsumerWidget {
   const _TrainChoiceCar({
     required this.value,
     required this.color,
@@ -504,24 +537,60 @@ class _TrainChoiceCar extends StatelessWidget {
   final bool wrong;
   final VoidCallback onTap;
 
+  Widget _card(BuildContext context, Color borderColor, {bool dimmed = false}) =>
+      Material(
+        color: wrong
+            ? const Color(0xFFFFEBEE)
+            : Colors.white.withValues(alpha: dimmed ? 0.35 : 1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: borderColor, width: 3),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          width: 84,
+          height: 84,
+          child: Center(
+            child: Text(
+              value,
+              style: Theme.of(
+                context,
+              ).textTheme.displaySmall?.copyWith(color: borderColor),
+            ),
+          ),
+        ),
+      );
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final borderColor = wrong ? const Color(0xFFC62828) : color;
-    return Material(
-      color: wrong ? const Color(0xFFFFEBEE) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: borderColor, width: 3),
+
+    // Cars can be either tapped (original behavior, fully preserved) or
+    // dragged onto the train's next empty slot — whichever a child finds
+    // easier or more fun.
+    return Draggable<String>(
+      data: value,
+      feedback: Material(
+        color: Colors.transparent,
+        child: Transform.scale(scale: 1.12, child: _card(context, borderColor)),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Center(
-          child: Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.displaySmall?.copyWith(color: borderColor),
+      childWhenDragging: _card(context, borderColor, dimmed: true),
+      child: Material(
+        color: wrong ? const Color(0xFFFFEBEE) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: borderColor, width: 3),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Center(
+            child: Text(
+              value,
+              style: Theme.of(
+                context,
+              ).textTheme.displaySmall?.copyWith(color: borderColor),
+            ),
           ),
         ),
       ),

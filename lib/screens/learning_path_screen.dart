@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
 import '../models/challenge.dart';
@@ -13,14 +16,14 @@ import 'math_practice_screen.dart';
 import 'coloring_screen.dart';
 import 'games_hub_screen.dart';
 
-class LearningPathScreen extends StatelessWidget {
+class LearningPathScreen extends ConsumerWidget {
   const LearningPathScreen({super.key});
 
   static const routeName = '/learning-path';
 
   @override
-  Widget build(BuildContext context) {
-    final progress = context.watch<ProgressService>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(progressServiceProvider);
     final isMalay = progress.language == AppLanguage.malay;
 
     final modules = _buildModules(isMalay, progress);
@@ -35,28 +38,41 @@ class LearningPathScreen extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: _SyllabusHeader(isMalay: isMalay, progress: progress),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) => Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: _ModuleCard(
-                    module: modules[i],
-                    onTap: () =>
-                        Navigator.of(context).pushNamed(modules[i].route),
+      body: AnimationLimiter(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: _SyllabusHeader(isMalay: isMalay, progress: progress),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) => AnimationConfiguration.staggeredList(
+                    position: i,
+                    duration: const Duration(milliseconds: 420),
+                    child: SlideAnimation(
+                      verticalOffset: 36,
+                      curve: Curves.easeOutCubic,
+                      child: FadeInAnimation(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _ModuleCard(
+                            module: modules[i],
+                            onTap: () => Navigator.of(
+                              context,
+                            ).pushNamed(modules[i].route),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+                  childCount: modules.length,
                 ),
-                childCount: modules.length,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -196,13 +212,13 @@ class LearningPathScreen extends StatelessWidget {
 }
 
 // ── Header banner ──────────────────────────────────────────────────────────────
-class _SyllabusHeader extends StatelessWidget {
+class _SyllabusHeader extends ConsumerWidget {
   const _SyllabusHeader({required this.isMalay, required this.progress});
   final bool isMalay;
   final ProgressService progress;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -271,13 +287,13 @@ class _SyllabusHeader extends StatelessWidget {
   }
 }
 
-class _HeaderStat extends StatelessWidget {
+class _HeaderStat extends ConsumerWidget {
   const _HeaderStat({required this.label, required this.value});
   final String label;
   final String value;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -302,26 +318,68 @@ class _HeaderStat extends StatelessWidget {
 }
 
 // ── Module card ────────────────────────────────────────────────────────────────
-class _ModuleCard extends StatelessWidget {
+class _ModuleCard extends ConsumerStatefulWidget {
   const _ModuleCard({required this.module, required this.onTap});
   final _ModuleInfo module;
   final VoidCallback onTap;
 
   @override
+  ConsumerState<_ModuleCard> createState() => _ModuleCardState();
+}
+
+class _ModuleCardState extends ConsumerState<_ModuleCard>
+    with SingleTickerProviderStateMixin {
+  // Press feedback shared with the rest of the app's tactile language
+  // (see BigModeButton / BadgeCard) — a gentle scale-down on press.
+  late final AnimationController _pressCtrl;
+  late final Animation<double> _pressScale;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 110),
+    );
+    _pressScale = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _pressCtrl, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pressCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails _) => _pressCtrl.forward();
+  void _onTapUp(TapUpDetails _) => _pressCtrl.reverse();
+  void _onTapCancel() => _pressCtrl.reverse();
+
+  @override
   Widget build(BuildContext context) {
+    final module = widget.module;
     final pct = module.total > 0
         ? (module.completed / module.total).clamp(0.0, 1.0)
         : 0.0;
     final pctLabel = '${(pct * 100).round()}%';
 
-    return Material(
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedBuilder(
+        animation: _pressScale,
+        builder: (context, child) =>
+            Transform.scale(scale: _pressScale.value, child: child),
+        child: Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(24),
       elevation: 4,
       shadowColor: module.color.withValues(alpha: 0.25),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Column(
@@ -338,9 +396,27 @@ class _ModuleCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
-                      child: Text(
-                        module.emoji,
-                        style: const TextStyle(fontSize: 28),
+                      child: Hero(
+                        tag: 'module-emoji-${module.route}',
+                        // Module → screen continuity: this emoji visually
+                        // "flies" into the destination screen's app bar.
+                        flightShuttleBuilder:
+                            (context, animation, direction, fromCtx, toCtx) {
+                          final fromHero =
+                              direction == HeroFlightDirection.push
+                                  ? fromCtx.widget
+                                  : toCtx.widget;
+                          return ScaleTransition(
+                            scale: Tween<double>(begin: 1.0, end: 0.85).animate(
+                              CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+                            ),
+                            child: fromHero is Hero ? fromHero.child : const SizedBox.shrink(),
+                          );
+                        },
+                        child: Text(
+                          module.emoji,
+                          style: const TextStyle(fontSize: 28),
+                        ),
                       ),
                     ),
                   ),
@@ -481,6 +557,8 @@ class _ModuleCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
         ),
       ),
     );

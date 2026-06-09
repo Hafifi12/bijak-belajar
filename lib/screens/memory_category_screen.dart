@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
 import '../models/memory_item.dart';
-import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_text.dart';
 import '../utils/constants.dart';
 import 'memory_game_screen.dart';
 
-class MemoryCategoryScreen extends StatelessWidget {
+class MemoryCategoryScreen extends ConsumerWidget {
   const MemoryCategoryScreen({super.key});
 
   static const routeName = '/memory';
 
   @override
-  Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final language = ref.watch(progressServiceProvider).language;
 
     return Scaffold(
       appBar: AppBar(title: Text(AppText.ui('memoryGame', language))),
@@ -40,7 +41,7 @@ class MemoryCategoryScreen extends StatelessWidget {
   }
 }
 
-class _MemoryCategoryStageCard extends StatelessWidget {
+class _MemoryCategoryStageCard extends ConsumerWidget {
   const _MemoryCategoryStageCard({
     required this.category,
     required this.language,
@@ -50,7 +51,7 @@ class _MemoryCategoryStageCard extends StatelessWidget {
   final AppLanguage language;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isMalay = language == AppLanguage.malay;
 
     return Container(
@@ -142,7 +143,7 @@ class _MemoryCategoryStageCard extends StatelessWidget {
   }
 }
 
-class _StageButton extends StatelessWidget {
+class _StageButton extends ConsumerWidget {
   const _StageButton({
     required this.category,
     required this.stage,
@@ -154,7 +155,7 @@ class _StageButton extends StatelessWidget {
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       color: category.color.withValues(alpha: 0.10),
       borderRadius: BorderRadius.circular(999),

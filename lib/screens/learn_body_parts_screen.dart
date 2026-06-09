@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
-import '../services/audio_service.dart';
-import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
 
 /// Belajar Anggota Badan — Learn Body Parts
 /// Malaysian kindergarten style for preschool children.
-class LearnBodyPartsScreen extends StatefulWidget {
+class LearnBodyPartsScreen extends ConsumerStatefulWidget {
   const LearnBodyPartsScreen({super.key});
 
   static const routeName = '/learn-body-parts';
 
   @override
-  State<LearnBodyPartsScreen> createState() => _LearnBodyPartsScreenState();
+  ConsumerState<LearnBodyPartsScreen> createState() => _LearnBodyPartsScreenState();
 }
 
-class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
+class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
     with TickerProviderStateMixin {
   int _current = 0;
   bool _recordedInitial = false;
@@ -263,12 +263,12 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
 
   void _recordCurrentLesson() {
     final item = _parts[_current];
-    context.read<ProgressService>().markModuleLesson('bodyparts', item.english);
+    ref.read(progressServiceProvider).markModuleLesson('bodyparts', item.english);
   }
 
   Future<void> _speakIn(String word, String locale) async {
-    final progress = context.read<ProgressService>();
-    final audio = context.read<AudioService>();
+    final progress = ref.read(progressServiceProvider);
+    final audio = ref.read(audioServiceProvider);
     await audio.speakLocale(
       word,
       enabled: progress.voiceEnabled,
@@ -278,7 +278,7 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+    final language = ref.watch(progressServiceProvider).language;
     final item = _parts[_current];
     final color = _color;
     final isMalay = language == AppLanguage.malay;
@@ -291,6 +291,14 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
+        // Continues the emoji "flight" started from the module card on the
+        // Learning Path screen — same Hero tag, same emoji.
+        leading: Center(
+          child: Hero(
+            tag: 'module-emoji-${LearnBodyPartsScreen.routeName}',
+            child: const Text('🧍', style: TextStyle(fontSize: 26)),
+          ),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -599,7 +607,7 @@ class _LearnBodyPartsScreenState extends State<LearnBodyPartsScreen>
   }
 }
 
-class _DoctorBodyChart extends StatelessWidget {
+class _DoctorBodyChart extends ConsumerWidget {
   const _DoctorBodyChart({
     required this.parts,
     required this.selectedIndex,
@@ -630,7 +638,7 @@ class _DoctorBodyChart extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selected = parts[selectedIndex];
     final label = selected.wordFor(language);
 
@@ -745,14 +753,14 @@ class _DoctorBodyChart extends StatelessWidget {
   }
 }
 
-class _SelectedPartPhotoCard extends StatelessWidget {
+class _SelectedPartPhotoCard extends ConsumerWidget {
   const _SelectedPartPhotoCard({required this.part, required this.language});
 
   final _BodyPart part;
   final AppLanguage language;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final label = part.wordFor(language);
 
     return Material(
@@ -898,7 +906,7 @@ class _SelectedPartPhotoCard extends StatelessWidget {
   }
 }
 
-class _ExactBodyPartPhoto extends StatelessWidget {
+class _ExactBodyPartPhoto extends ConsumerWidget {
   const _ExactBodyPartPhoto({
     required this.asset,
     required this.color,
@@ -910,7 +918,7 @@ class _ExactBodyPartPhoto extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(size > 120 ? 26 : 18),
       child: Container(
@@ -954,7 +962,7 @@ class _ExactBodyPartPhoto extends StatelessWidget {
   }
 }
 
-class _BodyPartThumbnail extends StatelessWidget {
+class _BodyPartThumbnail extends ConsumerWidget {
   const _BodyPartThumbnail({
     required this.asset,
     required this.color,
@@ -966,7 +974,7 @@ class _BodyPartThumbnail extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return _ExactBodyPartPhoto(asset: asset, color: color, size: size);
   }
 }
@@ -980,7 +988,7 @@ class _BodySpot {
   final double radius;
 }
 
-class _BodySpotButton extends StatelessWidget {
+class _BodySpotButton extends ConsumerWidget {
   const _BodySpotButton({
     required this.selected,
     required this.color,
@@ -994,7 +1002,7 @@ class _BodySpotButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Semantics(
       button: true,
       label: label,
@@ -1038,7 +1046,7 @@ class _BodySpotButton extends StatelessWidget {
   }
 }
 
-class _DoctorCallout extends StatelessWidget {
+class _DoctorCallout extends ConsumerWidget {
   const _DoctorCallout({
     required this.color,
     required this.label,
@@ -1050,7 +1058,7 @@ class _DoctorCallout extends StatelessWidget {
   final String english;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -1396,7 +1404,7 @@ class _BodyChartPainter extends CustomPainter {
   }
 }
 
-class _PartPickerStrip extends StatelessWidget {
+class _PartPickerStrip extends ConsumerWidget {
   const _PartPickerStrip({
     required this.parts,
     required this.selectedIndex,
@@ -1410,7 +1418,7 @@ class _PartPickerStrip extends StatelessWidget {
   final ValueChanged<int> onSelect;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SizedBox(
       height: 48,
       child: ListView.separated(
@@ -1446,7 +1454,7 @@ class _PartPickerStrip extends StatelessWidget {
 }
 
 /// Small chip showing a flag + translated word.
-class _LangChip extends StatelessWidget {
+class _LangChip extends ConsumerWidget {
   const _LangChip({
     required this.flag,
     required this.text,
@@ -1458,7 +1466,7 @@ class _LangChip extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
@@ -1485,7 +1493,7 @@ class _LangChip extends StatelessWidget {
   }
 }
 
-class _BodyPronounceButtons extends StatelessWidget {
+class _BodyPronounceButtons extends ConsumerWidget {
   const _BodyPronounceButtons({
     required this.onSpeak,
     required this.item,
@@ -1522,7 +1530,7 @@ class _BodyPronounceButtons extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

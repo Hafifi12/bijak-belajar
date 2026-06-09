@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../data/badge_data.dart';
 import '../models/app_language.dart';
@@ -16,16 +18,16 @@ import 'memory_category_screen.dart';
 import 'puzzle_screen.dart';
 import 'train_sort_screen.dart';
 
-class ProgressScreen extends StatefulWidget {
+class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
 
   static const routeName = '/progress';
 
   @override
-  State<ProgressScreen> createState() => _ProgressScreenState();
+  ConsumerState<ProgressScreen> createState() => _ProgressScreenState();
 }
 
-class _ProgressScreenState extends State<ProgressScreen>
+class _ProgressScreenState extends ConsumerState<ProgressScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeIn;
@@ -48,7 +50,7 @@ class _ProgressScreenState extends State<ProgressScreen>
 
   @override
   Widget build(BuildContext context) {
-    final progress = context.watch<ProgressService>();
+    final progress = ref.watch(progressServiceProvider);
     final language = progress.language;
     final isMalay = language == AppLanguage.malay;
 
@@ -128,16 +130,16 @@ class _ProgressScreenState extends State<ProgressScreen>
 }
 
 // ── Star Hero Banner ──────────────────────────────────────────────────────────
-class _StarHeroBanner extends StatefulWidget {
+class _StarHeroBanner extends ConsumerStatefulWidget {
   const _StarHeroBanner({required this.progress, required this.isMalay});
   final ProgressService progress;
   final bool isMalay;
 
   @override
-  State<_StarHeroBanner> createState() => _StarHeroBannerState();
+  ConsumerState<_StarHeroBanner> createState() => _StarHeroBannerState();
 }
 
-class _StarHeroBannerState extends State<_StarHeroBanner>
+class _StarHeroBannerState extends ConsumerState<_StarHeroBanner>
     with SingleTickerProviderStateMixin {
   late AnimationController _sparkCtrl;
 
@@ -326,7 +328,7 @@ class _StarHeroBannerState extends State<_StarHeroBanner>
   }
 }
 
-class _HeroBubble extends StatelessWidget {
+class _HeroBubble extends ConsumerWidget {
   const _HeroBubble({
     required this.value,
     required this.label,
@@ -337,7 +339,7 @@ class _HeroBubble extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
@@ -373,7 +375,7 @@ class _HeroBubble extends StatelessWidget {
 }
 
 // ── Syllabus Shortcut ─────────────────────────────────────────────────────────
-class _SyllabusProgressShortcut extends StatelessWidget {
+class _SyllabusProgressShortcut extends ConsumerWidget {
   const _SyllabusProgressShortcut({
     required this.progress,
     required this.isMalay,
@@ -383,7 +385,7 @@ class _SyllabusProgressShortcut extends StatelessWidget {
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(22),
@@ -480,13 +482,13 @@ class _SyllabusProgressShortcut extends StatelessWidget {
   }
 }
 
-class _MiniProgressPill extends StatelessWidget {
+class _MiniProgressPill extends ConsumerWidget {
   const _MiniProgressPill({required this.label});
 
   final String label;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -507,12 +509,12 @@ class _MiniProgressPill extends StatelessWidget {
 }
 
 // ── Section Header ─────────────────────────────────────────────────────────────
-class _SectionHeader extends StatelessWidget {
+class _SectionHeader extends ConsumerWidget {
   const _SectionHeader({required this.emoji, required this.title});
   final String emoji, title;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       children: [
         Text(emoji, style: const TextStyle(fontSize: 18)),
@@ -531,13 +533,13 @@ class _SectionHeader extends StatelessWidget {
 }
 
 // ── Activity Stats ─────────────────────────────────────────────────────────────
-class _ActivityStatsRow extends StatelessWidget {
+class _ActivityStatsRow extends ConsumerWidget {
   const _ActivityStatsRow({required this.progress, required this.isMalay});
   final ProgressService progress;
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final stats = [
       _ActivityStat(
         '🚂',

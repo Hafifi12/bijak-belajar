@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
 import '../models/challenge.dart';
 import '../models/train_mode.dart';
-import '../services/progress_service.dart';
 import 'find_explorer_screen.dart';
 import 'memory_category_screen.dart';
 import 'puzzle_screen.dart';
 import 'train_sort_screen.dart';
 
-class GamesHubScreen extends StatelessWidget {
+class GamesHubScreen extends ConsumerWidget {
   const GamesHubScreen({super.key});
   static const routeName = '/games-hub';
 
   @override
-  Widget build(BuildContext context) {
-    final progress = context.watch<ProgressService>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(progressServiceProvider);
     final isMalay = progress.language == AppLanguage.malay;
 
     return Scaffold(
@@ -160,12 +161,12 @@ class GamesHubScreen extends StatelessWidget {
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
-class _GamesHeader extends StatelessWidget {
+class _GamesHeader extends ConsumerWidget {
   const _GamesHeader({required this.isMalay});
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -225,12 +226,12 @@ class _GamesHeader extends StatelessWidget {
   }
 }
 
-class _ApprovedBadge extends StatelessWidget {
+class _ApprovedBadge extends ConsumerWidget {
   const _ApprovedBadge({required this.label});
   final String label;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -250,7 +251,7 @@ class _ApprovedBadge extends StatelessWidget {
 }
 
 // ── Section label ──────────────────────────────────────────────────────────────
-class _SectionLabel extends StatelessWidget {
+class _SectionLabel extends ConsumerWidget {
   const _SectionLabel({
     required this.emoji,
     required this.label,
@@ -261,7 +262,7 @@ class _SectionLabel extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       children: [
         Text(emoji, style: const TextStyle(fontSize: 20)),
@@ -281,7 +282,7 @@ class _SectionLabel extends StatelessWidget {
 }
 
 // ── Game card ──────────────────────────────────────────────────────────────────
-class _GameCard extends StatelessWidget {
+class _GameCard extends ConsumerStatefulWidget {
   const _GameCard({
     required this.emoji,
     required this.title,
@@ -300,15 +301,79 @@ class _GameCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  ConsumerState<_GameCard> createState() => _GameCardState();
+}
+
+class _GameCardState extends ConsumerState<_GameCard>
+    with TickerProviderStateMixin {
+  // Press feedback — same tactile language as BigModeButton/BadgeCard.
+  late final AnimationController _pressCtrl;
+  late final Animation<double> _pressScale;
+
+  // One-shot entrance: fades and slides the card up when it first appears,
+  // giving the hub list a lively, staggered-feeling reveal.
+  late final AnimationController _entryCtrl;
+  late final Animation<double> _entryFade;
+  late final Animation<Offset> _entrySlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 110),
+    );
+    _pressScale = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _pressCtrl, curve: Curves.easeOut),
+    );
+
+    _entryCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    final curved = CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOutCubic);
+    _entryFade = curved;
+    _entrySlide = Tween<Offset>(
+      begin: const Offset(0, 0.12),
+      end: Offset.zero,
+    ).animate(curved);
+    _entryCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _pressCtrl.dispose();
+    _entryCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails _) => _pressCtrl.forward();
+  void _onTapUp(TapUpDetails _) => _pressCtrl.reverse();
+  void _onTapCancel() => _pressCtrl.reverse();
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
+    final color = widget.color;
+    return FadeTransition(
+      opacity: _entryFade,
+      child: SlideTransition(
+        position: _entrySlide,
+        child: GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedBuilder(
+        animation: _pressScale,
+        builder: (context, child) =>
+            Transform.scale(scale: _pressScale.value, child: child),
+        child: Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(22),
       elevation: 4,
       shadowColor: color.withValues(alpha: 0.25),
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Row(
@@ -321,7 +386,7 @@ class _GameCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Center(
-                  child: Text(emoji, style: const TextStyle(fontSize: 34)),
+                  child: Text(widget.emoji, style: const TextStyle(fontSize: 34)),
                 ),
               ),
               const SizedBox(width: 14),
@@ -330,7 +395,7 @@ class _GameCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      widget.title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
@@ -339,7 +404,7 @@ class _GameCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      subtitle,
+                      widget.subtitle,
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF7A7A9A),
@@ -354,7 +419,7 @@ class _GameCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            learningObjective,
+                            widget.learningObjective,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -364,10 +429,10 @@ class _GameCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (completedCount > 0) ...[
+                    if (widget.completedCount > 0) ...[
                       const SizedBox(height: 4),
                       Text(
-                        '⭐ $completedCount selesai',
+                        '⭐ ${widget.completedCount} selesai',
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -383,17 +448,21 @@ class _GameCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
+      ),
+    ),
+      ),
     );
   }
 }
 
 // ── Tip card ───────────────────────────────────────────────────────────────────
-class _TipCard extends StatelessWidget {
+class _TipCard extends ConsumerWidget {
   const _TipCard({required this.isMalay});
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tips = isMalay
         ? [
             '🎯 Main bersama anak 10–15 minit sehari',

@@ -1,17 +1,17 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
-import '../services/audio_service.dart';
-import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
 
 // ── Entry point (topic picker) ─────────────────────────────────────────────────
-class MathPracticeScreen extends StatelessWidget {
+class MathPracticeScreen extends ConsumerWidget {
   const MathPracticeScreen({super.key});
 
   static const routeName = '/math-practice';
@@ -101,13 +101,21 @@ class MathPracticeScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final language = ref.watch(progressServiceProvider).language;
     final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
+        // Continues the emoji "flight" started from the module card on the
+        // Learning Path screen — same Hero tag, same emoji.
+        leading: Center(
+          child: Hero(
+            tag: 'module-emoji-${MathPracticeScreen.routeName}',
+            child: const Text('🧮', style: TextStyle(fontSize: 26)),
+          ),
+        ),
         title: Text(
           isMalay ? 'Latihan Matematik 🧮' : 'Maths Practice 🧮',
           style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
@@ -204,12 +212,12 @@ class MathPracticeScreen extends StatelessWidget {
   }
 }
 
-class _LevelHintBar extends StatelessWidget {
+class _LevelHintBar extends ConsumerWidget {
   const _LevelHintBar({required this.isMalay});
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const levels = [
       (color: Color(0xFF1DD1A1), label: 'Tahap 1', labelEn: 'Level 1'),
       (color: Color(0xFFFF9F43), label: 'Tahap 2', labelEn: 'Level 2'),
@@ -264,13 +272,13 @@ class _LevelHintBar extends StatelessWidget {
   }
 }
 
-class _TopicCard extends StatelessWidget {
+class _TopicCard extends ConsumerWidget {
   const _TopicCard({required this.topic, required this.isMalay});
   final _MathTopic topic;
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
@@ -380,7 +388,7 @@ class _TopicCard extends StatelessWidget {
 }
 
 // ── Quiz Screen ───────────────────────────────────────────────────────────────
-class MathQuizScreen extends StatefulWidget {
+class MathQuizScreen extends ConsumerStatefulWidget {
   const MathQuizScreen({
     super.key,
     required this.op,
@@ -393,10 +401,10 @@ class MathQuizScreen extends StatefulWidget {
   final int level; // 1=easy, 2=medium, 3=hard
 
   @override
-  State<MathQuizScreen> createState() => _MathQuizScreenState();
+  ConsumerState<MathQuizScreen> createState() => _MathQuizScreenState();
 }
 
-class _MathQuizScreenState extends State<MathQuizScreen>
+class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
     with TickerProviderStateMixin {
   static const _totalQuestions = 10;
 
@@ -448,7 +456,7 @@ class _MathQuizScreenState extends State<MathQuizScreen>
 
   void _generateQuestion() {
     final isMalay =
-        context.read<ProgressService>().language == AppLanguage.malay;
+        ref.read(progressServiceProvider).language == AppLanguage.malay;
     setState(() {
       _q = _Question.generate(
         op: widget.op,
@@ -477,8 +485,8 @@ class _MathQuizScreenState extends State<MathQuizScreen>
     });
 
     // Sound feedback — clap/chime for correct, soft buzz for wrong (no voice)
-    final progress = context.read<ProgressService>();
-    final audio = context.read<AudioService>();
+    final progress = ref.read(progressServiceProvider);
+    final audio = ref.read(audioServiceProvider);
     if (correct) {
       await progress.addStars(1);
     }
@@ -519,7 +527,7 @@ class _MathQuizScreenState extends State<MathQuizScreen>
 
   @override
   Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+    final language = ref.watch(progressServiceProvider).language;
     final isMalay = language == AppLanguage.malay;
     final color = widget.color;
 
@@ -746,31 +754,15 @@ class _MathQuizScreenState extends State<MathQuizScreen>
                       borderColor = AppTheme.leafGreen;
                     }
 
-                    return Material(
-                      color: btnColor,
-                      borderRadius: BorderRadius.circular(16),
+                    return _AnswerOption(
+                      btnColor: btnColor,
+                      textColor: textColor,
+                      borderColor: borderColor,
                       elevation: _answered ? 0 : 3,
-                      shadowColor: color.withValues(alpha: 0.2),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: _answered ? null : () => _pick(idx, isCorrect),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: borderColor, width: 2),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '$opt',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                color: textColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      glowColor: color,
+                      label: '$opt',
+                      enabled: !_answered,
+                      onTap: () => _pick(idx, isCorrect),
                     );
                   }).toList(),
                 ),
@@ -809,7 +801,7 @@ class _MathQuizScreenState extends State<MathQuizScreen>
   }
 }
 
-class _CountingObjectGrid extends StatelessWidget {
+class _CountingObjectGrid extends ConsumerWidget {
   const _CountingObjectGrid({
     required this.emoji,
     required this.count,
@@ -821,7 +813,7 @@ class _CountingObjectGrid extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 120),
       child: SingleChildScrollView(
@@ -850,14 +842,151 @@ class _CountingObjectGrid extends StatelessWidget {
   }
 }
 
-class _AnswerFeedback extends StatelessWidget {
+// Answer choice tile with press feedback plus a fun long-press "nudge":
+// holding a tile gives it a friendly wiggle + glow, a tactile cue that it's
+// tappable — without revealing whether it's the right answer.
+class _AnswerOption extends StatefulWidget {
+  const _AnswerOption({
+    required this.btnColor,
+    required this.textColor,
+    required this.borderColor,
+    required this.elevation,
+    required this.glowColor,
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final Color btnColor;
+  final Color textColor;
+  final Color borderColor;
+  final double elevation;
+  final Color glowColor;
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  State<_AnswerOption> createState() => _AnswerOptionState();
+}
+
+class _AnswerOptionState extends State<_AnswerOption>
+    with TickerProviderStateMixin {
+  late final AnimationController _pressCtrl;
+  late final Animation<double> _pressScale;
+  late final AnimationController _hintCtrl;
+  late final Animation<double> _hintWiggle;
+  late final Animation<double> _hintGlow;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 110),
+    );
+    _pressScale = Tween<double>(
+      begin: 1,
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _pressCtrl, curve: Curves.easeOut));
+
+    _hintCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 480),
+    );
+    _hintWiggle = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -0.04), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -0.04, end: 0.04), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.04, end: -0.03), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -0.03, end: 0.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _hintCtrl, curve: Curves.easeInOut));
+    _hintGlow = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _hintCtrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _pressCtrl.dispose();
+    _hintCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onLongPress() {
+    if (!widget.enabled) return;
+    _hintCtrl.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.enabled ? (_) => _pressCtrl.forward() : null,
+      onTapUp: widget.enabled ? (_) => _pressCtrl.reverse() : null,
+      onTapCancel: widget.enabled ? () => _pressCtrl.reverse() : null,
+      onLongPress: widget.enabled ? _onLongPress : null,
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_pressCtrl, _hintCtrl]),
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _pressScale.value,
+            child: Transform.rotate(angle: _hintWiggle.value, child: child),
+          );
+        },
+        child: AnimatedBuilder(
+          animation: _hintGlow,
+          builder: (context, child) => Material(
+            color: widget.btnColor,
+            borderRadius: BorderRadius.circular(16),
+            elevation: widget.elevation,
+            shadowColor: Color.lerp(
+              widget.glowColor.withValues(alpha: 0.2),
+              widget.glowColor.withValues(alpha: 0.7),
+              _hintGlow.value,
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: widget.enabled ? widget.onTap : null,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Color.lerp(
+                          widget.borderColor,
+                          widget.glowColor,
+                          _hintGlow.value,
+                        ) ??
+                        widget.borderColor,
+                    width: 2 + _hintGlow.value * 1.5,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    widget.label,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: widget.textColor,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AnswerFeedback extends ConsumerWidget {
   const _AnswerFeedback({required this.correct, required this.isMalay});
 
   final bool correct;
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final text = correct
         ? (isMalay ? 'Hebat! Jawapan betul!' : 'Great job! Correct!')
         : (isMalay ? 'Hampir betul! Cuba lagi.' : 'Almost there! Try again.');
@@ -885,7 +1014,7 @@ class _AnswerFeedback extends StatelessWidget {
 }
 
 // ── Result Screen ─────────────────────────────────────────────────────────────
-class MathResultScreen extends StatelessWidget {
+class MathResultScreen extends ConsumerWidget {
   const MathResultScreen({
     super.key,
     required this.score,
@@ -904,8 +1033,8 @@ class MathResultScreen extends StatelessWidget {
   final List<bool> answers;
 
   @override
-  Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final language = ref.watch(progressServiceProvider).language;
     final isMalay = language == AppLanguage.malay;
     final pct = score / total;
     final emoji = pct == 1.0

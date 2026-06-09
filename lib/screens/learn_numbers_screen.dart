@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
-import '../services/audio_service.dart';
-import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
 
-class LearnNumbersScreen extends StatefulWidget {
+class LearnNumbersScreen extends ConsumerStatefulWidget {
   const LearnNumbersScreen({super.key});
 
   static const routeName = '/learn-numbers';
 
   @override
-  State<LearnNumbersScreen> createState() => _LearnNumbersScreenState();
+  ConsumerState<LearnNumbersScreen> createState() => _LearnNumbersScreenState();
 }
 
-class _LearnNumbersScreenState extends State<LearnNumbersScreen>
+class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
     with TickerProviderStateMixin {
   int _current = 0;
   bool _recordedInitial = false;
@@ -454,9 +454,30 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
 
   void _recordCurrentLesson() {
     final item = _numbers[_current];
-    context.read<ProgressService>().markModuleLesson(
+    ref.read(progressServiceProvider).markModuleLesson(
       'numbers',
       '${item.number}',
+    );
+    // TTS: narrate the number and its name on every card load
+    _speakCurrentLesson();
+  }
+
+  Future<void> _speakCurrentLesson() async {
+    final ps = ref.read(progressServiceProvider);
+    if (!ps.voiceEnabled) return;
+    final item = _numbers[_current];
+    final audio = ref.read(audioServiceProvider);
+    final lang = ps.language;
+    await audio.speakLocale(
+      '${item.number}',
+      enabled: true,
+      locale: 'en-US',
+    );
+    await Future.delayed(const Duration(milliseconds: 420));
+    await audio.speakLocale(
+      _wordForLanguage(item, lang),
+      enabled: true,
+      locale: lang.ttsLocale,
     );
   }
 
@@ -471,8 +492,8 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   }
 
   Future<void> _speakIn(String word, String locale) async {
-    final progress = context.read<ProgressService>();
-    final audio = context.read<AudioService>();
+    final progress = ref.read(progressServiceProvider);
+    final audio = ref.read(audioServiceProvider);
     await audio.speakLocale(
       word,
       enabled: progress.voiceEnabled,
@@ -495,7 +516,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
 
   @override
   Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+    final language = ref.watch(progressServiceProvider).language;
     final item = _numbers[_current];
     final color = item.color;
     final isMalay = language == AppLanguage.malay;
@@ -507,6 +528,14 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
+        // Continues the emoji "flight" started from the module card on the
+        // Learning Path screen — same Hero tag, same emoji.
+        leading: Center(
+          child: Hero(
+            tag: 'module-emoji-${LearnNumbersScreen.routeName}',
+            child: const Text('🔢', style: TextStyle(fontSize: 26)),
+          ),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -991,7 +1020,7 @@ class _WordTable extends StatelessWidget {
 }
 
 // ── Counting objects ─────────────────────────────────────────────────────────
-class _CountingObjectsPanel extends StatefulWidget {
+class _CountingObjectsPanel extends ConsumerStatefulWidget {
   const _CountingObjectsPanel({
     required this.count,
     required this.color,
@@ -1005,10 +1034,10 @@ class _CountingObjectsPanel extends StatefulWidget {
   final bool isMalay;
 
   @override
-  State<_CountingObjectsPanel> createState() => _CountingObjectsPanelState();
+  ConsumerState<_CountingObjectsPanel> createState() => _CountingObjectsPanelState();
 }
 
-class _CountingObjectsPanelState extends State<_CountingObjectsPanel> {
+class _CountingObjectsPanelState extends ConsumerState<_CountingObjectsPanel> {
   final ScrollController _scrollController = ScrollController();
   int _counted = 0;
 

@@ -1,28 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../models/app_language.dart';
-import '../services/audio_service.dart';
-import '../services/progress_service.dart';
+import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
+import '../widgets/xp_popup.dart';
 
-class LearnLettersScreen extends StatefulWidget {
+class LearnLettersScreen extends ConsumerStatefulWidget {
   const LearnLettersScreen({super.key});
 
   static const routeName = '/learn-letters';
 
   @override
-  State<LearnLettersScreen> createState() => _LearnLettersScreenState();
+  ConsumerState<LearnLettersScreen> createState() =>
+      _LearnLettersScreenState();
 }
 
-class _LearnLettersScreenState extends State<LearnLettersScreen>
+class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
     with SingleTickerProviderStateMixin {
   int _current = 0;
   bool _recordedInitial = false;
   late AnimationController _bounceController;
   late Animation<double> _bounceAnim;
+
+  // ── Speech recognition ───────────────────────────────────────
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _speechAvailable = false;
+  bool _isListening = false;
+  String _speechResult = '';
+  bool? _speechCorrect;
 
   // ── A–Z with 5 languages ───────────────────────────────────────
   static const _letters = <_LetterItem>[
@@ -316,11 +325,25 @@ class _LearnLettersScreenState extends State<LearnLettersScreen>
     _bounceAnim = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
     );
+    _initSpeech();
+  }
+
+  Future<void> _initSpeech() async {
+    _speechAvailable = await _speech.initialize(
+      onError: (_) => setState(() => _isListening = false),
+      onStatus: (status) {
+        if (status == 'done' || status == 'notListening') {
+          if (mounted) setState(() => _isListening = false);
+        }
+      },
+    );
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
     _bounceController.dispose();
+    _speech.cancel();
     super.dispose();
   }
 
@@ -351,12 +374,49 @@ class _LearnLettersScreenState extends State<LearnLettersScreen>
 
   void _recordCurrentLesson() {
     final item = _letters[_current];
-    context.read<ProgressService>().markModuleLesson('letters', item.letter);
+    ref.read(progressServiceProvider).markModuleLesson('letters', item.letter);
+    // TTS: narrate the letter and the word on each card navigation
+    _speakCurrentLesson();
+    // Reset speech feedback when moving to a new letter
+    if (mounted) {
+      setState(() {
+        _speechResult = '';
+        _speechCorrect = null;
+      });
+    }
+  }
+
+  Future<void> _speakCurrentLesson() async {
+    final ps = ref.read(progressServiceProvider);
+    if (!ps.voiceEnabled) return;
+    final item = _letters[_current];
+    final audio = ref.read(audioServiceProvider);
+    final lang = ps.language;
+    // Say the letter name, then the word in the active language
+    await audio.speakLocale(item.letter, enabled: true, locale: 'en-US');
+    await Future.delayed(const Duration(milliseconds: 380));
+    final word = _wordForLanguage(item, lang);
+    await audio.speakLocale(word, enabled: true, locale: lang.ttsLocale);
+  }
+
+  String _wordForLanguage(_LetterItem item, AppLanguage lang) {
+    switch (lang) {
+      case AppLanguage.malay:
+        return item.malay;
+      case AppLanguage.mandarin:
+        return item.mandarin;
+      case AppLanguage.tamil:
+        return item.tamil;
+      case AppLanguage.indonesian:
+        return item.indonesian;
+      case AppLanguage.english:
+        return item.english;
+    }
   }
 
   Future<void> _speakIn(String word, String locale) async {
-    final progress = context.read<ProgressService>();
-    final audio = context.read<AudioService>();
+    final progress = ref.read(progressServiceProvider);
+    final audio = ref.read(audioServiceProvider);
     await audio.speakLocale(
       word,
       enabled: progress.voiceEnabled,
@@ -364,9 +424,65 @@ class _LearnLettersScreenState extends State<LearnLettersScreen>
     );
   }
 
+  // ── Speech recognition ───────────────────────────────────────
+
+  Future<void> _startListening() async {
+    if (!_speechAvailable || _isListening) return;
+    setState(() {
+      _isListening = true;
+      _speechResult = '';
+      _speechCorrect = null;
+    });
+    await _speech.listen(
+      onResult: (result) {
+        if (!mounted) return;
+        setState(() => _speechResult = result.recognizedWords);
+        if (result.finalResult) _evaluateSpeech(result.recognizedWords);
+      },
+      listenOptions: stt.SpeechListenOptions(
+        listenFor: const Duration(seconds: 5),
+        pauseFor: const Duration(seconds: 2),
+        cancelOnError: true,
+        partialResults: true,
+        localeId: 'en-US',
+      ),
+    );
+  }
+
+  Future<void> _stopListening() async {
+    await _speech.stop();
+    if (mounted) setState(() => _isListening = false);
+  }
+
+  void _evaluateSpeech(String words) {
+    if (words.isEmpty) return;
+    final item = _letters[_current];
+    final target = item.english.toLowerCase();
+    final letter = item.letter.toLowerCase();
+    final said = words.toLowerCase().trim();
+    final isCorrect = said.contains(letter) || said.contains(target);
+
+    setState(() {
+      _isListening = false;
+      _speechCorrect = isCorrect;
+    });
+
+    if (isCorrect) {
+      ref.read(progressServiceProvider).addStars(1);
+      XpPopup.show(context, amount: 1);
+      final audio = ref.read(audioServiceProvider);
+      final ps = ref.read(progressServiceProvider);
+      audio.speakLocale(
+        'Great job! You said ${item.letter} correctly!',
+        enabled: ps.voiceEnabled,
+        locale: 'en-US',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+    final language = ref.watch(progressServiceProvider).language;
     final item = _letters[_current];
     final color = _color;
     final isMalay = language == AppLanguage.malay;
@@ -378,6 +494,14 @@ class _LearnLettersScreenState extends State<LearnLettersScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
+        // Continues the emoji "flight" started from the module card on the
+        // Learning Path screen — same Hero tag, same emoji.
+        leading: Center(
+          child: Hero(
+            tag: 'module-emoji-${LearnLettersScreen.routeName}',
+            child: const Text('🔤', style: TextStyle(fontSize: 26)),
+          ),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -607,6 +731,143 @@ class _LearnLettersScreenState extends State<LearnLettersScreen>
                             tamil: item.letter.toLowerCase(),
                             color: color,
                           ),
+                          const SizedBox(height: 14),
+
+                          // ── 🎤 Speech recognition input ─────────
+                          if (_speechAvailable) ...[
+                            GestureDetector(
+                              onTap: _isListening
+                                  ? _stopListening
+                                  : _startListening,
+                              child: AnimatedContainer(
+                                duration:
+                                    const Duration(milliseconds: 220),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 22,
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _isListening
+                                      ? const Color(0xFFE84393)
+                                      : color,
+                                  borderRadius:
+                                      BorderRadius.circular(28),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (_isListening
+                                              ? const Color(0xFFE84393)
+                                              : color)
+                                          .withValues(alpha: 0.45),
+                                      blurRadius: 14,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      _isListening
+                                          ? Icons.stop_circle_rounded
+                                          : Icons.mic_rounded,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      _isListening
+                                          ? (isMalay
+                                              ? 'Saya dengar...'
+                                              : 'Listening...')
+                                          : (isMalay
+                                              ? '🎤 Sebut huruf ${item.letter}!'
+                                              : '🎤 Say letter ${item.letter}!'),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (_speechResult.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (_speechCorrect == true
+                                          ? const Color(0xFF34C759)
+                                          : _speechCorrect == false
+                                              ? AppTheme.appleRed
+                                              : Colors.grey.shade200)
+                                      .withValues(alpha: 0.15),
+                                  borderRadius:
+                                      BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: _speechCorrect == true
+                                        ? const Color(0xFF34C759)
+                                        : _speechCorrect == false
+                                            ? AppTheme.appleRed
+                                            : Colors.grey.shade400,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _speechCorrect == true
+                                          ? '✅'
+                                          : _speechCorrect == false
+                                              ? '❌'
+                                              : '🎤',
+                                      style: const TextStyle(
+                                          fontSize: 18),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        '"$_speechResult"',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: _speechCorrect == true
+                                              ? const Color(0xFF34C759)
+                                              : _speechCorrect == false
+                                                  ? AppTheme.appleRed
+                                                  : AppTheme.ink,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (_speechCorrect == true) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  isMalay
+                                      ? '⭐ +1 Bintang! Bagus sekali!'
+                                      : '⭐ +1 Star! Great job!',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF34C759),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ],
+
                           const SizedBox(height: 4),
                         ],
                       ),

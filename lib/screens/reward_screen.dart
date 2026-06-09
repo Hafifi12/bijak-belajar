@@ -1,10 +1,11 @@
 import 'dart:math' as math;
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/badge.dart';
-import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_text.dart';
 import 'home_screen.dart';
@@ -23,15 +24,15 @@ class RewardArgs {
   final FinderBadge? badge;
 }
 
-class RewardScreen extends StatefulWidget {
+class RewardScreen extends ConsumerStatefulWidget {
   const RewardScreen({super.key});
   static const routeName = '/reward';
 
   @override
-  State<RewardScreen> createState() => _RewardScreenState();
+  ConsumerState<RewardScreen> createState() => _RewardScreenState();
 }
 
-class _RewardScreenState extends State<RewardScreen>
+class _RewardScreenState extends ConsumerState<RewardScreen>
     with SingleTickerProviderStateMixin {
   late final ConfettiController _confettiController;
   late final AnimationController _scaleCtrl;
@@ -61,7 +62,7 @@ class _RewardScreenState extends State<RewardScreen>
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments as RewardArgs?;
     final badge = args?.badge;
-    final progress = context.watch<ProgressService>();
+    final progress = ref.watch(progressServiceProvider);
     final language = progress.language;
     final isMalay = progress.language.name == 'malay';
 

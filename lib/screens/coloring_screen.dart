@@ -1,10 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
-import '../services/progress_service.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // Data models
 // ─────────────────────────────────────────────────────────────────────────────
@@ -22,7 +23,7 @@ class _DrawPoint {
 // ─────────────────────────────────────────────────────────────────────────────
 // Entry — Category picker
 // ─────────────────────────────────────────────────────────────────────────────
-class ColoringScreen extends StatelessWidget {
+class ColoringScreen extends ConsumerWidget {
   const ColoringScreen({super.key});
   static const routeName = '/coloring';
 
@@ -106,8 +107,8 @@ class ColoringScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final progress = context.watch<ProgressService>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(progressServiceProvider);
     final isMalay = progress.language == AppLanguage.malay;
 
     return Scaffold(
@@ -115,6 +116,14 @@ class ColoringScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFFF9F43),
         foregroundColor: Colors.white,
+        // Continues the emoji "flight" started from the module card on the
+        // Learning Path screen — same Hero tag, same emoji.
+        leading: Center(
+          child: Hero(
+            tag: 'module-emoji-${ColoringScreen.routeName}',
+            child: const Text('🎨', style: TextStyle(fontSize: 26)),
+          ),
+        ),
         title: Text(
           isMalay ? 'Jom Mewarna! 🎨' : 'Let\'s Colour! 🎨',
           style: const TextStyle(fontWeight: FontWeight.w900),
@@ -159,12 +168,12 @@ class ColoringScreen extends StatelessWidget {
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
-class _ColoringHeader extends StatelessWidget {
+class _ColoringHeader extends ConsumerWidget {
   const _ColoringHeader({required this.isMalay});
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -223,12 +232,12 @@ class _ColoringHeader extends StatelessWidget {
   }
 }
 
-class _TeacherTag extends StatelessWidget {
+class _TeacherTag extends ConsumerWidget {
   const _TeacherTag({required this.label});
   final String label;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -248,7 +257,7 @@ class _TeacherTag extends StatelessWidget {
 }
 
 // ── Category card ──────────────────────────────────────────────────────────────
-class _CategoryCard extends StatelessWidget {
+class _CategoryCard extends ConsumerWidget {
   const _CategoryCard({
     required this.category,
     required this.isMalay,
@@ -259,7 +268,7 @@ class _CategoryCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(22),
@@ -317,7 +326,7 @@ class _CategoryCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Subject picker — choose WHAT to colour
 // ─────────────────────────────────────────────────────────────────────────────
-class _SubjectPickerScreen extends StatelessWidget {
+class _SubjectPickerScreen extends ConsumerWidget {
   const _SubjectPickerScreen({
     required this.category,
     required this.isMalay,
@@ -326,7 +335,7 @@ class _SubjectPickerScreen extends StatelessWidget {
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8E7),
       appBar: AppBar(
@@ -368,7 +377,7 @@ class _SubjectPickerScreen extends StatelessWidget {
   }
 }
 
-class _SubjectCard extends StatelessWidget {
+class _SubjectCard extends ConsumerWidget {
   const _SubjectCard({
     required this.subject,
     required this.color,
@@ -381,7 +390,7 @@ class _SubjectCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
@@ -430,7 +439,7 @@ class _SubjectCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Canvas — the actual finger-painting screen
 // ─────────────────────────────────────────────────────────────────────────────
-class ColoringCanvasScreen extends StatefulWidget {
+class ColoringCanvasScreen extends ConsumerStatefulWidget {
   const ColoringCanvasScreen({
     super.key,
     required this.subject,
@@ -442,10 +451,10 @@ class ColoringCanvasScreen extends StatefulWidget {
   final bool isMalay;
 
   @override
-  State<ColoringCanvasScreen> createState() => _ColoringCanvasScreenState();
+  ConsumerState<ColoringCanvasScreen> createState() => _ColoringCanvasScreenState();
 }
 
-class _ColoringCanvasScreenState extends State<ColoringCanvasScreen>
+class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     with SingleTickerProviderStateMixin {
   final List<_DrawPoint?> _points = [];
   Color _selectedColor = Colors.red;
@@ -516,7 +525,7 @@ class _ColoringCanvasScreenState extends State<ColoringCanvasScreen>
   }
 
   void _celebrate() async {
-    final ps = context.read<ProgressService>();
+    final ps = ref.read(progressServiceProvider);
     await ps.incrementColoringSessions();
     await ps.addStars(1);
     setState(() => _saved = true);
@@ -783,13 +792,13 @@ class _DrawingPainter extends CustomPainter {
 }
 
 // ── Star burst decoration ──────────────────────────────────────────────────────
-class _StarBurst extends StatelessWidget {
+class _StarBurst extends ConsumerWidget {
   const _StarBurst({required this.progress, required this.color});
   final double progress;
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return CustomPaint(
       painter: _StarBurstPainter(progress, color),
       child: const SizedBox.expand(),
@@ -831,7 +840,7 @@ class _StarBurstPainter extends CustomPainter {
 }
 
 // ── Tool button ────────────────────────────────────────────────────────────────
-class _ToolButton extends StatelessWidget {
+class _ToolButton extends ConsumerWidget {
   const _ToolButton({
     required this.icon,
     required this.label,
@@ -844,7 +853,7 @@ class _ToolButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -874,7 +883,7 @@ class _ToolButton extends StatelessWidget {
 }
 
 // ── Celebration dialog ─────────────────────────────────────────────────────────
-class _CelebrationDialog extends StatelessWidget {
+class _CelebrationDialog extends ConsumerWidget {
   const _CelebrationDialog({
     required this.isMalay,
     required this.subjectEmoji,
@@ -885,7 +894,7 @@ class _CelebrationDialog extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(

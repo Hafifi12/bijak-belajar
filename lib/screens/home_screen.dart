@@ -1,46 +1,164 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/app_language.dart';
+import '../models/quest.dart';
+import '../providers/app_state.dart';
 import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/badge_unlock_overlay.dart';
 import '../widgets/bijak_scene.dart';
-import '../widgets/star_counter.dart';
+import '../widgets/mascot_widget.dart';
+import '../widgets/xp_popup.dart';
 import 'coloring_screen.dart';
+import 'daily_reward_screen.dart';
 import 'games_hub_screen.dart';
 import 'jawi_asas_screen.dart';
 import 'learn_body_parts_screen.dart';
 import 'learn_letters_screen.dart';
 import 'learn_numbers_screen.dart';
 import 'learning_path_screen.dart';
+import 'level_up_screen.dart';
 import 'math_practice_screen.dart';
 import 'parent_gate_screen.dart';
 import 'progress_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+final RouteObserver<PageRoute> appRouteObserver = RouteObserver<PageRoute>();
+
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
   static const routeName = '/home';
 
   @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
+  final _mascotKey = GlobalKey<MascotWidgetState>();
+  int _lastXp = -1;
+
+  /// Cached so [dispose] and [_onProgressChanged] never touch `ref` outside the
+  /// mounted lifecycle (which throws after the widget is disposed).
+  ProgressService? _progress;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final progress = ref.read(progressServiceProvider);
+      _progress = progress;
+      _lastXp = progress.stars;
+      _checkNotifications();
+      // Listen for XP gains and badge unlocks
+      progress.addListener(_onProgressChanged);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    // Safe to remove — ProgressService outlives this widget. Uses the cached
+    // reference rather than `ref` (which is invalid during/after dispose).
+    _progress?.removeListener(_onProgressChanged);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _checkNotifications();
+  }
+
+  void _onProgressChanged() {
+    if (!mounted) return;
+    final ps = _progress;
+    if (ps == null) return;
+    final newXp = ps.stars;
+    if (_lastXp >= 0 && newXp > _lastXp) {
+      final gained = newXp - _lastXp;
+      XpPopup.show(context, amount: gained);
+      _mascotKey.currentState?.celebrate();
+    }
+    _lastXp = newXp;
+  }
+
+  Future<void> _checkNotifications() async {
+    if (!mounted) return;
+    final progress = ref.read(progressServiceProvider);
+
+    if (progress.consumeDailyRewardFlag()) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => DailyRewardDialog(progress: progress),
+      );
+      if (!mounted) return;
+    }
+
+    final levelUp = progress.consumeLevelUp();
+    if (levelUp != null) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => LevelUpDialog(
+          newLevel: levelUp,
+          isMalay: progress.language == AppLanguage.malay,
+        ),
+      );
+      if (!mounted) return;
+    }
+
+    // Show any badges unlocked since the last check, one after another.
+    for (final badge in progress.consumePendingBadges()) {
+      if (!mounted) return;
+      await BadgeUnlockOverlay.show(context, badge: badge);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final progress = context.watch<ProgressService>();
+    final progress = ref.watch(progressServiceProvider);
     final isMalay = progress.language == AppLanguage.malay;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3FB),
+      backgroundColor: AppTheme.lightBlue,
       bottomNavigationBar: _BottomBar(isMalay: isMalay),
       body: BijakScene(
-        topColor: const Color(0xFF8ED0FF),
-        bottomColor: const Color(0xFFFFF3FB),
+        topColor: const Color(0xFFBCE2FF),
+        bottomColor: AppTheme.lightBlue,
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: _HomeHeader(isMalay: isMalay, progress: progress),
+              child: _HomeHeader(
+                isMalay: isMalay,
+                progress: progress,
+                mascotKey: _mascotKey,
+              ),
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
+                  // ─── DAILY QUESTS section ──────────────────────────────
+                  _SectionChip(
+                    emoji: '🎯',
+                    label: isMalay ? 'MISI HARI INI' : 'TODAY\'S QUESTS',
+                    color: const Color(0xFFE84393),
+                  ),
+                  const SizedBox(height: 10),
+                  _DailyQuestsCard(isMalay: isMalay, progress: progress),
+
+                  const SizedBox(height: 22),
+
                   // ─── LEARN section ──────────────────────────────────────
                   _SectionChip(
                     emoji: '📖',
@@ -163,16 +281,23 @@ class HomeScreen extends StatelessWidget {
 // Header
 // ─────────────────────────────────────────────────────────────────────────────
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.isMalay, required this.progress});
+  const _HomeHeader({
+    required this.isMalay,
+    required this.progress,
+    this.mascotKey,
+  });
   final bool isMalay;
   final ProgressService progress;
+  final GlobalKey<MascotWidgetState>? mascotKey;
 
   @override
   Widget build(BuildContext context) {
+    final level = progress.currentLevel;
+
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
         child: Column(
           children: [
             // ── Top bar ──
@@ -182,15 +307,14 @@ class _HomeHeader extends StatelessWidget {
                 const Spacer(),
                 _IconBtn(
                   icon: Icons.insights_rounded,
-                  onTap: () =>
-                      Navigator.of(context).pushNamed(ProgressScreen.routeName),
+                  onTap: () => Navigator.of(context)
+                      .pushNamed(ProgressScreen.routeName),
                 ),
                 const SizedBox(width: 8),
                 _IconBtn(
                   icon: Icons.settings_rounded,
-                  onTap: () => Navigator.of(
-                    context,
-                  ).pushNamed(ParentGateScreen.routeName),
+                  onTap: () => Navigator.of(context)
+                      .pushNamed(ParentGateScreen.routeName),
                 ),
               ],
             ),
@@ -198,90 +322,151 @@ class _HomeHeader extends StatelessWidget {
 
             // ── Welcome card ──
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFFFFF), Color(0xFFFFF9FE)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: Colors.white, width: 3),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.ink.withValues(alpha: 0.12),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    color: AppTheme.ink.withValues(alpha: 0.09),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  const BijakBookMascot(size: 78),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isMalay
-                              ? '👋 Hai, anak bijak!'
-                              : '👋 Hi, smart learner!',
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                            color: AppTheme.ink,
-                          ),
+                  Row(
+                    children: [
+                      MascotWidget(key: mascotKey, size: 72),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isMalay
+                                  ? '👋 Hai, anak bijak!'
+                                  : '👋 Hi, smart learner!',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            // Level display
+                            Row(
+                              children: [
+                                Text(level.emoji,
+                                    style: const TextStyle(fontSize: 14)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${isMalay ? 'Tahap' : 'Level'} ${level.level} · ${isMalay ? level.titleMalay : level.title}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: level.color,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            // Level XP bar
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: level.progressFraction(progress.stars),
+                                minHeight: 5,
+                                backgroundColor:
+                                    level.color.withValues(alpha: 0.15),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    level.color),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            if (level.maxStars > 0)
+                              Text(
+                                isMalay
+                                    ? '${level.starsToNext(progress.stars)} bintang ke Tahap ${level.level + 1}'
+                                    : '${level.starsToNext(progress.stars)} stars to Level ${level.level + 1}',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: level.color.withValues(alpha: 0.8),
+                                ),
+                              ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isMalay
-                              ? 'Apa yang kita nak belajar hari ini? 🌟'
-                              : 'What shall we learn today? 🌟',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF5A6A9A),
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _LearningSteps(isMalay: isMalay),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFE4F6),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            isMalay
-                                ? '✨ Misi hari ini: pilih 1 aktiviti!'
-                                : "✨ Today's mission: pick 1 activity!",
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF8A2E72),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        children: [
+                          // Star pill
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppTheme.sunnyYellow.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                  color: AppTheme.sunnyYellow, width: 1.5),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('⭐',
+                                    style: TextStyle(fontSize: 14)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${progress.stars}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppTheme.ink,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Column(
-                    children: [
-                      StarCounter(large: false),
-                      SizedBox(height: 6),
-                      _CuteBadge(),
+                          const SizedBox(height: 6),
+                          // Streak pill
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF9F43)
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                  color: const Color(0xFFFF9F43), width: 1.5),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('🔥',
+                                    style: TextStyle(fontSize: 13)),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${progress.currentStreak}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppTheme.ink,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 12),
             _ContinueLearningBanner(isMalay: isMalay, progress: progress),
           ],
@@ -301,7 +486,6 @@ class _ContinueLearningBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Find the module with most progress that isn't complete
     final modules = [
       _ContinueModule(
         'numbers',
@@ -341,7 +525,6 @@ class _ContinueLearningBanner extends StatelessWidget {
       ),
     ];
 
-    // Pick module with progress > 0 and not 100%
     final active = modules.where((m) => m.done > 0 && m.done < m.total).toList()
       ..sort((a, b) => b.done.compareTo(a.done));
 
@@ -453,80 +636,173 @@ class _ContinueModule {
   final Color color;
 }
 
-class _LearningSteps extends StatelessWidget {
-  const _LearningSteps({required this.isMalay});
-  final bool isMalay;
-
-  @override
-  Widget build(BuildContext context) {
-    final steps = [
-      (emoji: '👁', label: isMalay ? 'Lihat' : 'See'),
-      (emoji: '🔊', label: isMalay ? 'Dengar' : 'Hear'),
-      (emoji: '✋', label: isMalay ? 'Buat' : 'Do'),
-    ];
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < steps.length; i++) ...[
-          _StepDot(
-            emoji: steps[i].emoji,
-            label: steps[i].label,
-            color: [
-              const Color(0xFFFFD9EC),
-              const Color(0xFFD6F3FF),
-              const Color(0xFFFFF0B8),
-            ][i],
-          ),
-          if (i < steps.length - 1)
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 9,
-              color: Color(0xFFB0B8D8),
-            ),
-        ],
-      ],
-    );
-  }
-}
-
-class _StepDot extends StatelessWidget {
-  const _StepDot({
-    required this.emoji,
-    required this.label,
-    required this.color,
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily Quests card
+// ─────────────────────────────────────────────────────────────────────────────
+class _DailyQuestsCard extends StatelessWidget {
+  const _DailyQuestsCard({
+    required this.isMalay,
+    required this.progress,
   });
-  final String emoji;
-  final String label;
-  final Color color;
+  final bool isMalay;
+  final ProgressService progress;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      child: Column(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 14)),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.ink,
-            ),
+    final quests = todayQuests();
+    final qProgress = progress.questProgress;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE84393).withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
+      ),
+      child: Column(
+        children: List.generate(quests.length, (i) {
+          final q = quests[i];
+          final prog = i < qProgress.length ? qProgress[i] : 0;
+          final done = prog >= q.requiredCount;
+          final pct =
+              (prog / q.requiredCount).clamp(0.0, 1.0);
+          final isLast = i == quests.length - 1;
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                child: Row(
+                  children: [
+                    // Emoji badge
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: done
+                            ? const Color(0xFF34C759).withValues(alpha: 0.15)
+                            : const Color(0xFFE84393).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Text(
+                          done ? '✅' : q.emoji,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  isMalay ? q.titleMalay : q.title,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: done
+                                        ? const Color(0xFF34C759)
+                                        : AppTheme.ink,
+                                    decoration: done
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: done
+                                      ? const Color(0xFF34C759)
+                                          .withValues(alpha: 0.15)
+                                      : AppTheme.sunnyYellow
+                                          .withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  '⭐ +${q.rewardStars}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                    color: done
+                                        ? const Color(0xFF34C759)
+                                        : const Color(0xFFB8860B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            isMalay ? q.descriptionMalay : q.description,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF7A7A9A),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: pct,
+                                    minHeight: 6,
+                                    backgroundColor: done
+                                        ? const Color(0xFF34C759)
+                                            .withValues(alpha: 0.15)
+                                        : const Color(0xFFE84393)
+                                            .withValues(alpha: 0.12),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      done
+                                          ? const Color(0xFF34C759)
+                                          : const Color(0xFFE84393),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$prog/${q.requiredCount}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: done
+                                      ? const Color(0xFF34C759)
+                                      : const Color(0xFFE84393),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isLast)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: const Color(0xFFE84393).withValues(alpha: 0.08),
+                  indent: 16,
+                  endIndent: 16,
+                ),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -582,7 +858,7 @@ class _SectionChip extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Module grid (3-column for learn modules)
+// Module grid
 // ─────────────────────────────────────────────────────────────────────────────
 class _ModuleGrid extends StatelessWidget {
   const _ModuleGrid({required this.children});
@@ -591,12 +867,12 @@ class _ModuleGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.count(
-      crossAxisCount: 3,
+      crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      childAspectRatio: 0.8,
+      childAspectRatio: 1.55,
       children: children,
     );
   }
@@ -668,157 +944,95 @@ class _ModuleTileState extends State<_ModuleTile>
         onTapCancel: () => _ctrl.reverse(),
         child: Container(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFF8FD)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.white, width: 2.5),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: widget.color.withValues(alpha: 0.22),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
+                color: widget.color.withValues(alpha: 0.18),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
           clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Row(
             children: [
-              // ── Coloured top ──
               Container(
-                height: 80,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      widget.color,
-                      widget.color.withValues(alpha: 0.75),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
+                width: 72,
+                color: widget.color,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Positioned(
-                      top: -12,
-                      right: -12,
-                      child: Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
+                    Text(widget.emoji,
+                        style: const TextStyle(fontSize: 32)),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      left: 8,
                       child: Text(
-                        widget.emoji,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    Text(
-                      widget.symbol,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        height: 1.1,
-                        shadows: [
-                          Shadow(color: Color(0x44000000), blurRadius: 4),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 4,
-                      left: 4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '${(pct * 100).round()}%',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        '${(pct * 100).round()}%',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // ── Info ──
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 7, 8, 6),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         widget.title,
                         maxLines: 2,
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.w900,
                           color: AppTheme.ink,
-                          height: 1.1,
+                          height: 1.15,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         widget.sub,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 9,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: widget.color,
                         ),
                       ),
-                      const Spacer(),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.favorite_rounded,
-                            size: 10,
-                            color: Color(0xFFFF5B96),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${widget.done}/${widget.total}',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: widget.color,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(6),
                         child: LinearProgressIndicator(
                           value: pct,
-                          minHeight: 5,
-                          backgroundColor: widget.color.withValues(alpha: 0.15),
+                          minHeight: 7,
+                          backgroundColor:
+                              widget.color.withValues(alpha: 0.14),
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            widget.color,
-                          ),
+                              widget.color),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${widget.done}/${widget.total}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: widget.color.withValues(alpha: 0.75),
                         ),
                       ),
                     ],
@@ -834,7 +1048,7 @@ class _ModuleTileState extends State<_ModuleTile>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Big nav button (full width highlight)
+// Big nav button
 // ─────────────────────────────────────────────────────────────────────────────
 class _BigNavButton extends StatelessWidget {
   const _BigNavButton({
@@ -921,13 +1135,13 @@ class _BigNavButton extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Bottom navigation bar
 // ─────────────────────────────────────────────────────────────────────────────
-class _BottomBar extends StatelessWidget {
+class _BottomBar extends ConsumerWidget {
   const _BottomBar({required this.isMalay});
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
-    final progress = context.watch<ProgressService>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(progressServiceProvider);
     final items = [
       _NavItem(
         icon: Icons.home_rounded,
@@ -1059,36 +1273,20 @@ class _IconBtn extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 38,
-        height: 38,
+        width: 42,
+        height: 42,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.ink.withValues(alpha: 0.10),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        child: Icon(icon, color: Colors.white, size: 20),
-      ),
-    );
-  }
-}
-
-class _CuteBadge extends StatelessWidget {
-  const _CuteBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF0B8),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: const Text(
-        'Cutie Mode ✨',
-        style: TextStyle(
-          fontSize: 8,
-          fontWeight: FontWeight.w900,
-          color: AppTheme.ink,
-        ),
+        child: Icon(icon, color: AppTheme.ink, size: 22),
       ),
     );
   }

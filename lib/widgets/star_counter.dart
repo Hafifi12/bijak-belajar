@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../services/progress_service.dart';
+import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
 
-class StarCounter extends StatelessWidget {
+class StarCounter extends ConsumerWidget {
   const StarCounter({super.key, this.large = false});
 
   final bool large;
 
   @override
-  Widget build(BuildContext context) {
-    final stars = context.select<ProgressService, int>((s) => s.stars);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stars = ref.watch(progressServiceProvider.select((s) => s.stars));
 
     return Semantics(
       label: '$stars stars earned',

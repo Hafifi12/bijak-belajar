@@ -2,13 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../data/find_explorer_data.dart';
 import '../models/challenge.dart';
 import '../models/explorer_item.dart';
-import '../services/audio_service.dart';
-import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_text.dart';
 import '../widgets/star_counter.dart';
@@ -23,15 +23,15 @@ const _slotAlignments = [
   Alignment(0.55, 0.50),   // bottom-right
 ];
 
-class FindExplorerScreen extends StatefulWidget {
+class FindExplorerScreen extends ConsumerStatefulWidget {
   const FindExplorerScreen({super.key});
   static const routeName = '/find-explorer';
 
   @override
-  State<FindExplorerScreen> createState() => _FindExplorerScreenState();
+  ConsumerState<FindExplorerScreen> createState() => _FindExplorerScreenState();
 }
 
-class _FindExplorerScreenState extends State<FindExplorerScreen>
+class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
     with TickerProviderStateMixin {
   final _rng = math.Random();
 
@@ -154,8 +154,8 @@ class _FindExplorerScreenState extends State<FindExplorerScreen>
       _popCtrls[slot].forward(from: 0);
       _sparkCtrl.forward(from: 0);
 
-      final progressService = context.read<ProgressService>();
-      final audioService = context.read<AudioService>();
+      final progressService = ref.read(progressServiceProvider);
+      final audioService = ref.read(audioServiceProvider);
       final badge = await progressService.completeChallenge(ChallengeMode.findExplorer);
       await audioService.playCelebration(enabled: progressService.soundEnabled);
 
@@ -189,8 +189,8 @@ class _FindExplorerScreenState extends State<FindExplorerScreen>
   void _speakTarget() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _options.isEmpty) return;
-      final progressService = context.read<ProgressService>();
-      context.read<AudioService>().speak(
+      final progressService = ref.read(progressServiceProvider);
+      ref.read(audioServiceProvider).speak(
         AppText.findExplorerPrompt(_target, progressService.language),
         enabled: progressService.voiceEnabled,
         language: progressService.language,
@@ -202,7 +202,7 @@ class _FindExplorerScreenState extends State<FindExplorerScreen>
 
   @override
   Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+    final language = ref.watch(progressServiceProvider).language;
 
     return Scaffold(
       body: Container(
@@ -285,12 +285,12 @@ class _FindExplorerScreenState extends State<FindExplorerScreen>
 // ─────────────────────────────────────────────────────────────────────────────
 // Top bar
 // ─────────────────────────────────────────────────────────────────────────────
-class _TopBar extends StatelessWidget {
+class _TopBar extends ConsumerWidget {
   const _TopBar({required this.onBack});
   final VoidCallback onBack;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
@@ -341,7 +341,7 @@ class _TopBar extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Mission card
 // ─────────────────────────────────────────────────────────────────────────────
-class _MissionCard extends StatelessWidget {
+class _MissionCard extends ConsumerWidget {
   const _MissionCard(
       {required this.target, required this.language, required this.onSpeak});
   final ExplorerItem target;
@@ -349,7 +349,7 @@ class _MissionCard extends StatelessWidget {
   final VoidCallback onSpeak;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -435,7 +435,7 @@ class _MissionCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Game arena — 4 floating objects
 // ─────────────────────────────────────────────────────────────────────────────
-class _GameArena extends StatelessWidget {
+class _GameArena extends ConsumerWidget {
   const _GameArena({
     required this.options,
     required this.targetSlot,
@@ -465,7 +465,7 @@ class _GameArena extends StatelessWidget {
   final void Function(int slot) onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Stack(
       children: [
         // Decorative stars in background
@@ -505,7 +505,7 @@ class _GameArena extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // One floating object card
 // ─────────────────────────────────────────────────────────────────────────────
-class _FloatingObject extends StatelessWidget {
+class _FloatingObject extends ConsumerWidget {
   const _FloatingObject({
     required this.item,
     required this.slot,
@@ -535,7 +535,7 @@ class _FloatingObject extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return AnimatedBuilder(
       animation: Listenable.merge([floatAnim, shakeAnim, popAnim]),
       builder: (ctx, _) {
@@ -660,11 +660,11 @@ class _FloatingObject extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Background decorative stars
 // ─────────────────────────────────────────────────────────────────────────────
-class _BgStars extends StatelessWidget {
+class _BgStars extends ConsumerWidget {
   const _BgStars();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Positioned.fill(
       child: IgnorePointer(
         child: CustomPaint(painter: _StarsPainter()),
@@ -703,12 +703,12 @@ class _StarsPainter extends CustomPainter {
 // ─────────────────────────────────────────────────────────────────────────────
 // Sparkle burst (correct answer celebration)
 // ─────────────────────────────────────────────────────────────────────────────
-class _SparklesBurst extends StatelessWidget {
+class _SparklesBurst extends ConsumerWidget {
   const _SparklesBurst({required this.controller});
   final AnimationController controller;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return AnimatedBuilder(
       animation: controller,
       builder: (_, __) => CustomPaint(

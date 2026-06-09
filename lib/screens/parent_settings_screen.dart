@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
 import '../services/progress_service.dart';
@@ -8,14 +10,14 @@ import '../utils/app_text.dart';
 import '../utils/constants.dart';
 import '../widgets/bijak_scene.dart';
 
-class ParentSettingsScreen extends StatelessWidget {
+class ParentSettingsScreen extends ConsumerWidget {
   const ParentSettingsScreen({super.key});
 
   static const routeName = '/parent-settings';
 
   @override
-  Widget build(BuildContext context) {
-    final progress = context.watch<ProgressService>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(progressServiceProvider);
     final language = progress.language;
     final isMalay = language == AppLanguage.malay;
 
@@ -111,7 +113,7 @@ class ParentSettingsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       OutlinedButton.icon(
-                        onPressed: () => _confirmReset(context),
+                        onPressed: () => _confirmReset(context, ref),
                         icon: const Icon(Icons.restart_alt_rounded),
                         label: Text(isMalay ? 'Set Semula Kemajuan' : 'Reset Progress'),
                         style: OutlinedButton.styleFrom(
@@ -130,7 +132,7 @@ class ParentSettingsScreen extends StatelessWidget {
                   title: Text(AppText.ui('language', language)),
                   subtitle: Text(progress.language.nativeName),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => _selectLanguage(context),
+                  onTap: () => _selectLanguage(context, ref),
                 ),
               ),
               const SizedBox(height: 14),
@@ -232,8 +234,8 @@ class ParentSettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmReset(BuildContext context) async {
-    final progress = context.read<ProgressService>();
+  Future<void> _confirmReset(BuildContext context, WidgetRef ref) async {
+    final progress = ref.read(progressServiceProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -257,8 +259,8 @@ class ParentSettingsScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _selectLanguage(BuildContext context) async {
-    final progress = context.read<ProgressService>();
+  Future<void> _selectLanguage(BuildContext context, WidgetRef ref) async {
+    final progress = ref.read(progressServiceProvider);
     final selected = await showDialog<AppLanguage>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -287,7 +289,7 @@ class ParentSettingsScreen extends StatelessWidget {
   }
 }
 
-class _ProgressSummaryCard extends StatelessWidget {
+class _ProgressSummaryCard extends ConsumerWidget {
   const _ProgressSummaryCard({
     required this.progress,
     required this.isMalay,
@@ -296,7 +298,7 @@ class _ProgressSummaryCard extends StatelessWidget {
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final modules = [
       _ModuleRow(
         emoji: '🔢',
@@ -539,7 +541,7 @@ class _ModuleRow {
   final Color color;
 }
 
-class _StatBubble extends StatelessWidget {
+class _StatBubble extends ConsumerWidget {
   const _StatBubble({
     required this.value,
     required this.label,
@@ -550,7 +552,7 @@ class _StatBubble extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
         Text(
@@ -575,14 +577,14 @@ class _StatBubble extends StatelessWidget {
   }
 }
 
-class _SafetyBadge extends StatelessWidget {
+class _SafetyBadge extends ConsumerWidget {
   const _SafetyBadge({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
@@ -609,7 +611,7 @@ class _SafetyBadge extends StatelessWidget {
   }
 }
 
-class _DevInfoRow extends StatelessWidget {
+class _DevInfoRow extends ConsumerWidget {
   const _DevInfoRow({
     required this.icon,
     required this.label,
@@ -621,7 +623,7 @@ class _DevInfoRow extends StatelessWidget {
   final String value;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       children: [
         Icon(icon, size: 16, color: const Color(0xFF6C5CE7)),

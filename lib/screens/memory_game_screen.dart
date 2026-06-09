@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../data/memory_data.dart';
 import '../models/app_language.dart';
 import '../models/challenge.dart';
 import '../models/memory_item.dart';
-import '../services/audio_service.dart';
-import '../services/progress_service.dart';
 import '../utils/app_text.dart';
 import '../widgets/shape_display.dart';
 import '../widgets/star_counter.dart';
@@ -19,16 +19,16 @@ class MemoryGameArgs {
   final MemoryStage stage;
 }
 
-class MemoryGameScreen extends StatefulWidget {
+class MemoryGameScreen extends ConsumerStatefulWidget {
   const MemoryGameScreen({super.key});
 
   static const routeName = '/memory-game';
 
   @override
-  State<MemoryGameScreen> createState() => _MemoryGameScreenState();
+  ConsumerState<MemoryGameScreen> createState() => _MemoryGameScreenState();
 }
 
-class _MemoryGameScreenState extends State<MemoryGameScreen> {
+class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen> {
   late MemoryCategory _category;
   late MemoryStage _stage;
   List<_MemoryCardEntry> _cards = const [];
@@ -58,7 +58,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   @override
   Widget build(BuildContext context) {
     final category = _category;
-    final language = context.watch<ProgressService>().language;
+    final language = ref.watch(progressServiceProvider).language;
     final matchedPairs = _matched.length ~/ 2;
     final totalPairs = _cards.length ~/ 2;
 
@@ -257,8 +257,8 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
       return;
     }
 
-    final progressService = context.read<ProgressService>();
-    final audioService = context.read<AudioService>();
+    final progressService = ref.read(progressServiceProvider);
+    final audioService = ref.read(audioServiceProvider);
     final navigator = Navigator.of(context);
 
     setState(() {
@@ -286,7 +286,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   }
 }
 
-class _MemoryHeader extends StatelessWidget {
+class _MemoryHeader extends ConsumerWidget {
   const _MemoryHeader({
     required this.category,
     required this.stage,
@@ -304,7 +304,7 @@ class _MemoryHeader extends StatelessWidget {
   final AppLanguage language;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isMalay = language == AppLanguage.malay;
 
     return Card(
@@ -349,7 +349,7 @@ class _MemoryHeader extends StatelessWidget {
   }
 }
 
-class _MemoryTile extends StatelessWidget {
+class _MemoryTile extends ConsumerWidget {
   const _MemoryTile({
     required this.entry,
     required this.visible,
@@ -371,7 +371,7 @@ class _MemoryTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final borderColor = matched ? const Color(0xFF2E7D32) : categoryColor;
 
     return Semantics(
@@ -411,13 +411,13 @@ class _MemoryTile extends StatelessWidget {
   }
 }
 
-class _HiddenCard extends StatelessWidget {
+class _HiddenCard extends ConsumerWidget {
   const _HiddenCard({super.key, required this.ultraCompact});
 
   final bool ultraCompact;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Icon(
         Icons.question_mark_rounded,
@@ -428,7 +428,7 @@ class _HiddenCard extends StatelessWidget {
   }
 }
 
-class _VisibleCard extends StatelessWidget {
+class _VisibleCard extends ConsumerWidget {
   const _VisibleCard({
     super.key,
     required this.item,
@@ -447,7 +447,7 @@ class _VisibleCard extends StatelessWidget {
   final bool ultraCompact;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: EdgeInsets.all(ultraCompact ? 2 : (compact ? 5 : 8)),
       child: Column(
@@ -485,7 +485,7 @@ class _VisibleCard extends StatelessWidget {
   }
 }
 
-class _MemoryItemArt extends StatelessWidget {
+class _MemoryItemArt extends ConsumerWidget {
   const _MemoryItemArt({
     required this.item,
     required this.color,
@@ -499,7 +499,7 @@ class _MemoryItemArt extends StatelessWidget {
   final bool ultraCompact;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final displayColor = item.displayColor;
     final shapeKind = item.shapeKind;
     final symbol = item.symbol;

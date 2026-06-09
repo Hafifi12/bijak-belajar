@@ -1,28 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiny_finder/app.dart';
 import 'package:tiny_finder/models/train_mode.dart';
+import 'package:tiny_finder/providers/app_state.dart';
 import 'package:tiny_finder/screens/home_screen.dart';
 import 'package:tiny_finder/screens/memory_category_screen.dart';
 import 'package:tiny_finder/screens/train_sort_screen.dart';
 import 'package:tiny_finder/services/progress_service.dart';
 
+String _todayKey() {
+  final now = DateTime.now();
+  return '${now.year}-${now.month.toString().padLeft(2, '0')}-'
+      '${now.day.toString().padLeft(2, '0')}';
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    // Seed today's login date so the daily-reward dialog does not pop over the
+    // home screen during these UI tests.
+    SharedPreferences.setMockInitialValues({'last_login_date': _todayKey()});
   });
 
   Future<void> pumpAppAndOpenHome(
     WidgetTester tester,
     ProgressService progressService,
   ) async {
+    // Use a tall surface so the scrolling home content (header + all module
+    // tiles) is laid out without needing to scroll lazy slivers into view.
+    tester.view.physicalSize = const Size(1200, 2600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
-      TinyFinderApp(
-        progressService: progressService,
-        initialRoute: HomeScreen.routeName,
+      ProviderScope(
+        overrides: [
+          progressServiceProvider.overrideWith((ref) => progressService),
+        ],
+        child: const TinyFinderApp(
+          initialRoute: HomeScreen.routeName,
+        ),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));

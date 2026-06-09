@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
-import '../services/audio_service.dart';
-import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
 
 /// Jawi Asas — teaches the 28 Arabic/Jawi letters used in Bahasa Melayu Jawi
 /// in a warm, fun style for Malaysian Muslim preschool children.
-class JawiAsasScreen extends StatefulWidget {
+class JawiAsasScreen extends ConsumerStatefulWidget {
   const JawiAsasScreen({super.key});
 
   static const routeName = '/jawi-asas';
 
   @override
-  State<JawiAsasScreen> createState() => _JawiAsasScreenState();
+  ConsumerState<JawiAsasScreen> createState() => _JawiAsasScreenState();
 }
 
-class _JawiAsasScreenState extends State<JawiAsasScreen>
+class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
     with SingleTickerProviderStateMixin {
   int _current = 0;
   bool _recordedInitial = false;
@@ -283,12 +283,12 @@ class _JawiAsasScreenState extends State<JawiAsasScreen>
 
   void _recordCurrentLesson() {
     final item = _jawis[_current];
-    context.read<ProgressService>().markModuleLesson('jawi', item.jawi);
+    ref.read(progressServiceProvider).markModuleLesson('jawi', item.jawi);
   }
 
   Future<void> _speakIn(String word, String locale) async {
-    final progress = context.read<ProgressService>();
-    final audio = context.read<AudioService>();
+    final progress = ref.read(progressServiceProvider);
+    final audio = ref.read(audioServiceProvider);
     await audio.speakLocale(
       word,
       enabled: progress.voiceEnabled,
@@ -298,7 +298,7 @@ class _JawiAsasScreenState extends State<JawiAsasScreen>
 
   @override
   Widget build(BuildContext context) {
-    final language = context.watch<ProgressService>().language;
+    final language = ref.watch(progressServiceProvider).language;
     final item = _jawis[_current];
     final color = _color;
     final isFirst = _current == 0;
@@ -309,6 +309,14 @@ class _JawiAsasScreenState extends State<JawiAsasScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.skyBlue,
         foregroundColor: Colors.white,
+        // Continues the emoji "flight" started from the module card on the
+        // Learning Path screen — same Hero tag, same emoji.
+        leading: Center(
+          child: Hero(
+            tag: 'module-emoji-${JawiAsasScreen.routeName}',
+            child: const Text('🌙', style: TextStyle(fontSize: 26)),
+          ),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -635,7 +643,7 @@ class _JawiAsasScreenState extends State<JawiAsasScreen>
   }
 }
 
-class _JawiPronounceButtons extends StatelessWidget {
+class _JawiPronounceButtons extends ConsumerWidget {
   const _JawiPronounceButtons({
     required this.onSpeak,
     required this.arabicLetter,
@@ -649,7 +657,7 @@ class _JawiPronounceButtons extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
