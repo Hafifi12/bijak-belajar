@@ -150,6 +150,7 @@ class AppText {
       MemoryCategory.animals => 'animals',
       MemoryCategory.shapes => 'shapes',
       MemoryCategory.colors => 'colors',
+      MemoryCategory.jawi => 'jawiCategory',
     };
     return ui(key, language);
   }
@@ -162,6 +163,7 @@ class AppText {
       MemoryCategory.animals => 'animalsSubtitle',
       MemoryCategory.shapes => 'shapesSubtitle',
       MemoryCategory.colors => 'colorsSubtitle',
+      MemoryCategory.jawi => 'jawiCategorySubtitle',
     };
     return ui(key, language);
   }
@@ -360,6 +362,18 @@ const _uiText = <String, Map<AppLanguage, String>>{
     AppLanguage.malay: 'Warna',
     AppLanguage.mandarin: '颜色',
     AppLanguage.tamil: 'நிறங்கள்',
+  },
+  'jawiCategory': {
+    AppLanguage.english: 'Jawi Letters',
+    AppLanguage.malay: 'Huruf Jawi',
+    AppLanguage.mandarin: '爪夷字母',
+    AppLanguage.tamil: 'ஜாவி எழுத்துகள்',
+  },
+  'jawiCategorySubtitle': {
+    AppLanguage.english: 'Match Jawi letter pairs',
+    AppLanguage.malay: 'Padankan pasangan huruf Jawi',
+    AppLanguage.mandarin: '配对爪夷字母',
+    AppLanguage.tamil: 'ஜாவி எழுத்து ஜோடிகளைப் பொருத்துங்கள்',
   },
   'animalsSubtitle': {
     AppLanguage.english: 'Match animal pairs',

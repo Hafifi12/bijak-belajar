@@ -54,11 +54,24 @@ const colorMemoryItems = <MemoryItem>[
   ),
 ];
 
+/// Jawi letters as memory cards — exercises letterform recognition, which is
+/// exactly what early Jawi literacy needs. The first six are the most
+/// visually distinct for ages 4–7.
+const jawiMemoryItems = <MemoryItem>[
+  MemoryItem(id: 'jawi_alif', label: 'Alif', symbol: 'ا'),
+  MemoryItem(id: 'jawi_ba', label: 'Ba', symbol: 'ب'),
+  MemoryItem(id: 'jawi_ta', label: 'Ta', symbol: 'ت'),
+  MemoryItem(id: 'jawi_jim', label: 'Jim', symbol: 'ج'),
+  MemoryItem(id: 'jawi_dal', label: 'Dal', symbol: 'د'),
+  MemoryItem(id: 'jawi_ra', label: 'Ra', symbol: 'ر'),
+];
+
 List<MemoryItem> memoryItemsFor(MemoryCategory category, {int pairCount = 6}) {
   final baseItems = switch (category) {
     MemoryCategory.animals => animalMemoryItems,
     MemoryCategory.shapes => shapeMemoryItems,
     MemoryCategory.colors => colorMemoryItems,
+    MemoryCategory.jawi => jawiMemoryItems,
   };
 
   if (pairCount <= baseItems.length) {
@@ -156,6 +169,38 @@ MemoryItem _generatedMemoryItem(MemoryCategory category, int index) {
         id: 'color_generated_$index',
         label: 'Color ${index + 1}',
         displayColor: color,
+      );
+    case MemoryCategory.jawi:
+      const jawiLetters = [
+        ('tha', 'Tha', 'ث'),
+        ('ha', 'Ha', 'ح'),
+        ('kha', 'Kha', 'خ'),
+        ('dzal', 'Dzal', 'ذ'),
+        ('zai', 'Zai', 'ز'),
+        ('sin', 'Sin', 'س'),
+        ('syin', 'Syin', 'ش'),
+        ('sad', 'Sad', 'ص'),
+        ('dad', 'Dad', 'ض'),
+        ('to', 'Ta', 'ط'),
+        ('zo', 'Za', 'ظ'),
+        ('ain', 'Ain', 'ع'),
+        ('ghain', 'Ghain', 'غ'),
+        ('fa', 'Fa', 'ف'),
+        ('qaf', 'Qaf', 'ق'),
+        ('kaf', 'Kaf', 'ك'),
+        ('lam', 'Lam', 'ل'),
+        ('mim', 'Mim', 'م'),
+        ('nun', 'Nun', 'ن'),
+        ('wau', 'Wau', 'و'),
+        ('haa', 'Ha', 'ه'),
+        ('ya', 'Ya', 'ي'),
+      ];
+      final item =
+          jawiLetters[(index - jawiMemoryItems.length) % jawiLetters.length];
+      return MemoryItem(
+        id: 'jawi_${item.$1}_$index',
+        label: item.$2,
+        symbol: item.$3,
       );
   }
 }

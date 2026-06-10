@@ -18,30 +18,31 @@ void main() {
     expect(progressService.stars, 0);
     expect(progressService.completedChallenges, 0);
 
-    for (var index = 0; index < 4; index++) {
+    var anyBadgeReturned = false;
+    for (var index = 0; index < 5; index++) {
       final badge = await progressService.completeChallenge(
         ChallengeMode.findExplorer,
       );
-      expect(badge, isNull);
+      if (badge != null) anyBadgeReturned = true;
     }
 
-    final earnedBadge = await progressService.completeChallenge(
-      ChallengeMode.findExplorer,
-    );
-
-    expect(progressService.stars, 5);
+    // Five base stars are guaranteed; the daily-quest "play a game" bonus and
+    // the mystery-game-of-the-day doubling may add more depending on the date,
+    // so assert at least the base.
+    expect(progressService.stars, greaterThanOrEqualTo(5));
     expect(progressService.completedChallenges, 5);
     expect(progressService.countFor(ChallengeMode.findExplorer), 5);
     // Completing 5 games unlocks the "First Finder" (5 games) and "First Stars"
-    // (5 stars) badges simultaneously; completeChallenge returns one of them.
-    expect(earnedBadge, isNotNull);
+    // (5 stars) badges; completeChallenge surfaces a badge as it is earned.
+    expect(anyBadgeReturned, isTrue);
     expect(progressService.hasBadge('badge_games_5'), isTrue);
     expect(progressService.hasBadge('badge_stars_5'), isTrue);
 
+    final persistedStars = progressService.stars;
     final reloaded = ProgressService();
     await reloaded.load();
 
-    expect(reloaded.stars, 5);
+    expect(reloaded.stars, persistedStars);
     expect(reloaded.countFor(ChallengeMode.findExplorer), 5);
     expect(reloaded.countFor(ChallengeMode.memory), 0);
     expect(reloaded.hasBadge('badge_games_5'), isTrue);

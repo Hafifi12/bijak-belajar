@@ -62,7 +62,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         title: Text(
           isMalay ? '🏆 Kemajuan Saya' : '🏆 My Progress',

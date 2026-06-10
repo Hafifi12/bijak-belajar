@@ -233,7 +233,11 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
 
   Future<void> _completePuzzle() async {
     final progressService = ref.read(progressServiceProvider);
-    await progressService.completeChallenge(ChallengeMode.puzzle);
+    // 3×3 pays 1 ⭐, 4×4 pays 2 ⭐ — harder board, better payout.
+    await progressService.completeChallenge(
+      ChallengeMode.puzzle,
+      stars: _gridSize >= 4 ? 2 : 1,
+    );
     if (!mounted) {
       return;
     }
@@ -267,7 +271,7 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

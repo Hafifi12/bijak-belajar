@@ -211,6 +211,53 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                       ),
                     ),
 
+                  // Streak rescued by a freeze token
+                  if (widget.progress.streakFreezeJustUsed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        isMalay
+                            ? '❄️ Streak kamu diselamatkan! Token beku digunakan.'
+                            : '❄️ Your streak was saved! A freeze token was used.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFFBDE6FF),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+
+                  // Freeze tokens held
+                  if (widget.progress.streakFreezes > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        isMalay
+                            ? '❄️ ${widget.progress.streakFreezes} token beku — melindungi streak kamu jika terlepas sehari'
+                            : '❄️ ${widget.progress.streakFreezes} freeze token${widget.progress.streakFreezes > 1 ? 's' : ''} — protects your streak if you miss a day',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+
+                  // Tomorrow's reward — make the escalating table work for us
+                  Text(
+                    isMalay
+                        ? '⏰ Datang esok untuk +${widget.progress.tomorrowRewardStars} ⭐!'
+                        : '⏰ Come back tomorrow for +${widget.progress.tomorrowRewardStars} ⭐!',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppTheme.sunnyYellow,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+
                   const SizedBox(height: 16),
 
                   // Collect button

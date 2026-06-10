@@ -318,6 +318,12 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
   @override
   void initState() {
     super.initState();
+    // Resume at the last letter the child saw, instead of restarting at A.
+    final last = ref.read(progressServiceProvider).getLastLesson('letters');
+    if (last.isNotEmpty) {
+      final idx = _letters.indexWhere((l) => l.letter == last);
+      if (idx >= 0) _current = idx;
+    }
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 650),
@@ -472,10 +478,13 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       XpPopup.show(context, amount: 1);
       final audio = ref.read(audioServiceProvider);
       final ps = ref.read(progressServiceProvider);
+      final praiseMalay = ps.language == AppLanguage.malay;
       audio.speakLocale(
-        'Great job! You said ${item.letter} correctly!',
+        praiseMalay
+            ? 'Bagus! Kamu sebut ${item.letter} dengan betul!'
+            : 'Great job! You said ${item.letter} correctly!',
         enabled: ps.voiceEnabled,
-        locale: 'en-US',
+        locale: praiseMalay ? 'ms-MY' : 'en-US',
       );
     }
   }
@@ -492,12 +501,12 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: AppTheme.skyBlue,
+        backgroundColor: AppTheme.moduleLetters,
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         title: Row(
@@ -728,21 +737,11 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                               textAlign: TextAlign.center,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          _LetterWordTable(item: item, color: color),
-                          const SizedBox(height: 14),
-                          _PronounceButtons(
-                            onSpeak: _speakIn,
-                            malay: item.letter.toLowerCase(),
-                            english: item.letter.toLowerCase(),
-                            mandarin: item.letter.toLowerCase(),
-                            indonesian: item.letter.toLowerCase(),
-                            tamil: item.letter.toLowerCase(),
-                            color: color,
-                          ),
                           const SizedBox(height: 14),
 
                           // ── 🎤 Speech recognition input ─────────
+                          // Promoted above the word table: "say the letter"
+                          // is this module's core interaction, not a footnote.
                           if (_speechAvailable) ...[
                             GestureDetector(
                               onTap: _isListening
@@ -751,6 +750,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                               child: AnimatedContainer(
                                 duration:
                                     const Duration(milliseconds: 220),
+                                constraints: const BoxConstraints(
+                                  minHeight: AppTheme.kidTarget,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 22,
                                   vertical: 14,
@@ -877,6 +879,19 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                             ],
                           ],
 
+                          const SizedBox(height: 14),
+                          _LetterWordTable(item: item, color: color),
+                          const SizedBox(height: 14),
+                          _PronounceButtons(
+                            onSpeak: _speakIn,
+                            malay: item.letter.toLowerCase(),
+                            english: item.letter.toLowerCase(),
+                            mandarin: item.letter.toLowerCase(),
+                            indonesian: item.letter.toLowerCase(),
+                            tamil: item.letter.toLowerCase(),
+                            color: color,
+                          ),
+
                           const SizedBox(height: 4),
                         ],
                       ),
@@ -906,7 +921,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.deepBlue,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          minimumSize: const Size.fromHeight(AppTheme.kidTarget),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -934,7 +949,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.sunnyYellow,
                           foregroundColor: AppTheme.ink,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          minimumSize: const Size.fromHeight(AppTheme.kidTarget),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -979,12 +994,14 @@ class _LetterWordTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Language tags instead of country flags: Mandarin and Tamil are
+    // Malaysian community languages, not foreign ones.
     final rows = [
-      ('🇲🇾', 'Melayu', item.malay),
-      ('🇬🇧', 'English', item.english),
-      ('🇨🇳', '中文', item.mandarin),
-      ('🇮🇳', 'தமிழ்', item.tamil),
-      ('🇮🇩', 'Indonesia', item.indonesian),
+      ('BM', 'Melayu', item.malay),
+      ('EN', 'English', item.english),
+      ('中', '中文', item.mandarin),
+      ('த', 'தமிழ்', item.tamil),
+      ('ID', 'Indonesia', item.indonesian),
     ];
     return Container(
       decoration: BoxDecoration(
@@ -1005,7 +1022,23 @@ class _LetterWordTable extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Text(flag, style: const TextStyle(fontSize: 20)),
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.14),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        flag,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: color,
+                        ),
+                      ),
+                    ),
                     const SizedBox(width: 10),
                     SizedBox(
                       width: 74,
@@ -1066,12 +1099,13 @@ class _PronounceButtons extends StatelessWidget {
   final String tamil;
   final Color color;
 
+  // Language tags only — no country flags (Malaysian community languages).
   static const _langs = [
-    (flag: '🇲🇾', label: 'BM', locale: 'ms-MY'),
-    (flag: '🇬🇧', label: 'EN', locale: 'en-US'),
-    (flag: '🇨🇳', label: '中文', locale: 'zh-CN'),
-    (flag: '🇮🇩', label: 'ID', locale: 'id-ID'),
-    (flag: '🇮🇳', label: 'தமிழ்', locale: 'ta-IN'),
+    (label: 'BM', locale: 'ms-MY'),
+    (label: 'EN', locale: 'en-US'),
+    (label: '中文', locale: 'zh-CN'),
+    (label: 'ID', locale: 'id-ID'),
+    (label: 'தமிழ்', locale: 'ta-IN'),
   ];
 
   String _wordFor(String locale) {
@@ -1132,18 +1166,16 @@ class _PronounceButtons extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(l.flag, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 6),
                       Text(
                         l.label,
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
                           color: color,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.volume_up_rounded, size: 15, color: color),
+                      const SizedBox(width: 5),
+                      Icon(Icons.volume_up_rounded, size: 16, color: color),
                     ],
                   ),
                 ),

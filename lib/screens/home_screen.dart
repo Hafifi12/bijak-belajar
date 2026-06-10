@@ -10,6 +10,7 @@ import '../utils/route_observer.dart';
 import '../widgets/badge_unlock_overlay.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/mascot_widget.dart';
+import '../widgets/pressable.dart';
 import '../widgets/xp_popup.dart';
 import 'coloring_screen.dart';
 import 'daily_reward_screen.dart';
@@ -151,7 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                   _SectionChip(
                     emoji: '🎯',
                     label: isMalay ? 'MISI HARI INI' : 'TODAY\'S QUESTS',
-                    color: const Color(0xFFE84393),
+                    color: AppTheme.pink,
                   ),
                   const SizedBox(height: 10),
                   _DailyQuestsCard(language: progress.language, progress: progress),
@@ -172,7 +173,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                         symbol: '1\n2\n3',
                         title: isMalay ? 'Nombor' : 'Numbers',
                         sub: '1 – 100',
-                        color: AppTheme.appleRed,
+                        color: AppTheme.moduleNumbers,
                         done: progress.getModuleLessons('numbers'),
                         total: 100,
                         onTap: () => Navigator.of(
@@ -184,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                         symbol: 'A\nB\nC',
                         title: isMalay ? 'Huruf' : 'Letters',
                         sub: 'A – Z',
-                        color: AppTheme.turquoise,
+                        color: AppTheme.moduleLetters,
                         done: progress.getModuleLessons('letters'),
                         total: 26,
                         onTap: () => Navigator.of(
@@ -196,7 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                         symbol: 'ا\nب\nت',
                         title: isMalay ? 'Jawi' : 'Jawi',
                         sub: isMalay ? '28 Huruf' : '28 Letters',
-                        color: AppTheme.leafGreen,
+                        color: AppTheme.moduleJawi,
                         done: progress.getModuleLessons('jawi'),
                         total: 28,
                         onTap: () => Navigator.of(
@@ -208,7 +209,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                         symbol: '👦',
                         title: isMalay ? 'Anggota\nBadan' : 'Body\nParts',
                         sub: isMalay ? '14 Bahagian' : '14 Parts',
-                        color: AppTheme.purple,
+                        color: AppTheme.moduleBodyParts,
                         done: progress.getModuleLessons('bodyparts'),
                         total: 14,
                         onTap: () => Navigator.of(
@@ -220,7 +221,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                         symbol: '+ −\n× ÷',
                         title: isMalay ? 'Matematik' : 'Math',
                         sub: isMalay ? 'Tambah & Tolak' : 'Add & Subtract',
-                        color: const Color(0xFFFF9F1C),
+                        color: AppTheme.moduleMath,
                         done: progress.getModuleLessons('math'),
                         total: 50,
                         onTap: () => Navigator.of(
@@ -232,7 +233,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                         symbol: '🖌️',
                         title: isMalay ? 'Mewarna' : 'Colour',
                         sub: isMalay ? 'Lukis & Warna' : 'Draw & Paint',
-                        color: const Color(0xFFFF9F43),
+                        color: AppTheme.moduleColoring,
                         done: progress.coloringSessions,
                         total: 40,
                         onTap: () => Navigator.of(
@@ -248,7 +249,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                   _SectionChip(
                     emoji: '🎮',
                     label: isMalay ? 'PERMAINAN' : 'GAMES',
-                    color: AppTheme.purple,
+                    color: AppTheme.moduleGames,
                   ),
                   const SizedBox(height: 12),
                   _BigNavButton(
@@ -259,7 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                     sub: isMalay
                         ? 'Memori, Teka-Teki, Tren Nombor & Huruf'
                         : 'Memory, Puzzle, Number Train & Letter Train',
-                    color: AppTheme.purple,
+                    color: AppTheme.moduleGames,
                     onTap: () => Navigator.of(
                       context,
                     ).pushNamed(GamesHubScreen.routeName),
@@ -306,12 +307,14 @@ class _HomeHeader extends StatelessWidget {
                 const Spacer(),
                 _IconBtn(
                   icon: Icons.insights_rounded,
+                  label: isMalay ? 'Kemajuan' : 'Progress',
                   onTap: () => Navigator.of(context)
                       .pushNamed(ProgressScreen.routeName),
                 ),
                 const SizedBox(width: 8),
                 _IconBtn(
                   icon: Icons.settings_rounded,
+                  label: isMalay ? 'Tetapan' : 'Settings',
                   onTap: () => Navigator.of(context)
                       .pushNamed(ParentGateScreen.routeName),
                 ),
@@ -458,6 +461,44 @@ class _HomeHeader extends StatelessWidget {
                               ],
                             ),
                           ),
+                          // Streak-freeze tokens — visible insurance makes
+                          // the streak feel safe to invest in.
+                          if (progress.streakFreezes > 0) ...[
+                            const SizedBox(height: 6),
+                            Tooltip(
+                              message: isMalay
+                                  ? 'Token beku: lindungi streak jika terlepas sehari'
+                                  : 'Freeze tokens: protect your streak if you miss a day',
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF48DBFB)
+                                      .withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                      color: const Color(0xFF48DBFB),
+                                      width: 1.5),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text('❄️',
+                                        style: TextStyle(fontSize: 13)),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      '${progress.streakFreezes}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppTheme.ink,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -492,7 +533,7 @@ class _ContinueLearningBanner extends StatelessWidget {
         isMalay ? 'Nombor' : 'Numbers',
         progress.getModuleLessons('numbers'),
         100,
-        AppTheme.appleRed,
+        AppTheme.moduleNumbers,
         LearnNumbersScreen.routeName,
       ),
       _ContinueModule(
@@ -501,7 +542,7 @@ class _ContinueLearningBanner extends StatelessWidget {
         isMalay ? 'Huruf' : 'Letters',
         progress.getModuleLessons('letters'),
         26,
-        AppTheme.turquoise,
+        AppTheme.moduleLetters,
         LearnLettersScreen.routeName,
       ),
       _ContinueModule(
@@ -510,7 +551,7 @@ class _ContinueLearningBanner extends StatelessWidget {
         'Jawi',
         progress.getModuleLessons('jawi'),
         28,
-        AppTheme.leafGreen,
+        AppTheme.moduleJawi,
         JawiAsasScreen.routeName,
       ),
       _ContinueModule(
@@ -519,7 +560,7 @@ class _ContinueLearningBanner extends StatelessWidget {
         isMalay ? 'Anggota Badan' : 'Body Parts',
         progress.getModuleLessons('bodyparts'),
         14,
-        AppTheme.purple,
+        AppTheme.moduleBodyParts,
         LearnBodyPartsScreen.routeName,
       ),
     ];
@@ -532,12 +573,13 @@ class _ContinueLearningBanner extends StatelessWidget {
     final m = active.first;
     final pct = (m.done / m.total).clamp(0.0, 1.0);
 
-    return Semantics(
-      button: true,
-      label: 'Continue learning ${m.name}. ${m.done} of ${m.total} complete.',
-      child: GestureDetector(
-        onTap: () => Navigator.of(context).pushNamed(m.route),
-        child: Container(
+    return Pressable(
+      onTap: () => Navigator.of(context).pushNamed(m.route),
+      pressedScale: 0.97,
+      semanticLabel: isMalay
+          ? 'Teruskan belajar ${m.name}. ${m.done} daripada ${m.total} selesai.'
+          : 'Continue learning ${m.name}. ${m.done} of ${m.total} complete.',
+      child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -566,15 +608,15 @@ class _ContinueLearningBanner extends StatelessWidget {
                     Text(
                       isMalay ? '▶ Teruskan Belajar' : '▶ Continue Learning',
                       style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
                     ),
                     Text(
                       m.name,
                       style: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 16,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
                       ),
@@ -614,7 +656,6 @@ class _ContinueLearningBanner extends StatelessWidget {
               ),
             ],
           ),
-        ),
       ),
     );
   }
@@ -657,7 +698,7 @@ class _DailyQuestsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE84393).withValues(alpha: 0.12),
+            color: AppTheme.pink.withValues(alpha: 0.12),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -684,8 +725,8 @@ class _DailyQuestsCard extends StatelessWidget {
                       height: 46,
                       decoration: BoxDecoration(
                         color: done
-                            ? const Color(0xFF34C759).withValues(alpha: 0.15)
-                            : const Color(0xFFE84393).withValues(alpha: 0.12),
+                            ? AppTheme.leafGreen.withValues(alpha: 0.15)
+                            : AppTheme.pink.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Center(
@@ -706,10 +747,10 @@ class _DailyQuestsCard extends StatelessWidget {
                                 child: Text(
                                   q.localizedTitle(language),
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w900,
                                     color: done
-                                        ? const Color(0xFF34C759)
+                                        ? AppTheme.leafGreen
                                         : AppTheme.ink,
                                     decoration: done
                                         ? TextDecoration.lineThrough
@@ -722,7 +763,7 @@ class _DailyQuestsCard extends StatelessWidget {
                                     horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: done
-                                      ? const Color(0xFF34C759)
+                                      ? AppTheme.leafGreen
                                           .withValues(alpha: 0.15)
                                       : AppTheme.sunnyYellow
                                           .withValues(alpha: 0.2),
@@ -731,10 +772,10 @@ class _DailyQuestsCard extends StatelessWidget {
                                 child: Text(
                                   '⭐ +${q.rewardStars}',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w900,
                                     color: done
-                                        ? const Color(0xFF34C759)
+                                        ? AppTheme.leafGreen
                                         : const Color(0xFFB8860B),
                                   ),
                                 ),
@@ -745,9 +786,9 @@ class _DailyQuestsCard extends StatelessWidget {
                           Text(
                             q.localizedDescription(language),
                             style: const TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF7A7A9A),
+                              color: AppTheme.inkFaint,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -760,14 +801,14 @@ class _DailyQuestsCard extends StatelessWidget {
                                     value: pct,
                                     minHeight: 6,
                                     backgroundColor: done
-                                        ? const Color(0xFF34C759)
+                                        ? AppTheme.leafGreen
                                             .withValues(alpha: 0.15)
-                                        : const Color(0xFFE84393)
+                                        : AppTheme.pink
                                             .withValues(alpha: 0.12),
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                       done
-                                          ? const Color(0xFF34C759)
-                                          : const Color(0xFFE84393),
+                                          ? AppTheme.leafGreen
+                                          : AppTheme.pink,
                                     ),
                                   ),
                                 ),
@@ -776,11 +817,11 @@ class _DailyQuestsCard extends StatelessWidget {
                               Text(
                                 '$prog/${q.requiredCount}',
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w800,
                                   color: done
-                                      ? const Color(0xFF34C759)
-                                      : const Color(0xFFE84393),
+                                      ? AppTheme.leafGreen
+                                      : AppTheme.pink,
                                 ),
                               ),
                             ],
@@ -795,7 +836,7 @@ class _DailyQuestsCard extends StatelessWidget {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: const Color(0xFFE84393).withValues(alpha: 0.08),
+                  color: AppTheme.pink.withValues(alpha: 0.08),
                   indent: 16,
                   endIndent: 16,
                 ),
@@ -842,7 +883,7 @@ class _SectionChip extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w900,
                   color: color,
                   letterSpacing: 0.8,
@@ -871,13 +912,13 @@ class _ModuleGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      childAspectRatio: 1.55,
+      childAspectRatio: 1.45,
       children: children,
     );
   }
 }
 
-class _ModuleTile extends StatefulWidget {
+class _ModuleTile extends StatelessWidget {
   const _ModuleTile({
     required this.emoji,
     required this.symbol,
@@ -898,148 +939,88 @@ class _ModuleTile extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<_ModuleTile> createState() => _ModuleTileState();
-}
-
-class _ModuleTileState extends State<_ModuleTile>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 110),
-    );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 0.93,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final pct = widget.total > 0
-        ? (widget.done / widget.total).clamp(0.0, 1.0)
-        : 0.0;
+    final pct = total > 0 ? (done / total).clamp(0.0, 1.0) : 0.0;
 
-    return AnimatedBuilder(
-      animation: _scale,
-      builder: (_, child) => Transform.scale(scale: _scale.value, child: child),
-      child: GestureDetector(
-        onTapDown: (_) => _ctrl.forward(),
-        onTapUp: (_) {
-          _ctrl.reverse();
-          widget.onTap();
-        },
-        onTapCancel: () => _ctrl.reverse(),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: widget.color.withValues(alpha: 0.18),
-                blurRadius: 12,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            children: [
-              Container(
-                width: 72,
-                color: widget.color,
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: '$title. $done of $total complete.',
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.18),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          children: [
+            // Colored identity rail: emoji only. (The old percent chip was
+            // parent-math, not kid feedback — the bar + count carry that.)
+            Container(
+              width: 64,
+              color: color,
+              alignment: Alignment.center,
+              child: Text(emoji, style: const TextStyle(fontSize: 34)),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 10),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(widget.emoji,
-                        style: const TextStyle(fontSize: 32)),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(8),
+                    Text(
+                      title,
+                      maxLines: 2,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.ink,
+                        height: 1.15,
                       ),
-                      child: Text(
-                        '${(pct * 100).round()}%',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                        ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      sub,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: pct,
+                        minHeight: 7,
+                        backgroundColor: color.withValues(alpha: 0.14),
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$done/$total',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: color.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        widget.title,
-                        maxLines: 2,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: AppTheme.ink,
-                          height: 1.15,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        widget.sub,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: widget.color,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(
-                          value: pct,
-                          minHeight: 7,
-                          backgroundColor:
-                              widget.color.withValues(alpha: 0.14),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              widget.color),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${widget.done}/${widget.total}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: widget.color.withValues(alpha: 0.75),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1169,6 +1150,7 @@ class _BottomBar extends ConsumerWidget {
             : Icons.volume_off_rounded,
         label: isMalay ? 'Suara' : 'Voice',
         selected: voiceEnabled,
+        isToggle: true,
         onTap: () => progress.setVoiceEnabled(!voiceEnabled),
       ),
       _NavItem(
@@ -1198,50 +1180,65 @@ class _BottomBar extends ConsumerWidget {
           ],
         ),
         child: Row(
-          children: items
-              .map(
-                (item) => Expanded(
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(22),
-                    onTap: item.onTap,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(vertical: 7),
-                      decoration: BoxDecoration(
-                        color: item.selected
-                            ? AppTheme.sunnyYellow.withValues(alpha: 0.3)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            item.icon,
-                            color: item.selected
-                                ? AppTheme.ink
-                                : const Color(0xFF8898C8),
-                            size: 22,
+          children: items.map((item) {
+            // Toggles (Voice) read green when on / muted when off, so a
+            // child can see at a glance whether the app will talk. Plain
+            // navigation selection keeps the yellow treatment.
+            final Color tint = item.isToggle
+                ? (item.selected
+                    ? AppTheme.leafGreen
+                    : const Color(0xFF8898C8))
+                : (item.selected
+                    ? AppTheme.ink
+                    : const Color(0xFF8898C8));
+            final Color bg = item.isToggle
+                ? (item.selected
+                    ? AppTheme.leafGreen.withValues(alpha: 0.16)
+                    : Colors.transparent)
+                : (item.selected
+                    ? AppTheme.sunnyYellow.withValues(alpha: 0.3)
+                    : Colors.transparent);
+
+            return Expanded(
+              child: Semantics(
+                button: !item.isToggle,
+                toggled: item.isToggle ? item.selected : null,
+                label: item.label,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                  onTap: item.onTap,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    constraints: const BoxConstraints(
+                      minHeight: AppTheme.kidTarget,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: bg,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(item.icon, color: tint, size: 26),
+                        const SizedBox(height: 3),
+                        Text(
+                          item.label,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: tint,
                           ),
-                          const SizedBox(height: 3),
-                          Text(
-                            item.label,
-                            maxLines: 1,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: item.selected
-                                  ? AppTheme.ink
-                                  : const Color(0xFF8898C8),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              )
-              .toList(),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
@@ -1254,10 +1251,12 @@ class _NavItem {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.isToggle = false,
   });
   final IconData icon;
   final String label;
   final bool selected;
+  final bool isToggle;
   final VoidCallback onTap;
 }
 
@@ -1265,29 +1264,35 @@ class _NavItem {
 // Small helpers
 // ─────────────────────────────────────────────────────────────────────────────
 class _IconBtn extends StatelessWidget {
-  const _IconBtn({required this.icon, required this.onTap});
+  const _IconBtn({required this.icon, required this.label, required this.onTap});
   final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.ink.withValues(alpha: 0.10),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+    return Tooltip(
+      message: label,
+      child: Pressable(
+        onTap: onTap,
+        semanticLabel: label,
+        minSize: AppTheme.minTarget,
+        child: Container(
+          width: AppTheme.minTarget,
+          height: AppTheme.minTarget,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.ink.withValues(alpha: 0.10),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Icon(icon, color: AppTheme.ink, size: 24),
         ),
-        child: Icon(icon, color: AppTheme.ink, size: 22),
       ),
     );
   }

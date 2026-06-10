@@ -65,6 +65,8 @@ extension AppLanguageDetails on AppLanguage {
     switch (code) {
       case 'ms':
         return AppLanguage.malay;
+      case 'en':
+        return AppLanguage.english;
       case 'zh':
         return AppLanguage.mandarin;
       case 'ta':
@@ -72,7 +74,9 @@ extension AppLanguageDetails on AppLanguage {
       case 'id':
         return AppLanguage.indonesian;
       default:
-        return AppLanguage.english;
+        // Malaysian-first product: Bahasa Melayu is the default experience
+        // for new installs; parents can switch in Settings.
+        return AppLanguage.malay;
     }
   }
 }

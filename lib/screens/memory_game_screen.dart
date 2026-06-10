@@ -67,7 +67,7 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen> {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: language == AppLanguage.malay ? 'Kembali' : 'Back',
         ),
         title: Text(AppText.categoryTitle(category, language)),
         actions: [
@@ -272,7 +272,10 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen> {
     });
 
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    final badge = await progressService.completeChallenge(ChallengeMode.memory);
+    final badge = await progressService.completeChallenge(
+      ChallengeMode.memory,
+      stars: _stage.starReward,
+    );
     await audioService.playCelebration(enabled: progressService.soundEnabled);
 
     if (!mounted) {

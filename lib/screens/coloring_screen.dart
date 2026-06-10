@@ -1,11 +1,15 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
+import '../services/artwork_store.dart';
+import 'coloring_gallery_screen.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // Data models
 // ─────────────────────────────────────────────────────────────────────────────
@@ -119,7 +123,7 @@ class ColoringScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         title: Row(
@@ -136,6 +140,15 @@ class ColoringScreen extends ConsumerWidget {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.photo_library_rounded),
+            tooltip: isMalay ? 'Galeri Seni Saya' : 'My Art Gallery',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ColoringGalleryScreen()),
+            ),
+          ),
+        ],
       ),
       body: CustomScrollView(
         slivers: [
@@ -445,9 +458,11 @@ class _SubjectCard extends ConsumerWidget {
 class ColoringCanvasScreen extends ConsumerStatefulWidget {
   const ColoringCanvasScreen({
     super.key,
+    // ignore: library_private_types_in_public_api
     required this.subject,
     required this.color,
   });
+  // ignore: library_private_types_in_public_api
   final _Subject subject;
   final Color color;
 
@@ -458,6 +473,7 @@ class ColoringCanvasScreen extends ConsumerStatefulWidget {
 class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     with SingleTickerProviderStateMixin {
   final List<_DrawPoint?> _points = [];
+  final GlobalKey _canvasKey = GlobalKey();
   Color _selectedColor = Colors.red;
   double _strokeWidth = 18.0;
   bool _isEraser = false;
@@ -553,9 +569,27 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     });
   }
 
+  /// Captures the (untransformed) canvas layer as a PNG and stores it in the
+  /// local gallery. Failure is non-fatal — the celebration still runs.
+  Future<void> _saveArtwork() async {
+    try {
+      final boundary = _canvasKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (data != null) {
+        await ArtworkStore.save(data.buffer.asUint8List());
+      }
+    } catch (e) {
+      debugPrint('[Coloring] artwork save failed: $e');
+    }
+  }
+
   void _celebrate() async {
     final ps = ref.read(progressServiceProvider);
     final isMalay = ps.language == AppLanguage.malay;
+    await _saveArtwork();
     await ps.incrementColoringSessions();
     await ps.addStars(1);
     if (!mounted) return;
@@ -615,9 +649,13 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                   child: ClipRect(
                     child: Transform(
                       transform: Matrix4.identity()
-                        ..translate(_offset.dx, _offset.dy)
-                        ..scale(_scale),
-                      child: Stack(
+                        ..translateByDouble(_offset.dx, _offset.dy, 0, 1)
+                        ..scaleByDouble(_scale, _scale, _scale, 1),
+                      // RepaintBoundary sits inside the transform so gallery
+                      // captures are always un-zoomed/un-panned.
+                      child: RepaintBoundary(
+                        key: _canvasKey,
+                        child: Stack(
                         fit: StackFit.expand,
                         children: [
                           // Layer 1 — white canvas background
@@ -654,6 +692,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                               ),
                             ),
                         ],
+                        ),
                       ),
                     ),
                   ),

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,7 +8,9 @@ import '../providers/app_state.dart';
 import '../models/app_language.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
+import '../widgets/pressable.dart';
 import '../widgets/star_counter.dart';
+import '../widgets/xp_popup.dart';
 
 /// Belajar Anggota Badan — Learn Body Parts
 /// Malaysian kindergarten style for preschool children.
@@ -266,6 +270,115 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
     ref.read(progressServiceProvider).markModuleLesson('bodyparts', item.english);
   }
 
+  // ── "Doctor says…" mini-game ──────────────────────────────────
+  // Simon-says on the body chart: the doctor names a part (TTS), the child
+  // taps it. 5 rounds; first-try hits earn a star each. Pure engagement —
+  // turns a one-session module into a repeatable game.
+  static const _dsTotalRounds = 5;
+  final Random _dsRng = Random();
+  bool _doctorSaysActive = false;
+  int _dsRound = 0;
+  int _dsTarget = -1;
+  int _dsStars = 0;
+  bool _dsFirstTry = true;
+  bool? _dsLastTapCorrect;
+
+  void _startDoctorSays() {
+    setState(() {
+      _doctorSaysActive = true;
+      _dsRound = 1;
+      _dsStars = 0;
+      _dsFirstTry = true;
+      _dsLastTapCorrect = null;
+    });
+    _nextDoctorPrompt();
+  }
+
+  void _stopDoctorSays() {
+    setState(() {
+      _doctorSaysActive = false;
+      _dsTarget = -1;
+      _dsLastTapCorrect = null;
+    });
+  }
+
+  void _nextDoctorPrompt() {
+    var next = _dsRng.nextInt(_parts.length);
+    if (next == _dsTarget) next = (next + 1) % _parts.length;
+    setState(() {
+      _dsTarget = next;
+      _dsFirstTry = true;
+      _dsLastTapCorrect = null;
+    });
+    _speakDoctorPrompt();
+  }
+
+  Future<void> _speakDoctorPrompt() async {
+    if (_dsTarget < 0) return;
+    final ps = ref.read(progressServiceProvider);
+    final isMalay = ps.language == AppLanguage.malay;
+    final word = isMalay ? _parts[_dsTarget].malay : _parts[_dsTarget].english;
+    await ref.read(audioServiceProvider).speakLocale(
+          isMalay
+              ? 'Doktor kata: sentuh $word!'
+              : 'Doctor says: touch your $word!',
+          enabled: ps.voiceEnabled,
+          locale: isMalay ? 'ms-MY' : 'en-US',
+        );
+  }
+
+  Future<void> _handleDoctorTap(int index) async {
+    if (!_doctorSaysActive || _dsTarget < 0) return;
+    final ps = ref.read(progressServiceProvider);
+    final isMalay = ps.language == AppLanguage.malay;
+    final audio = ref.read(audioServiceProvider);
+
+    if (index == _dsTarget) {
+      if (_dsFirstTry) _dsStars++;
+      setState(() => _dsLastTapCorrect = true);
+      await audio.speakLocale(
+        isMalay ? 'Betul! Pandai!' : 'Correct! Well done!',
+        enabled: ps.voiceEnabled,
+        locale: isMalay ? 'ms-MY' : 'en-US',
+      );
+      if (_dsRound >= _dsTotalRounds) {
+        await _finishDoctorSays();
+      } else {
+        setState(() => _dsRound++);
+        _nextDoctorPrompt();
+      }
+    } else {
+      setState(() {
+        _dsFirstTry = false;
+        _dsLastTapCorrect = false;
+      });
+      await audio.speakLocale(
+        isMalay ? 'Cuba lagi!' : 'Try again!',
+        enabled: ps.voiceEnabled,
+        locale: isMalay ? 'ms-MY' : 'en-US',
+      );
+    }
+  }
+
+  Future<void> _finishDoctorSays() async {
+    final ps = ref.read(progressServiceProvider);
+    final isMalay = ps.language == AppLanguage.malay;
+    final earned = _dsStars;
+    _stopDoctorSays();
+    if (earned > 0) {
+      await ps.addStars(earned);
+      if (!mounted) return;
+      XpPopup.show(context, amount: earned);
+    }
+    await ref.read(audioServiceProvider).speakLocale(
+          isMalay
+              ? 'Permainan tamat! Kamu dapat $earned bintang!'
+              : 'Game over! You earned $earned stars!',
+          enabled: ps.voiceEnabled,
+          locale: isMalay ? 'ms-MY' : 'en-US',
+        );
+  }
+
   Future<void> _speakIn(String word, String locale) async {
     final progress = ref.read(progressServiceProvider);
     final audio = ref.read(audioServiceProvider);
@@ -289,12 +402,12 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: AppTheme.skyBlue,
+        backgroundColor: AppTheme.moduleBodyParts,
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         title: Row(
@@ -453,11 +566,33 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                               scale: _pulseAnim,
                               child: _DoctorBodyChart(
                                 parts: _parts,
-                                selectedIndex: _current,
+                                // No highlight during the game — it would
+                                // leak hints.
+                                selectedIndex:
+                                    _doctorSaysActive ? -1 : _current,
                                 language: language,
-                                onSelect: _goToPart,
+                                onSelect: _doctorSaysActive
+                                    ? (i) => _handleDoctorTap(i)
+                                    : _goToPart,
                               ),
                             ),
+                          ),
+
+                          const SizedBox(height: 10),
+                          _DoctorSaysBar(
+                            active: _doctorSaysActive,
+                            round: _dsRound,
+                            total: _dsTotalRounds,
+                            targetWord: _doctorSaysActive && _dsTarget >= 0
+                                ? (isMalay
+                                    ? _parts[_dsTarget].malay
+                                    : _parts[_dsTarget].english)
+                                : null,
+                            lastCorrect: _dsLastTapCorrect,
+                            isMalay: isMalay,
+                            onStart: _startDoctorSays,
+                            onStop: _stopDoctorSays,
+                            onRepeat: _speakDoctorPrompt,
                           ),
 
                           const SizedBox(height: 12),
@@ -504,13 +639,13 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               _LangChip(
-                                flag: '🇲🇾',
+                                flag: 'BM',
                                 text: item.malay,
                                 color: color,
                               ),
                               const SizedBox(width: 8),
                               _LangChip(
-                                flag: '🇨🇳',
+                                flag: '中',
                                 text: item.mandarin,
                                 color: color,
                               ),
@@ -521,13 +656,13 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               _LangChip(
-                                flag: '🇮🇩',
+                                flag: 'ID',
                                 text: item.indonesian,
                                 color: color,
                               ),
                               const SizedBox(width: 8),
                               _LangChip(
-                                flag: '🇮🇳',
+                                flag: 'த',
                                 text: item.tamil,
                                 color: color,
                               ),
@@ -659,8 +794,14 @@ class _DoctorBodyChart extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = parts[selectedIndex];
-    final label = selected.wordFor(language);
+    // selectedIndex == -1 → "Doctor says…" game mode: nothing highlighted
+    // and no callout, so the chart cannot leak the answer.
+    final _BodyPart? selected =
+        (selectedIndex >= 0 && selectedIndex < parts.length)
+            ? parts[selectedIndex]
+            : null;
+    final accent = selected?.color ?? AppTheme.moduleBodyParts;
+    final label = selected?.wordFor(language);
 
     return Container(
       width: double.infinity,
@@ -669,7 +810,7 @@ class _DoctorBodyChart extends ConsumerWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF8FCFF),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: selected.color.withValues(alpha: 0.24)),
+        border: Border.all(color: accent.withValues(alpha: 0.24)),
         boxShadow: [
           BoxShadow(
             color: AppTheme.deepBlue.withValues(alpha: 0.08),
@@ -682,11 +823,23 @@ class _DoctorBodyChart extends ConsumerWidget {
         children: [
           Row(
             children: [
-              _BodyPartThumbnail(
-                asset: selected.photoAsset,
-                color: selected.color,
-                size: 42,
-              ),
+              if (selected != null)
+                _BodyPartThumbnail(
+                  asset: selected.photoAsset,
+                  color: selected.color,
+                  size: 42,
+                )
+              else
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text('🩺', style: TextStyle(fontSize: 22)),
+                ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -725,7 +878,7 @@ class _DoctorBodyChart extends ConsumerWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: selected.color.withValues(alpha: 0.38),
+                            color: accent.withValues(alpha: 0.38),
                             width: 2,
                           ),
                           gradient: LinearGradient(
@@ -752,16 +905,17 @@ class _DoctorBodyChart extends ConsumerWidget {
                           onTap: () => onSelect(spot.index),
                         ),
                       ),
-                    Positioned(
-                      left: 12,
-                      right: 12,
-                      bottom: 10,
-                      child: _DoctorCallout(
-                        color: selected.color,
-                        label: label,
-                        english: selected.english,
+                    if (selected != null && label != null)
+                      Positioned(
+                        left: 12,
+                        right: 12,
+                        bottom: 10,
+                        child: _DoctorCallout(
+                          color: selected.color,
+                          label: label,
+                          english: selected.english,
+                        ),
                       ),
-                    ),
                   ],
                 );
               },
@@ -1497,7 +1651,14 @@ class _LangChip extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(flag, style: const TextStyle(fontSize: 16)),
+          Text(
+            flag,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
+          ),
           const SizedBox(width: 6),
           Text(
             text,
@@ -1524,12 +1685,13 @@ class _BodyPronounceButtons extends ConsumerWidget {
   final _BodyPart item;
   final Color color;
 
+  // Language tags only — no country flags (Malaysian community languages).
   static const _langs = [
-    (flag: '🇲🇾', label: 'BM', locale: 'ms-MY'),
-    (flag: '🇬🇧', label: 'EN', locale: 'en-US'),
-    (flag: '🇨🇳', label: '中文', locale: 'zh-CN'),
-    (flag: '🇮🇩', label: 'ID', locale: 'id-ID'),
-    (flag: '🇮🇳', label: 'தமிழ்', locale: 'ta-IN'),
+    (label: 'BM', locale: 'ms-MY'),
+    (label: 'EN', locale: 'en-US'),
+    (label: '中文', locale: 'zh-CN'),
+    (label: 'ID', locale: 'id-ID'),
+    (label: 'தமிழ்', locale: 'ta-IN'),
   ];
 
   String _wordFor(String locale) {
@@ -1587,13 +1749,11 @@ class _BodyPronounceButtons extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(l.flag, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 6),
                       Text(
                         l.label,
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
                           color: color,
                         ),
                       ),
@@ -1647,4 +1807,150 @@ class _BodyPart {
   }
 
   String get funEnglish => 'Say "$english" and point gently.';
+}
+
+// ── "Doctor says…" control bar ───────────────────────────────────────────────
+class _DoctorSaysBar extends StatelessWidget {
+  const _DoctorSaysBar({
+    required this.active,
+    required this.round,
+    required this.total,
+    required this.targetWord,
+    required this.lastCorrect,
+    required this.isMalay,
+    required this.onStart,
+    required this.onStop,
+    required this.onRepeat,
+  });
+
+  final bool active;
+  final int round;
+  final int total;
+  final String? targetWord;
+  final bool? lastCorrect;
+  final bool isMalay;
+  final VoidCallback onStart;
+  final VoidCallback onStop;
+  final VoidCallback onRepeat;
+
+  @override
+  Widget build(BuildContext context) {
+    const color = AppTheme.moduleBodyParts;
+
+    if (!active) {
+      return Pressable(
+        onTap: onStart,
+        pressedScale: 0.97,
+        semanticLabel: isMalay
+            ? 'Mula permainan Doktor Kata'
+            : 'Start Doctor Says game',
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color, color.withValues(alpha: 0.78)],
+            ),
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            border: Border.all(color: Colors.white, width: 2.5),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.35),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Text('🩺', style: TextStyle(fontSize: 28)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isMalay ? 'Doktor Kata!' : 'Doctor Says!',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      isMalay
+                          ? 'Dengar dan sentuh anggota yang betul • ⭐ setiap betul'
+                          : 'Listen and touch the right part • ⭐ per correct',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.play_circle_fill_rounded,
+                  color: Colors.white, size: 30),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final feedbackEmoji = lastCorrect == null
+        ? '🩺'
+        : lastCorrect == true
+            ? '✅'
+            : '❌';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: color, width: 2),
+      ),
+      child: Row(
+        children: [
+          Text(feedbackEmoji, style: const TextStyle(fontSize: 26)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isMalay
+                      ? 'Pusingan $round/$total — sentuh:'
+                      : 'Round $round/$total — touch:',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.inkMuted,
+                  ),
+                ),
+                Text(
+                  targetWord ?? '…',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onRepeat,
+            tooltip: isMalay ? 'Ulang arahan' : 'Repeat instruction',
+            icon: const Icon(Icons.volume_up_rounded, color: color),
+          ),
+          IconButton(
+            onPressed: onStop,
+            tooltip: isMalay ? 'Berhenti' : 'Stop',
+            icon: const Icon(Icons.close_rounded, color: AppTheme.inkMuted),
+          ),
+        ],
+      ),
+    );
+  }
 }

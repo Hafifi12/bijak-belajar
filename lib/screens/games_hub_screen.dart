@@ -6,6 +6,8 @@ import '../providers/app_state.dart';
 import '../models/app_language.dart';
 import '../models/challenge.dart';
 import '../models/train_mode.dart';
+import '../theme/app_theme.dart';
+import '../widgets/pressable.dart';
 import 'find_explorer_screen.dart';
 import 'memory_category_screen.dart';
 import 'puzzle_screen.dart';
@@ -23,12 +25,12 @@ class GamesHubScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F0FF),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF7C4DFF),
+        backgroundColor: AppTheme.moduleGames,
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         title: Text(
           isMalay ? 'Permainan & Aktiviti 🎮' : 'Games & Activities 🎮',
@@ -45,7 +47,7 @@ class GamesHubScreen extends ConsumerWidget {
                 _SectionLabel(
                   emoji: '🚂',
                   label: isMalay ? 'Latihan Susun' : 'Sort & Train',
-                  color: const Color(0xFFFF9F43),
+                  color: AppTheme.orange,
                 ),
                 const SizedBox(height: 10),
                 _GameCard(
@@ -54,8 +56,9 @@ class GamesHubScreen extends ConsumerWidget {
                   subtitle: isMalay
                       ? 'Susun nombor mengikut turutan yang betul'
                       : 'Sort number cars in the correct order',
-                  color: const Color(0xFFFF6B6B),
+                  color: AppTheme.moduleNumbers,
                   completedCount: progress.countFor(ChallengeMode.numberTrain),
+                  isMystery: progress.mysteryGameToday == ChallengeMode.numberTrain,
                   learningObjective: isMalay
                       ? 'Urutan nombor, matematik asas'
                       : 'Number sequencing, basic numeracy',
@@ -71,8 +74,9 @@ class GamesHubScreen extends ConsumerWidget {
                   subtitle: isMalay
                       ? 'Susun huruf mengikut susunan A–Z'
                       : 'Sort letter cars in A–Z order',
-                  color: const Color(0xFF1DD1A1),
+                  color: AppTheme.moduleLetters,
                   completedCount: progress.countFor(ChallengeMode.letterTrain),
+                  isMystery: progress.mysteryGameToday == ChallengeMode.letterTrain,
                   learningObjective: isMalay
                       ? 'Turutan abjad, literasi awal'
                       : 'Alphabet sequence, early literacy',
@@ -87,7 +91,7 @@ class GamesHubScreen extends ConsumerWidget {
                 _SectionLabel(
                   emoji: '🧠',
                   label: isMalay ? 'Daya Ingatan & Fokus' : 'Memory & Focus',
-                  color: const Color(0xFF7C4DFF),
+                  color: AppTheme.moduleGames,
                 ),
                 const SizedBox(height: 10),
                 _GameCard(
@@ -98,6 +102,7 @@ class GamesHubScreen extends ConsumerWidget {
                       : 'Flip and match cards — build strong memory',
                   color: const Color(0xFF7E57C2),
                   completedCount: progress.countFor(ChallengeMode.memory),
+                  isMystery: progress.mysteryGameToday == ChallengeMode.memory,
                   learningObjective: isMalay
                       ? 'Daya ingatan, tumpuan, padanan gambar'
                       : 'Memory, concentration, picture matching',
@@ -114,6 +119,7 @@ class GamesHubScreen extends ConsumerWidget {
                       : 'Arrange picture tiles — easy 3×3 and hard 4×4',
                   color: const Color(0xFF00897B),
                   completedCount: progress.countFor(ChallengeMode.puzzle),
+                  isMystery: progress.mysteryGameToday == ChallengeMode.puzzle,
                   learningObjective: isMalay
                       ? 'Penyelesaian masalah, koordinasi, ruang'
                       : 'Problem-solving, coordination, spatial sense',
@@ -126,7 +132,7 @@ class GamesHubScreen extends ConsumerWidget {
                 _SectionLabel(
                   emoji: '🔎',
                   label: isMalay ? 'Cari & Terokai' : 'Find & Explore',
-                  color: const Color(0xFF00C9A7),
+                  color: AppTheme.turquoise,
                 ),
                 const SizedBox(height: 10),
                 _GameCard(
@@ -135,8 +141,9 @@ class GamesHubScreen extends ConsumerWidget {
                   subtitle: isMalay
                       ? 'Cari benda yang disebut — latih pendengaran & penglihatan'
                       : 'Find the object named — train listening & visual skills',
-                  color: const Color(0xFF00C9A7),
+                  color: AppTheme.turquoise,
                   completedCount: progress.countFor(ChallengeMode.findExplorer),
+                  isMystery: progress.mysteryGameToday == ChallengeMode.findExplorer,
                   learningObjective: isMalay
                       ? 'Perbendaharaan kata, pendengaran, tumpuan'
                       : 'Vocabulary, listening, attention focus',
@@ -184,7 +191,7 @@ class _GamesHeader extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7C4DFF).withValues(alpha: 0.35),
+            color: AppTheme.moduleGames.withValues(alpha: 0.35),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -287,7 +294,7 @@ class _SectionLabel extends ConsumerWidget {
 }
 
 // ── Game card ──────────────────────────────────────────────────────────────────
-class _GameCard extends ConsumerStatefulWidget {
+class _GameCard extends ConsumerWidget {
   const _GameCard({
     required this.emoji,
     required this.title,
@@ -296,6 +303,7 @@ class _GameCard extends ConsumerStatefulWidget {
     required this.completedCount,
     required this.learningObjective,
     required this.onTap,
+    this.isMystery = false,
   });
   final String emoji;
   final String title;
@@ -305,93 +313,36 @@ class _GameCard extends ConsumerStatefulWidget {
   final String learningObjective;
   final VoidCallback onTap;
 
-  @override
-  ConsumerState<_GameCard> createState() => _GameCardState();
-}
-
-class _GameCardState extends ConsumerState<_GameCard>
-    with TickerProviderStateMixin {
-  // Press feedback — same tactile language as BigModeButton/BadgeCard.
-  late final AnimationController _pressCtrl;
-  late final Animation<double> _pressScale;
-
-  // One-shot entrance: fades and slides the card up when it first appears,
-  // giving the hub list a lively, staggered-feeling reveal.
-  late final AnimationController _entryCtrl;
-  late final Animation<double> _entryFade;
-  late final Animation<Offset> _entrySlide;
+  /// Today's mystery game — pays 2× stars (see ProgressService).
+  final bool isMystery;
 
   @override
-  void initState() {
-    super.initState();
-    _pressCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 110),
-    );
-    _pressScale = Tween<double>(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _pressCtrl, curve: Curves.easeOut),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(progressServiceProvider);
+    final isMalay = progress.language == AppLanguage.malay;
 
-    _entryCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 420),
-    );
-    final curved = CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOutCubic);
-    _entryFade = curved;
-    _entrySlide = Tween<Offset>(
-      begin: const Offset(0, 0.12),
-      end: Offset.zero,
-    ).animate(curved);
-    _entryCtrl.forward();
-  }
-
-  @override
-  void dispose() {
-    _pressCtrl.dispose();
-    _entryCtrl.dispose();
-    super.dispose();
-  }
-
-  void _onTapDown(TapDownDetails _) => _pressCtrl.forward();
-  void _onTapUp(TapUpDetails _) => _pressCtrl.reverse();
-  void _onTapCancel() => _pressCtrl.reverse();
-
-  @override
-  Widget build(BuildContext context) {
-    final color = widget.color;
-    return FadeTransition(
-      opacity: _entryFade,
-      child: SlideTransition(
-        position: _entrySlide,
-        child: GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      child: AnimatedBuilder(
-        animation: _pressScale,
-        builder: (context, child) =>
-            Transform.scale(scale: _pressScale.value, child: child),
-        child: Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(22),
-      elevation: 4,
-      shadowColor: color.withValues(alpha: 0.25),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: widget.onTap,
+    return Pressable(
+      onTap: onTap,
+      pressedScale: 0.97,
+      semanticLabel: '$title. $subtitle',
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        elevation: 4,
+        shadowColor: color.withValues(alpha: 0.25),
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Row(
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: AppTheme.kidTargetLarge,
+                height: AppTheme.kidTargetLarge,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Center(
-                  child: Text(widget.emoji, style: const TextStyle(fontSize: 34)),
+                  child: Text(emoji, style: const TextStyle(fontSize: 34)),
                 ),
               ),
               const SizedBox(width: 14),
@@ -399,20 +350,51 @@ class _GameCardState extends ConsumerState<_GameCard>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF123A7A),
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.ink,
+                            ),
+                          ),
+                        ),
+                        if (isMystery) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.sunnyYellow,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              isMalay ? '🎁 2× ⭐ Hari Ini!' : '🎁 2× ⭐ Today!',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.ink,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      widget.subtitle,
+                      subtitle,
                       style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF7A7A9A),
+                        fontSize: 13,
+                        color: AppTheme.inkFaint,
                         fontWeight: FontWeight.w600,
                         height: 1.4,
                       ),
@@ -420,13 +402,13 @@ class _GameCardState extends ConsumerState<_GameCard>
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(Icons.school_rounded, size: 12, color: color),
+                        Icon(Icons.school_rounded, size: 13, color: color),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            widget.learningObjective,
+                            learningObjective,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: color,
                             ),
@@ -434,14 +416,16 @@ class _GameCardState extends ConsumerState<_GameCard>
                         ),
                       ],
                     ),
-                    if (widget.completedCount > 0) ...[
+                    if (completedCount > 0) ...[
                       const SizedBox(height: 4),
                       Text(
-                        '⭐ ${widget.completedCount} selesai',
+                        isMalay
+                            ? '⭐ $completedCount selesai'
+                            : '⭐ $completedCount completed',
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFFFFAA00),
+                          color: Color(0xFFB8860B),
                         ),
                       ),
                     ],
@@ -452,10 +436,6 @@ class _GameCardState extends ConsumerState<_GameCard>
             ],
           ),
         ),
-      ),
-    ),
-      ),
-    ),
       ),
     );
   }

@@ -40,6 +40,12 @@ class ProgressService extends ChangeNotifier {
   // ── New keys ───────────────────────────────────────────────────
   static const _streakKey = 'current_streak';
   static const _longestStreakKey = 'longest_streak';
+  static const _streakFreezesKey = 'streak_freezes';
+  static const _daily5DateKey = 'daily5_date';
+  static const _weekStartDateKey = 'week_start_date';
+  static const _weekStartStarsKey = 'week_start_stars';
+  static const _weekStartChallengesKey = 'week_start_challenges';
+  static const _weekStartColoringKey = 'week_start_coloring';
   static const _lastLoginDateKey = 'last_login_date';
   static const _questDateKey = 'quest_date';
   static const _questProgressKey = 'quest_progress';
@@ -66,7 +72,8 @@ class ProgressService extends ChangeNotifier {
   bool _backgroundMusicEnabled = false;
   bool _soundEnabled = true;
   bool _voiceEnabled = true;
-  AppLanguage _language = AppLanguage.english;
+  // Malaysian-first: BM is the default for new installs (Settings can change it).
+  AppLanguage _language = AppLanguage.malay;
 
   final Map<String, int> _moduleLessons = {};
   final Map<String, Set<String>> _moduleSeenLessons = {};
@@ -78,6 +85,22 @@ class ProgressService extends ChangeNotifier {
   int _longestStreak = 0;
   String _lastLoginDate = '';
   bool _shouldShowDailyReward = false;
+
+  /// Streak-freeze tokens: earned every 7 consecutive days (max 2 held),
+  /// spent automatically when the child misses exactly one day so the streak
+  /// survives. Silent brutal streak resets are the top churn moment.
+  int _streakFreezes = 0;
+  bool _streakFreezeJustUsed = false;
+
+  /// Date (yyyy-mm-dd) the Math "Daily 5" bonus was last claimed.
+  String _daily5Date = '';
+
+  /// Weekly snapshot (taken each Monday) so the parent recap can show
+  /// this-week deltas without storing a full history.
+  String _weekStartDate = '';
+  int _weekStartStars = 0;
+  int _weekStartChallenges = 0;
+  int _weekStartColoring = 0;
   AppLevel? _pendingLevelUp;
   final List<FinderBadge> _pendingBadges = [];
   List<int> _questProgress = [0, 0, 0];
@@ -96,18 +119,70 @@ class ProgressService extends ChangeNotifier {
   int getModuleLessons(String moduleId) => _moduleLessons[moduleId] ?? 0;
   String getLastLesson(String moduleId) => _lastLesson[moduleId] ?? '';
 
+  /// Whether [lessonLabel] has already been seen (and therefore already
+  /// awarded its star). Lets screens detect "first time" moments — e.g. the
+  /// Numbers band-completion bonus — without double-awarding.
+  bool hasSeenLesson(String moduleId, String lessonLabel) =>
+      _moduleSeenLessons[moduleId]?.contains(lessonLabel) ?? false;
+
   // ── Getters: new ──────────────────────────────────────────────
   int get currentStreak => _currentStreak;
   int get longestStreak => _longestStreak;
   bool get shouldShowDailyReward => _shouldShowDailyReward;
+  int get streakFreezes => _streakFreezes;
+
+  /// True when today's login was rescued by a freeze token (session-local;
+  /// the daily-reward dialog uses it to announce the save).
+  bool get streakFreezeJustUsed => _streakFreezeJustUsed;
+
+  /// Whether today's Math "Daily 5" bonus has already been claimed.
+  bool get isDaily5DoneToday => _daily5Date == _todayString();
+
+  // ── Mystery game of the day ───────────────────────────────────
+  /// One playable game pays double stars each day (date-seeded, rotates
+  /// through the hub's five games). Nudges play-pattern variety.
+  ChallengeMode get mysteryGameToday {
+    const pool = [
+      ChallengeMode.numberTrain,
+      ChallengeMode.letterTrain,
+      ChallengeMode.memory,
+      ChallengeMode.puzzle,
+      ChallengeMode.findExplorer,
+    ];
+    final day = DateTime.now().difference(DateTime(2024, 1, 1)).inDays;
+    return pool[day % pool.length];
+  }
+
+  // ── Weekly recap (parent-facing) ──────────────────────────────
+  int get starsThisWeek => (_stars - _weekStartStars).clamp(0, 1 << 31);
+  int get gamesThisWeek =>
+      (_completedChallenges - _weekStartChallenges).clamp(0, 1 << 31);
+  int get coloringThisWeek =>
+      (_coloringSessions - _weekStartColoring).clamp(0, 1 << 31);
+
+  /// Claims the once-per-day Math "Daily 5" bonus (+5 ⭐). Returns the stars
+  /// awarded (0 if already claimed today).
+  Future<int> claimDaily5Bonus() async {
+    if (isDaily5DoneToday) return 0;
+    _daily5Date = _todayString();
+    await _preferences?.setString(_daily5DateKey, _daily5Date);
+    await addStars(5);
+    return 5;
+  }
 
   AppLevel get currentLevel => levelForStars(_stars);
 
-  int get dailyRewardStars {
-    if (_currentStreak <= 2) return 2;
-    if (_currentStreak <= 6) return 3;
-    if (_currentStreak <= 13) return 5;
-    if (_currentStreak <= 29) return 7;
+  int get dailyRewardStars => _rewardForStreak(_currentStreak);
+
+  /// What tomorrow pays if the streak continues — shown on the daily-reward
+  /// dialog so the escalating table actually motivates a return visit.
+  int get tomorrowRewardStars => _rewardForStreak(_currentStreak + 1);
+
+  static int _rewardForStreak(int streak) {
+    if (streak <= 2) return 2;
+    if (streak <= 6) return 3;
+    if (streak <= 13) return 5;
+    if (streak <= 29) return 7;
     return 10;
   }
 
@@ -191,6 +266,12 @@ class ProgressService extends ChangeNotifier {
     _currentStreak = prefs.getInt(_streakKey) ?? 0;
     _longestStreak = prefs.getInt(_longestStreakKey) ?? 0;
     _lastLoginDate = prefs.getString(_lastLoginDateKey) ?? '';
+    _streakFreezes = prefs.getInt(_streakFreezesKey) ?? 0;
+    _daily5Date = prefs.getString(_daily5DateKey) ?? '';
+    _weekStartDate = prefs.getString(_weekStartDateKey) ?? '';
+    _weekStartStars = prefs.getInt(_weekStartStarsKey) ?? 0;
+    _weekStartChallenges = prefs.getInt(_weekStartChallengesKey) ?? 0;
+    _weekStartColoring = prefs.getInt(_weekStartColoringKey) ?? 0;
 
     final savedQuestDate = prefs.getString(_questDateKey) ?? '';
     final savedProgress = prefs.getStringList(_questProgressKey);
@@ -205,6 +286,7 @@ class ProgressService extends ChangeNotifier {
     _questDate = savedQuestDate;
 
     await _checkStreak();
+    await _checkWeek();
     _checkAllBadges(); // Award any badges earned from previous sessions
     notifyListeners();
   }
@@ -243,6 +325,9 @@ class ProgressService extends ChangeNotifier {
 
   // ── incrementColoringSessions ─────────────────────────────────
   Future<void> incrementColoringSessions() async {
+    // Tolerate being called before load() so an early coloring session is
+    // never lost to initialisation ordering.
+    if (_preferences == null) await load();
     final prefs = _prefs;
     _coloringSessions++;
     await prefs.setInt(_coloringSessionsKey, _coloringSessions);
@@ -267,9 +352,17 @@ class ProgressService extends ChangeNotifier {
   }
 
   // ── completeChallenge ─────────────────────────────────────────
-  Future<FinderBadge?> completeChallenge(ChallengeMode mode) async {
+  /// [stars] lets harder variants pay more (e.g. 4×4 puzzle = 2 ⭐, hard
+  /// memory boards = 3 ⭐) so difficulty is worth choosing.
+  Future<FinderBadge?> completeChallenge(
+    ChallengeMode mode, {
+    int stars = 1,
+  }) async {
     final oldLevel = currentLevel;
-    _stars += 1;
+    // Mystery game of the day pays double.
+    final effectiveStars =
+        mode == mysteryGameToday ? stars.clamp(1, 5) * 2 : stars.clamp(1, 5);
+    _stars += effectiveStars;
     _completedChallenges += 1;
     _completedByMode[mode] = (_completedByMode[mode] ?? 0) + 1;
 
@@ -327,6 +420,13 @@ class ProgressService extends ChangeNotifier {
     _currentStreak = 0;
     _longestStreak = 0;
     _lastLoginDate = '';
+    _streakFreezes = 0;
+    _streakFreezeJustUsed = false;
+    _daily5Date = '';
+    _weekStartDate = '';
+    _weekStartStars = 0;
+    _weekStartChallenges = 0;
+    _weekStartColoring = 0;
     _questProgress = [0, 0, 0];
     _questDate = '';
     _pendingLevelUp = null;
@@ -345,6 +445,12 @@ class ProgressService extends ChangeNotifier {
     await prefs.remove(_streakKey);
     await prefs.remove(_longestStreakKey);
     await prefs.remove(_lastLoginDateKey);
+    await prefs.remove(_streakFreezesKey);
+    await prefs.remove(_daily5DateKey);
+    await prefs.remove(_weekStartDateKey);
+    await prefs.remove(_weekStartStarsKey);
+    await prefs.remove(_weekStartChallengesKey);
+    await prefs.remove(_weekStartColoringKey);
     await prefs.remove(_questDateKey);
     await prefs.remove(_questProgressKey);
     notifyListeners();
@@ -373,6 +479,16 @@ class ProgressService extends ChangeNotifier {
     final yesterday = _yesterdayString();
     if (_lastLoginDate == yesterday) {
       _currentStreak++;
+      _maybeEarnFreeze();
+    } else if (_lastLoginDate.isNotEmpty &&
+        _lastLoginDate == _daysAgoString(2) &&
+        _streakFreezes > 0) {
+      // Missed exactly one day with a freeze token in hand: spend it and
+      // keep the streak alive instead of resetting to 1.
+      _streakFreezes--;
+      _streakFreezeJustUsed = true;
+      _currentStreak++;
+      _maybeEarnFreeze();
     } else {
       _currentStreak = 1;
     }
@@ -385,6 +501,35 @@ class ProgressService extends ChangeNotifier {
       await prefs.setInt(_streakKey, _currentStreak);
       await prefs.setInt(_longestStreakKey, _longestStreak);
       await prefs.setString(_lastLoginDateKey, _lastLoginDate);
+      await prefs.setInt(_streakFreezesKey, _streakFreezes);
+    }
+  }
+
+  /// Snapshots counters at the start of each ISO week (Monday) so the parent
+  /// recap can show this-week deltas.
+  Future<void> _checkWeek() async {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final mondayString =
+        '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+    if (_weekStartDate == mondayString) return;
+    _weekStartDate = mondayString;
+    _weekStartStars = _stars;
+    _weekStartChallenges = _completedChallenges;
+    _weekStartColoring = _coloringSessions;
+    final prefs = _preferences;
+    if (prefs != null) {
+      await prefs.setString(_weekStartDateKey, _weekStartDate);
+      await prefs.setInt(_weekStartStarsKey, _weekStartStars);
+      await prefs.setInt(_weekStartChallengesKey, _weekStartChallenges);
+      await prefs.setInt(_weekStartColoringKey, _weekStartColoring);
+    }
+  }
+
+  /// Every 7th consecutive day grants a freeze token, capped at 2 held.
+  void _maybeEarnFreeze() {
+    if (_currentStreak > 0 && _currentStreak % 7 == 0 && _streakFreezes < 2) {
+      _streakFreezes++;
     }
   }
 
@@ -463,9 +608,11 @@ class ProgressService extends ChangeNotifier {
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
-  String _yesterdayString() {
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    return '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+  String _yesterdayString() => _daysAgoString(1);
+
+  String _daysAgoString(int days) {
+    final d = DateTime.now().subtract(Duration(days: days));
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
   Future<void> _saveQuestProgress() async {

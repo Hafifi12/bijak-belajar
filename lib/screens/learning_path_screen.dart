@@ -36,7 +36,7 @@ class LearningPathScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         title: Text(
           isMalay ? 'Laluan Pembelajaran' : 'Learning Path',
@@ -105,6 +105,7 @@ class LearningPathScreen extends ConsumerWidget {
         lastLesson: progress.getLastLesson('numbers'),
         route: LearnNumbersScreen.routeName,
         moduleId: 'numbers',
+        kspk: 'KSPK · Awal Matematik',
       ),
       _ModuleInfo(
         emoji: '🔤',
@@ -122,6 +123,7 @@ class LearningPathScreen extends ConsumerWidget {
         lastLesson: progress.getLastLesson('letters'),
         route: LearnLettersScreen.routeName,
         moduleId: 'letters',
+        kspk: 'KSPK · Literasi Bahasa',
       ),
       _ModuleInfo(
         emoji: '🌙',
@@ -139,6 +141,7 @@ class LearningPathScreen extends ConsumerWidget {
         lastLesson: progress.getLastLesson('jawi'),
         route: JawiAsasScreen.routeName,
         moduleId: 'jawi',
+        kspk: 'KSPK · Pendidikan Islam',
       ),
       _ModuleInfo(
         emoji: '🧍',
@@ -156,6 +159,7 @@ class LearningPathScreen extends ConsumerWidget {
         lastLesson: progress.getLastLesson('bodyparts'),
         route: LearnBodyPartsScreen.routeName,
         moduleId: 'bodyparts',
+        kspk: 'KSPK · Awal Sains',
       ),
       _ModuleInfo(
         emoji: '🧮',
@@ -173,6 +177,7 @@ class LearningPathScreen extends ConsumerWidget {
         lastLesson: progress.getLastLesson('math'),
         route: MathPracticeScreen.routeName,
         moduleId: 'math',
+        kspk: 'KSPK · Awal Matematik',
       ),
       _ModuleInfo(
         emoji: '🎨',
@@ -190,6 +195,7 @@ class LearningPathScreen extends ConsumerWidget {
         lastLesson: '',
         route: ColoringScreen.routeName,
         moduleId: 'coloring',
+        kspk: 'KSPK · Kreativiti & Estetika',
       ),
       _ModuleInfo(
         emoji: '🎮',
@@ -211,6 +217,7 @@ class LearningPathScreen extends ConsumerWidget {
         lastLesson: '',
         route: GamesHubScreen.routeName,
         moduleId: 'games',
+        kspk: 'KSPK · Belajar Melalui Bermain',
       ),
     ];
   }
@@ -494,6 +501,43 @@ class _ModuleCardState extends ConsumerState<_ModuleCard>
                 ),
               ),
 
+              // ── KSPK strand tag (parent/teacher trust signal) ──
+              if (module.kspk != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: module.color.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: module.color.withValues(alpha: 0.30),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.school_rounded,
+                        size: 12,
+                        color: module.color,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        module.kspk!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: module.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 12),
 
               // ── Progress bar ──
@@ -583,12 +627,17 @@ class _ModuleInfo {
     required this.lastLesson,
     required this.route,
     required this.moduleId,
+    this.kspk,
   });
 
   final String emoji;
   final String title;
   final String objective;
   final String recommendedAge;
+
+  /// KSPK (Kurikulum Standard Prasekolah Kebangsaan) strand this module
+  /// supports — parent/teacher-facing trust signal, not kid-facing copy.
+  final String? kspk;
   final Color color;
   final List<String> levels;
   final int completed;

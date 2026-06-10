@@ -7,6 +7,7 @@ import '../models/app_language.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
+import 'jawi_trace_screen.dart';
 
 /// Jawi Asas — teaches the 28 Arabic/Jawi letters used in Bahasa Melayu Jawi
 /// in a warm, fun style for Malaysian Muslim preschool children.
@@ -241,6 +242,13 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
   @override
   void initState() {
     super.initState();
+    // Resume at the last Jawi letter the child saw, instead of restarting
+    // at alif every session.
+    final last = ref.read(progressServiceProvider).getLastLesson('jawi');
+    if (last.isNotEmpty) {
+      final idx = _jawis.indexWhere((j) => j.jawi == last);
+      if (idx >= 0) _current = idx;
+    }
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -307,12 +315,12 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: AppTheme.skyBlue,
+        backgroundColor: AppTheme.moduleJawi,
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: language == AppLanguage.malay ? 'Kembali' : 'Back',
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         title: Row(
@@ -508,7 +516,47 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                               color: color,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 10),
+                          // ── Trace this letter (Jawi v2) ──
+                          ElevatedButton.icon(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => JawiTraceScreen(
+                                  letter: item.jawi,
+                                  letterName: item.name,
+                                  color: color,
+                                ),
+                              ),
+                            ),
+                            icon: const Text(
+                              '✍️',
+                              style: TextStyle(fontSize: 20),
+                            ),
+                            label: Text(
+                              language == AppLanguage.malay
+                                  ? 'Jejak Huruf Ini! +⭐'
+                                  : 'Trace This Letter! +⭐',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.sunnyYellow,
+                              foregroundColor: AppTheme.ink,
+                              minimumSize:
+                                  const Size.fromHeight(AppTheme.kidTarget),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusLg),
+                              ),
+                              side: const BorderSide(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                           // Example word row
                           Container(
                             padding: const EdgeInsets.symmetric(

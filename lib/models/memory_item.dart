@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'challenge.dart';
 
-enum MemoryCategory { animals, shapes, colors }
+enum MemoryCategory { animals, shapes, colors, jawi }
 
 enum MemoryStage { easy, normal, medium, high }
 
@@ -23,6 +23,20 @@ extension MemoryStageDetails on MemoryStage {
   int get totalCards => gridSize * gridSize;
 
   int get pairCount => totalCards ~/ 2;
+
+  /// Star payout — bigger boards pay more so difficulty is worth choosing.
+  int get starReward {
+    switch (this) {
+      case MemoryStage.easy:
+        return 1;
+      case MemoryStage.normal:
+        return 1;
+      case MemoryStage.medium:
+        return 2;
+      case MemoryStage.high:
+        return 3;
+    }
+  }
 
   bool get hasBonusCard => totalCards.isOdd;
 
@@ -66,6 +80,8 @@ extension MemoryCategoryDetails on MemoryCategory {
         return 'Shape Memory';
       case MemoryCategory.colors:
         return 'Color Memory';
+      case MemoryCategory.jawi:
+        return 'Jawi Memory';
     }
   }
 
@@ -77,6 +93,8 @@ extension MemoryCategoryDetails on MemoryCategory {
         return 'Shapes';
       case MemoryCategory.colors:
         return 'Colors';
+      case MemoryCategory.jawi:
+        return 'Jawi';
     }
   }
 
@@ -88,6 +106,8 @@ extension MemoryCategoryDetails on MemoryCategory {
         return 'Match shape pairs';
       case MemoryCategory.colors:
         return 'Match color pairs';
+      case MemoryCategory.jawi:
+        return 'Match Jawi letter pairs';
     }
   }
 
@@ -99,6 +119,8 @@ extension MemoryCategoryDetails on MemoryCategory {
         return Icons.category_rounded;
       case MemoryCategory.colors:
         return Icons.palette_rounded;
+      case MemoryCategory.jawi:
+        return Icons.nightlight_round;
     }
   }
 
@@ -110,6 +132,9 @@ extension MemoryCategoryDetails on MemoryCategory {
         return const Color(0xFF00A896);
       case MemoryCategory.colors:
         return const Color(0xFFFF7058);
+      case MemoryCategory.jawi:
+        // Matches the Jawi module identity color (AppTheme.moduleJawi).
+        return const Color(0xFF00B894);
     }
   }
 }

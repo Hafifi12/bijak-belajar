@@ -105,6 +105,22 @@ class TinyFinderApp extends StatelessWidget {
           if (builder == null) return null;
           return _buildRoute(settings.name!, builder, settings);
         },
+        builder: (context, child) {
+          // Clamp system text scaling: layouts use fixed-height grids and
+          // compact labels, so unbounded scaling overflows them, while very
+          // small scales make kid-facing text illegible. 0.9–1.3 keeps both
+          // accessibility headroom and layout integrity.
+          final media = MediaQuery.of(context);
+          return MediaQuery(
+            data: media.copyWith(
+              textScaler: media.textScaler.clamp(
+                minScaleFactor: 0.9,
+                maxScaleFactor: 1.3,
+              ),
+            ),
+            child: child!,
+          );
+        },
     );
   }
 }

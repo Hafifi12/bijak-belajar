@@ -7,6 +7,7 @@ import '../models/app_language.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
+import '../widgets/xp_popup.dart';
 
 class LearnNumbersScreen extends ConsumerStatefulWidget {
   const LearnNumbersScreen({super.key});
@@ -404,6 +405,13 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
   @override
   void initState() {
     super.initState();
+    // Resume where the child left off — restarting a 100-card journey at
+    // number 1 on every open was the app's single biggest re-entry friction.
+    final last = ref.read(progressServiceProvider).getLastLesson('numbers');
+    final lastNum = int.tryParse(last);
+    if (lastNum != null && lastNum >= 1 && lastNum <= _numbers.length) {
+      _current = lastNum - 1;
+    }
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 650),
@@ -452,14 +460,38 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
     }
   }
 
+  /// Band finish lines — reaching these for the first time pays a bonus, so
+  /// the 100-card journey has mid-way payoffs instead of one long grind.
+  static const _bandEnds = {10, 20, 50, 100};
+
   void _recordCurrentLesson() {
+    final ps = ref.read(progressServiceProvider);
     final item = _numbers[_current];
-    ref.read(progressServiceProvider).markModuleLesson(
-      'numbers',
-      '${item.number}',
-    );
-    // TTS: narrate the number and its name on every card load
-    _speakCurrentLesson();
+    final isNewBandEnd = _bandEnds.contains(item.number) &&
+        !ps.hasSeenLesson('numbers', '${item.number}');
+    ps.markModuleLesson('numbers', '${item.number}');
+    if (isNewBandEnd) {
+      _celebrateBand(item.number);
+    } else {
+      // TTS: narrate the number and its name on every card load
+      _speakCurrentLesson();
+    }
+  }
+
+  Future<void> _celebrateBand(int n) async {
+    final ps = ref.read(progressServiceProvider);
+    await ps.addStars(5);
+    if (!mounted) return;
+    XpPopup.show(context, amount: 5);
+    _bounceController.forward(from: 0);
+    final isMalay = ps.language == AppLanguage.malay;
+    await ref.read(audioServiceProvider).speakLocale(
+          isMalay
+              ? 'Hebat! Kamu sudah sampai nombor $n! Lima bintang bonus!'
+              : 'Amazing! You reached number $n! Five bonus stars!',
+          enabled: ps.voiceEnabled,
+          locale: isMalay ? 'ms-MY' : 'en-US',
+        );
   }
 
   Future<void> _speakCurrentLesson() async {
@@ -526,12 +558,14 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: AppTheme.skyBlue,
+        // Module identity color — must match the Numbers tile on Home and
+        // the Learning Path card so pre-readers know where they are.
+        backgroundColor: AppTheme.moduleNumbers,
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         // Moved from leading into the title row so the back button can occupy leading.
@@ -652,16 +686,28 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                       ),
                       child: Column(
                         children: [
-                          ScaleTransition(
-                            scale: _bounceAnim,
-                            child: ScaleTransition(
-                              scale: _pulseAnim,
-                              child: _NumberStage(item: item, color: color),
+                          // Poking the giant number is the first thing every
+                          // child tries — it now replays the narration.
+                          Semantics(
+                            button: true,
+                            label: isMalay
+                                ? 'Nombor ${item.number}. Sentuh untuk dengar.'
+                                : 'Number ${item.number}. Tap to hear.',
+                            child: GestureDetector(
+                              onTap: () {
+                                _bounceController.forward(from: 0);
+                                _speakCurrentLesson();
+                              },
+                              child: ScaleTransition(
+                                scale: _bounceAnim,
+                                child: ScaleTransition(
+                                  scale: _pulseAnim,
+                                  child: _NumberStage(item: item, color: color),
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 14),
-                          _WordTable(item: item, color: color),
-                          const SizedBox(height: 12),
                           _ReadNumberCard(
                             color: color,
                             prompt: isMalay
@@ -698,40 +744,46 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: isFirst ? null : _prev,
-                        icon: const Icon(Icons.arrow_back_ios_rounded),
-                        label: Text(
-                          isMalay ? 'Sebelum' : 'Back',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
+                    // Pre-readers don't parse "greyed out = unavailable" —
+                    // on the first card the Back button is simply absent.
+                    if (!isFirst) ...[
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _prev,
+                          icon: const Icon(Icons.arrow_back_ios_rounded),
+                          label: Text(
+                            isMalay ? 'Sebelum' : 'Back',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.deepBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          elevation: 5,
-                          side: const BorderSide(
-                            color: Colors.white,
-                            width: 2.5,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.deepBlue,
+                            foregroundColor: Colors.white,
+                            minimumSize:
+                                const Size.fromHeight(AppTheme.kidTarget),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusLg),
+                            ),
+                            elevation: 5,
+                            side: const BorderSide(
+                              color: Colors.white,
+                              width: 2.5,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
+                      const SizedBox(width: 10),
+                    ],
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: isLast ? null : _next,
                         label: Text(
                           isMalay ? 'Seterusnya' : 'Next',
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -740,9 +792,11 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.sunnyYellow,
                           foregroundColor: AppTheme.ink,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          minimumSize:
+                              const Size.fromHeight(AppTheme.kidTarget),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusLg),
                           ),
                           elevation: 6,
                           side: const BorderSide(
@@ -954,81 +1008,6 @@ class _ReadNumberCard extends StatelessWidget {
   }
 }
 
-// ── 5-Language word table ──────────────────────────────────────────────────────
-class _WordTable extends StatelessWidget {
-  const _WordTable({required this.item, required this.color});
-  final _NumberItem item;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = [
-      ('🇲🇾', 'Melayu', item.malay),
-      ('🇬🇧', 'English', item.english),
-      ('🇨🇳', '中文', item.mandarin),
-      ('🇮🇳', 'தமிழ்', item.tamil),
-      ('🇮🇩', 'Indonesia', item.indonesian),
-    ];
-    return Container(
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        children: rows.asMap().entries.map((e) {
-          final isLast = e.key == rows.length - 1;
-          final (flag, lang, word) = e.value;
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    Text(flag, style: const TextStyle(fontSize: 20)),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      width: 74,
-                      child: Text(
-                        lang,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        word,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: color,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  color: color.withValues(alpha: 0.15),
-                  indent: 14,
-                  endIndent: 14,
-                ),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
 // ── Counting objects ─────────────────────────────────────────────────────────
 class _CountingObjectsPanel extends ConsumerStatefulWidget {
   const _CountingObjectsPanel({
@@ -1074,9 +1053,10 @@ class _CountingObjectsPanelState extends ConsumerState<_CountingObjectsPanel> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = (constraints.maxWidth / 44).floor().clamp(5, 8).toInt();
+        // ≥52dp cells — counting circles are primary kid tap targets.
+        final columns = (constraints.maxWidth / 56).floor().clamp(4, 7).toInt();
         final rows = (widget.count / columns).ceil();
-        final gridHeight = rows <= 4 ? rows * 46.0 : 190.0;
+        final gridHeight = rows <= 4 ? rows * 58.0 : 232.0;
         final scrollable = rows > 4;
 
         return Container(
@@ -1237,12 +1217,18 @@ class _NumberPronunciationPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // One audio-first language list (replaces the old read-only word table +
+    // chip wrap, which showed the same five words twice). Each row is a
+    // full-width, ≥56dp tap target: tap anywhere on the row to hear the word.
+    //
+    // No country flags: Mandarin and Tamil are Malaysian community languages —
+    // tagging them with China/India flags misframes them for our audience.
     final rows = [
-      (flag: '🇲🇾', label: 'BM', word: item.malay, locale: 'ms-MY'),
-      (flag: '🇬🇧', label: 'EN', word: item.english, locale: 'en-US'),
-      (flag: '🇨🇳', label: '中文', word: item.mandarin, locale: 'zh-CN'),
-      (flag: '🇮🇳', label: 'தமிழ்', word: item.tamil, locale: 'ta-IN'),
-      (flag: '🇮🇩', label: 'ID', word: item.indonesian, locale: 'id-ID'),
+      (tag: 'BM', label: 'Bahasa Melayu', word: item.malay, locale: 'ms-MY'),
+      (tag: 'EN', label: 'English', word: item.english, locale: 'en-US'),
+      (tag: '中', label: '中文', word: item.mandarin, locale: 'zh-CN'),
+      (tag: 'த', label: 'தமிழ்', word: item.tamil, locale: 'ta-IN'),
+      (tag: 'ID', label: 'Indonesia', word: item.indonesian, locale: 'id-ID'),
     ];
 
     return Container(
@@ -1250,7 +1236,7 @@ class _NumberPronunciationPanel extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(color: color.withValues(alpha: 0.18), width: 1.5),
         boxShadow: [
           BoxShadow(
@@ -1270,77 +1256,91 @@ class _NumberPronunciationPanel extends StatelessWidget {
               Expanded(
                 child: Text(
                   isMalay
-                      ? 'Belajar sebutan 5 bahasa'
-                      : 'Learn 5-language words',
+                      ? 'Sentuh untuk dengar dalam 5 bahasa'
+                      : 'Tap to hear in 5 languages',
                   style: const TextStyle(
                     color: AppTheme.ink,
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final row in rows)
-                Material(
-                  color: color.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
+          const SizedBox(height: 8),
+          for (final row in rows)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Semantics(
+                button: true,
+                label: '${row.label}: ${row.word}',
+                child: Material(
+                  color: color.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     onTap: () => onSpeak(row.word, row.locale),
                     child: Container(
-                      constraints: const BoxConstraints(minHeight: 46),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 7,
+                      constraints: const BoxConstraints(
+                        minHeight: AppTheme.kidTarget,
                       ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: color.withValues(alpha: 0.25),
-                        ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(row.flag, style: const TextStyle(fontSize: 17)),
-                          const SizedBox(width: 6),
-                          Text(
-                            row.label,
-                            style: TextStyle(
-                              color: color,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.16),
+                              shape: BoxShape.circle,
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 126),
+                            alignment: Alignment.center,
                             child: Text(
-                              row.word,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppTheme.ink,
-                                fontSize: 13,
+                              row.tag,
+                              style: TextStyle(
+                                color: color,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Icon(Icons.volume_up_rounded, size: 16, color: color),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 86,
+                            child: Text(
+                              row.label,
+                              maxLines: 2,
+                              style: TextStyle(
+                                color: color,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              row.word,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.ink,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(Icons.volume_up_rounded, size: 22, color: color),
                         ],
                       ),
                     ),
                   ),
                 ),
-            ],
-          ),
+              ),
+            ),
         ],
       ),
     );

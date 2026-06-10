@@ -8,7 +8,9 @@ import '../providers/app_state.dart';
 import '../models/app_language.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
+import '../widgets/pressable.dart';
 import '../widgets/star_counter.dart';
+import '../widgets/xp_popup.dart';
 
 // ── Entry point (topic picker) ─────────────────────────────────────────────────
 class MathPracticeScreen extends ConsumerWidget {
@@ -111,7 +113,7 @@ class MathPracticeScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         title: Row(
@@ -128,7 +130,7 @@ class MathPracticeScreen extends ConsumerWidget {
             ),
           ],
         ),
-        backgroundColor: AppTheme.skyBlue,
+        backgroundColor: AppTheme.moduleMath,
         foregroundColor: Colors.white,
         actions: const [
           Padding(
@@ -198,6 +200,11 @@ class MathPracticeScreen extends ConsumerWidget {
                 ),
               ),
 
+              const SizedBox(height: 14),
+
+              // Daily 5 — the module's daily comeback hook.
+              _Daily5Card(isMalay: isMalay),
+
               const SizedBox(height: 22),
 
               // Level selector hint
@@ -214,6 +221,103 @@ class MathPracticeScreen extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Daily 5 card ───────────────────────────────────────────────────────────────
+class _Daily5Card extends ConsumerWidget {
+  const _Daily5Card({required this.isMalay});
+  final bool isMalay;
+
+  /// Today's operation — rotates daily (same seed idea as the quest pool) so
+  /// the Daily 5 feels fresh without any new content.
+  MathOp get _todaysOp {
+    final day = DateTime.now().difference(DateTime(2024, 1, 1)).inDays;
+    return MathOp.values[day % MathOp.values.length];
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(progressServiceProvider);
+    final done = progress.isDaily5DoneToday;
+    const color = AppTheme.moduleMath;
+
+    return Pressable(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => MathQuizScreen(
+            op: _todaysOp,
+            color: color,
+            level: 1,
+            daily5: true,
+          ),
+        ),
+      ),
+      pressedScale: 0.97,
+      semanticLabel: isMalay
+          ? 'Lima soalan harian. ${done ? 'Selesai hari ini.' : 'Bonus lima bintang.'}'
+          : 'Daily five questions. ${done ? 'Done today.' : 'Five star bonus.'}',
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: done
+                ? [AppTheme.leafGreen, AppTheme.leafGreen.withValues(alpha: 0.8)]
+                : [color, color.withValues(alpha: 0.78)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          border: Border.all(color: Colors.white, width: 2.5),
+          boxShadow: [
+            BoxShadow(
+              color: (done ? AppTheme.leafGreen : color)
+                  .withValues(alpha: 0.35),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Text(done ? '✅' : '⚡', style: const TextStyle(fontSize: 34)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isMalay ? 'Misi 5 Soalan Harian' : 'Daily 5 Challenge',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    done
+                        ? (isMalay
+                            ? 'Selesai hari ini! Datang lagi esok ⭐'
+                            : 'Done today! Come back tomorrow ⭐')
+                        : (isMalay
+                            ? '5 soalan pantas • Bonus +5 ⭐'
+                            : '5 quick questions • +5 ⭐ bonus'),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: Colors.white, size: 20),
+          ],
         ),
       ),
     );
@@ -402,11 +506,15 @@ class MathQuizScreen extends ConsumerStatefulWidget {
     required this.op,
     required this.color,
     this.level = 1,
+    this.daily5 = false,
   });
 
   final MathOp op;
   final Color color;
   final int level; // 1=easy, 2=medium, 3=hard
+
+  /// Daily 5 mode: 5 questions, once-per-day +5 ⭐ bonus on completion.
+  final bool daily5;
 
   @override
   ConsumerState<MathQuizScreen> createState() => _MathQuizScreenState();
@@ -414,7 +522,7 @@ class MathQuizScreen extends ConsumerStatefulWidget {
 
 class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
     with TickerProviderStateMixin {
-  static const _totalQuestions = 10;
+  int get _totalQuestions => widget.daily5 ? 5 : 10;
 
   final _rng = Random();
   final _answers = <bool>[];
@@ -425,6 +533,33 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
   int _questionIndex = 0;
   bool _answered = false;
   int? _selectedOption;
+
+  // ── Adaptive difficulty ───────────────────────────────────────
+  // The quiz silently steps the level up after 3 correct in a row and down
+  // after 2 wrong in a row, keeping the child in the zone where questions
+  // feel winnable but not boring. No UI — frustration management, not a
+  // feature the child should see.
+  late int _level = widget.level;
+  int _correctStreak = 0;
+  int _wrongStreak = 0;
+
+  void _adaptDifficulty({required bool correct}) {
+    if (correct) {
+      _correctStreak++;
+      _wrongStreak = 0;
+      if (_correctStreak >= 3 && _level < 3) {
+        _level++;
+        _correctStreak = 0;
+      }
+    } else {
+      _wrongStreak++;
+      _correctStreak = 0;
+      if (_wrongStreak >= 2 && _level > 1) {
+        _level--;
+        _wrongStreak = 0;
+      }
+    }
+  }
 
   // animations
   late AnimationController _shakeCtrl;
@@ -468,7 +603,7 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
     setState(() {
       _q = _Question.generate(
         op: widget.op,
-        level: widget.level,
+        level: _level,
         rng: _rng,
         isMalay: isMalay,
       );
@@ -490,6 +625,7 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
         _answers.add(false);
         _shakeCtrl.forward(from: 0);
       }
+      _adaptDifficulty(correct: correct);
     });
 
     // Sound feedback — clap/chime for correct, soft buzz for wrong (no voice)
@@ -517,6 +653,14 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
           widget.level,
         ),
       );
+      // Daily 5 completion bonus — once per day, regardless of score (effort
+      // is what brings a 4–7 year old back; mastery gates come later).
+      if (widget.daily5) {
+        final bonus = await progress.claimDaily5Bonus();
+        if (bonus > 0 && mounted) {
+          XpPopup.show(context, amount: bonus);
+        }
+      }
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -542,7 +686,7 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: AppTheme.skyBlue,
+        backgroundColor: AppTheme.moduleMath,
         foregroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1071,7 +1215,7 @@ class MathResultScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppTheme.lightBlue,
       appBar: AppBar(
-        backgroundColor: AppTheme.skyBlue,
+        backgroundColor: AppTheme.moduleMath,
         foregroundColor: Colors.white,
         title: Text(
           isMalay ? 'Keputusan 🏆' : 'Results 🏆',

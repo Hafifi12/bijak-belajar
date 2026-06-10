@@ -21,8 +21,13 @@ void main() {
 
   setUp(() {
     // Seed today's login date so the daily-reward dialog does not pop over the
-    // home screen during these UI tests.
-    SharedPreferences.setMockInitialValues({'last_login_date': _todayKey()});
+    // home screen during these UI tests. Pin language to English because the
+    // app now defaults to Bahasa Melayu (Malaysian-first) and these tests
+    // assert English strings.
+    SharedPreferences.setMockInitialValues({
+      'last_login_date': _todayKey(),
+      'language': 'en',
+    });
   });
 
   Future<void> pumpAppAndOpenHome(

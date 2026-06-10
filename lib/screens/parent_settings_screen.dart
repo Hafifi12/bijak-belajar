@@ -28,7 +28,7 @@ class ParentSettingsScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: 'Back',
+          tooltip: isMalay ? 'Kembali' : 'Back',
         ),
         title: Text(AppText.ui('parentSettings', language)),
       ),
@@ -107,6 +107,9 @@ class ParentSettingsScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 14),
+              // ── Weekly recap — the "let's do your 10 minutes" nudge ──
+              _WeeklyRecapCard(progress: progress, isMalay: isMalay),
               const SizedBox(height: 14),
               // ── Parent / Teacher Progress Summary ──
               _ProgressSummaryCard(progress: progress, isMalay: isMalay),
@@ -649,6 +652,92 @@ class _DevInfoRow extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Weekly recap card ────────────────────────────────────────────────────────
+class _WeeklyRecapCard extends StatelessWidget {
+  const _WeeklyRecapCard({required this.progress, required this.isMalay});
+  final ProgressService progress;
+  final bool isMalay;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      (
+        '⭐',
+        isMalay ? 'Bintang minggu ini' : 'Stars this week',
+        '${progress.starsThisWeek}',
+      ),
+      (
+        '🎮',
+        isMalay ? 'Permainan selesai' : 'Games completed',
+        '${progress.gamesThisWeek}',
+      ),
+      (
+        '🎨',
+        isMalay ? 'Sesi mewarna' : 'Colouring sessions',
+        '${progress.coloringThisWeek}',
+      ),
+      (
+        '🔥',
+        isMalay ? 'Streak semasa' : 'Current streak',
+        isMalay
+            ? '${progress.currentStreak} hari'
+            : '${progress.currentStreak} days',
+      ),
+    ];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              isMalay ? '📅 Ringkasan Minggu Ini' : '📅 This Week\'s Recap',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              isMalay
+                  ? 'Sejak Isnin — gunakan untuk sesi 10 minit bersama anak.'
+                  : 'Since Monday — use it to plan a 10-minute session together.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            for (final (emoji, label, value) in rows)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  children: [
+                    Text(emoji, style: const TextStyle(fontSize: 20)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.ink,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
