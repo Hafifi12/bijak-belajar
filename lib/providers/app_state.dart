@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../services/audio_service.dart';
 import '../services/progress_service.dart';
@@ -11,6 +12,14 @@ import '../services/progress_service.dart';
 final progressServiceProvider = ChangeNotifierProvider<ProgressService>(
   (ref) => throw UnimplementedError(
     'progressServiceProvider must be overridden in ProviderScope',
+  ),
+);
+
+/// Riverpod wrapper around [PackageInfo].
+/// Override in [ProviderScope] with the pre-loaded instance from main().
+final packageInfoProvider = Provider<PackageInfo>(
+  (ref) => throw UnimplementedError(
+    'packageInfoProvider must be overridden in ProviderScope',
   ),
 );
 

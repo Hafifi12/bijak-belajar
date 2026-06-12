@@ -18,6 +18,7 @@ class ParentSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(progressServiceProvider);
+    final packageInfo = ref.watch(packageInfoProvider);
     final language = progress.language;
     final isMalay = language == AppLanguage.malay;
 
@@ -144,12 +145,22 @@ class ParentSettingsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 14),
+              _SectionHeader(
+                emoji: '👨‍💻',
+                label: isMalay ? 'MAKLUMAT PEMBANGUN' : 'DEVELOPER INFO',
+                color: const Color(0xFF6C5CE7),
+              ),
+              const SizedBox(height: 12),
               // Developer info card
               Card(
-                color: AppTheme.cream,
+                elevation: 4,
+                shadowColor: const Color(0xFF6C5CE7).withValues(alpha: 0.2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
-                  side: const BorderSide(color: AppTheme.deepBlue, width: 2),
+                  side: BorderSide(
+                    color: const Color(0xFF6C5CE7).withValues(alpha: 0.2),
+                    width: 2,
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -157,16 +168,20 @@ class ParentSettingsScreen extends ConsumerWidget {
                     children: [
                       // Logo / icon
                       Container(
-                        width: 72,
-                        height: 72,
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6C5CE7),
-                          borderRadius: BorderRadius.circular(20),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF6C5CE7), Color(0xFFA29BFE)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(22),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.deepBlue.withValues(alpha: 0.35),
-                              blurRadius: 12,
-                              offset: const Offset(0, 5),
+                              color: const Color(0xFF6C5CE7).withValues(alpha: 0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
@@ -175,66 +190,92 @@ class ParentSettingsScreen extends ConsumerWidget {
                             'ANF',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 22,
+                              fontSize: 26,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       const Text(
                         'ANF Studio',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF6C5CE7),
+                          letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
-                        'Developed with ❤️ for Malaysian children',
+                        isMalay
+                            ? 'Dibangunkan dengan ❤️ untuk anak-anak Malaysia'
+                            : 'Developed with ❤️ for Malaysian children',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                           color: Colors.grey.shade600,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 8),
-                      _DevInfoRow(
-                        icon: Icons.apps_rounded,
-                        label: 'App',
-                        value: 'Bijak Belajar',
-                      ),
-                      const SizedBox(height: 6),
-                      _DevInfoRow(
-                        icon: Icons.business_rounded,
-                        label: 'Studio',
-                        value: 'ANF Studio',
-                      ),
-                      const SizedBox(height: 6),
-                      _DevInfoRow(
-                        icon: Icons.flag_rounded,
-                        label: 'Negara',
-                        value: 'Malaysia 🇲🇾',
-                      ),
-                      const SizedBox(height: 6),
-                      _DevInfoRow(
-                        icon: Icons.child_care_rounded,
-                        label: 'Sasaran',
-                        value: 'Kanak-kanak 3–8 tahun',
-                      ),
-                      const SizedBox(height: 6),
-                      _DevInfoRow(
-                        icon: Icons.verified_rounded,
-                        label: 'Versi',
-                        value: '1.0.0+3',
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6C5CE7).withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Column(
+                          children: [
+                            _DevInfoRow(
+                              icon: Icons.apps_rounded,
+                              label: isMalay ? 'Apl' : 'App',
+                              value: 'Bijak Belajar',
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Divider(height: 1, thickness: 0.5),
+                            ),
+                            _DevInfoRow(
+                              icon: Icons.business_rounded,
+                              label: 'Studio',
+                              value: 'ANF Studio',
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Divider(height: 1, thickness: 0.5),
+                            ),
+                            _DevInfoRow(
+                              icon: Icons.flag_rounded,
+                              label: isMalay ? 'Negara' : 'Country',
+                              value: 'Malaysia 🇲🇾',
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Divider(height: 1, thickness: 0.5),
+                            ),
+                            _DevInfoRow(
+                              icon: Icons.child_care_rounded,
+                              label: isMalay ? 'Sasaran' : 'Target',
+                              value: isMalay ? 'Kanak-kanak 3–8 tahun' : 'Kids aged 3–8',
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Divider(height: 1, thickness: 0.5),
+                            ),
+                            _DevInfoRow(
+                              icon: Icons.verified_rounded,
+                              label: isMalay ? 'Versi' : 'Version',
+                              value: '${packageInfo.version}+${packageInfo.buildNumber}',
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -634,21 +675,76 @@ class _DevInfoRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF6C5CE7)),
-        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: const Color(0xFF6C5CE7).withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 14, color: const Color(0xFF6C5CE7)),
+        ),
+        const SizedBox(width: 10),
         Text(
-          '$label:',
+          label,
           style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF6C5CE7),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.inkFaint,
           ),
         ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+        const Spacer(),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: AppTheme.ink,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.emoji,
+    required this.label,
+    required this.color,
+  });
+  final String emoji;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(50),
+            border: Border.all(
+              color: color.withValues(alpha: 0.45),
+              width: 1.4,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 15)),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
           ),
         ),
       ],

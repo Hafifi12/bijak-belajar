@@ -2,19 +2,23 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/app_language.dart';
+import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
 import 'parent_settings_screen.dart';
 
-class ParentGateScreen extends StatefulWidget {
+class ParentGateScreen extends ConsumerStatefulWidget {
   const ParentGateScreen({super.key});
   static const routeName = '/parent-gate';
 
   @override
-  State<ParentGateScreen> createState() => _ParentGateScreenState();
+  ConsumerState<ParentGateScreen> createState() => _ParentGateScreenState();
 }
 
-class _ParentGateScreenState extends State<ParentGateScreen>
+class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _ctrl = TextEditingController();
   String? _error;
@@ -54,67 +58,58 @@ class _ParentGateScreenState extends State<ParentGateScreen>
   }
 
   void _check() {
+    final isMalay = ref.read(progressServiceProvider).language == AppLanguage.malay;
     if (_ctrl.text.trim() == '$_answer') {
       HapticFeedback.lightImpact();
       Navigator.of(context).pushReplacementNamed(ParentSettingsScreen.routeName);
     } else {
       HapticFeedback.heavyImpact();
-      setState(() => _error = 'Not quite — try again! 🤔');
+      setState(() => _error = isMalay ? 'Kurang tepat — cuba lagi! 🤔' : 'Not quite — try again! 🤔');
       _ctrl.clear();
       _shakeCtrl.forward(from: 0);
       _generateChallenge();
-      setState(() {});
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isMalay = ref.watch(progressServiceProvider).language == AppLanguage.malay;
+
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF0648D9), Color(0xFF1EA7FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          tooltip: isMalay ? 'Kembali' : 'Back',
+        ),
+        title: Text(
+          isMalay ? 'Untuk Orang Dewasa' : 'Grown-Ups Only',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.3,
           ),
         ),
+        centerTitle: true,
+      ),
+      body: BijakScene(
+        topColor: AppTheme.deepBlue,
+        bottomColor: AppTheme.skyBlue,
+        showHills: false,
         child: SafeArea(
           child: Column(
             children: [
-              // ── Top bar ─────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-                      tooltip: 'Back',
-                    ),
-                    const Expanded(
-                      child: Text(
-                        'Grown-Ups Only',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-
               // ── Hero ────────────────────────────────────────────
               const Spacer(),
               const _ShieldBadge(),
               const SizedBox(height: 12),
-              const Text(
-                'Parent & Teacher Access',
-                style: TextStyle(
+              Text(
+                isMalay ? 'Akses Ibu Bapa & Guru' : 'Parent & Teacher Access',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
@@ -123,7 +118,7 @@ class _ParentGateScreenState extends State<ParentGateScreen>
               ),
               const SizedBox(height: 6),
               Text(
-                'Solve the sum to unlock settings',
+                isMalay ? 'Selesaikan jumlah untuk buka tetapan' : 'Solve the sum to unlock settings',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.75),
                   fontSize: 14,
@@ -178,7 +173,7 @@ class _ParentGateScreenState extends State<ParentGateScreen>
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'What is the answer?',
+                              isMalay ? 'Berapakah jawapannya?' : 'What is the answer?',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -234,7 +229,7 @@ class _ParentGateScreenState extends State<ParentGateScreen>
                         child: FilledButton.icon(
                           onPressed: _check,
                           icon: const Icon(Icons.lock_open_rounded, size: 22),
-                          label: const Text('Unlock Settings'),
+                          label: Text(isMalay ? 'Buka Tetapan' : 'Unlock Settings'),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppTheme.deepBlue,
                             foregroundColor: Colors.white,
@@ -260,7 +255,9 @@ class _ParentGateScreenState extends State<ParentGateScreen>
               Padding(
                 padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
                 child: Text(
-                  'This simple maths check keeps settings safe from little fingers 🧒',
+                  isMalay 
+                      ? 'Semakan matematik mudah ini memastikan tetapan selamat daripada si kecil 🧒'
+                      : 'This simple maths check keeps settings safe from little fingers 🧒',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
