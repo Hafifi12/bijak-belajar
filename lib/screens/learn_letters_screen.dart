@@ -394,17 +394,39 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
     }
   }
 
+  /// Strips romanisation hints like "苹果 (Píngguǒ)" → "苹果" so the TTS
+  /// engine only receives the target script.
+  static String _ttsClean(String s) =>
+      s.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+
+  /// "Letter, then its example" — A → "A seperti Ayam" (BM),
+  /// "A for Ant" (EN), "A, 苹果" (other languages).
+  String _letterPhrase(_LetterItem item, AppLanguage lang) {
+    return switch (lang) {
+      AppLanguage.malay => item.phonicsMalay,
+      AppLanguage.english => '${item.letter} for ${item.english}',
+      _ => '${item.letter}, ${_ttsClean(_wordForLanguage(item, lang))}',
+    };
+  }
+
   Future<void> _speakCurrentLesson() async {
     final ps = ref.read(progressServiceProvider);
     if (!ps.voiceEnabled) return;
     final item = _letters[_current];
     final audio = ref.read(audioServiceProvider);
     final lang = ps.language;
-    // Say the letter name, then the word in the active language
-    await audio.speakLocale(item.letter, enabled: true, locale: 'en-US');
+    // Letter name in the app language's voice, then the example phrase.
+    await audio.speakLocale(
+      item.letter,
+      enabled: true,
+      locale: lang.ttsLocale,
+    );
     await Future.delayed(const Duration(milliseconds: 380));
-    final word = _wordForLanguage(item, lang);
-    await audio.speakLocale(word, enabled: true, locale: lang.ttsLocale);
+    await audio.speakLocale(
+      _letterPhrase(item, lang),
+      enabled: true,
+      locale: lang.ttsLocale,
+    );
   }
 
   String _wordForLanguage(_LetterItem item, AppLanguage lang) {
@@ -887,11 +909,14 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                           _PronounceButtons(
                             isMalay: isMalay,
                             onSpeak: _speakIn,
-                            malay: item.letter.toLowerCase(),
-                            english: item.letter.toLowerCase(),
-                            mandarin: item.letter.toLowerCase(),
-                            indonesian: item.letter.toLowerCase(),
-                            tamil: item.letter.toLowerCase(),
+                            // Letter followed by its example word, per language.
+                            malay: '${item.letter}, ${item.malay}',
+                            english: '${item.letter}, ${item.english}',
+                            mandarin:
+                                '${item.letter}, ${_ttsClean(item.mandarin)}',
+                            indonesian:
+                                '${item.letter}, ${item.indonesian}',
+                            tamil: '${item.letter}, ${_ttsClean(item.tamil)}',
                             color: color,
                           ),
 

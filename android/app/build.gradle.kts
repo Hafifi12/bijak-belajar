@@ -2,7 +2,7 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -16,7 +16,7 @@ if (keyPropertiesFile.exists()) {
 
 android {
     namespace = "com.anfstudio.bijakbelajar"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = "28.2.13676358"
 
     compileOptions {
@@ -40,8 +40,7 @@ android {
     defaultConfig {
         applicationId = "com.anfstudio.bijakbelajar"
         minSdk = flutter.minSdkVersion
-        // Android 16 — Play Store's expected 2026 target requirement.
-        targetSdk = 36
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
