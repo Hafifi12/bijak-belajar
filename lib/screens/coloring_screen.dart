@@ -9,6 +9,7 @@ import '../providers/app_state.dart';
 
 import '../models/app_language.dart';
 import '../services/artwork_store.dart';
+import '../theme/app_theme.dart';
 import 'coloring_gallery_screen.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // Data models
@@ -470,14 +471,35 @@ class ColoringCanvasScreen extends ConsumerStatefulWidget {
   ConsumerState<ColoringCanvasScreen> createState() => _ColoringCanvasScreenState();
 }
 
+enum _CanvasTool { brush, eraser, stamp }
+
+enum _CanvasAction { stroke, stamp }
+
+class _StampMark {
+  const _StampMark({required this.offset, required this.emoji, required this.size});
+  final Offset offset;
+  final String emoji;
+  final double size;
+}
+
 class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     with SingleTickerProviderStateMixin {
   final List<_DrawPoint?> _points = [];
+  final List<_StampMark> _stamps = [];
+
+  /// Order of strokes/stamps for unified undo.
+  final List<_CanvasAction> _actionLog = [];
   final GlobalKey _canvasKey = GlobalKey();
   Color _selectedColor = Colors.red;
   double _strokeWidth = 18.0;
-  bool _isEraser = false;
+  _CanvasTool _tool = _CanvasTool.brush;
+  String _selectedStamp = '⭐';
   bool _saved = false;
+  bool _strokeInProgress = false;
+
+  static const _stampChoices = [
+    '⭐', '❤️', '🌈', '🦋', '🌸', '🌟', '🍎', '⚽', '🚗', '🐱', '🐶', '🦄',
+  ];
 
   // Zoom + pan state
   double _scale = 1.0;
@@ -526,6 +548,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     _startOffset = _offset;
     _startScale = _scale;
     _isDrawGesture = details.pointerCount == 1;
+    if (_isDrawGesture) {
+      setState(() => _saved = false);
+    }
   }
 
   void _onScaleUpdate(ScaleUpdateDetails details) {
@@ -538,23 +563,72 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
         _scale = newScale;
         _offset = details.localFocalPoint - sceneF * newScale;
       });
-    } else if (_isDrawGesture) {
+    } else if (_isDrawGesture && _tool != _CanvasTool.stamp) {
       // Single finger: convert screen → canvas coordinates, then draw.
       final p = (details.localFocalPoint - _offset) / _scale;
+      final isEraser = _tool == _CanvasTool.eraser;
       setState(() {
+        _saved = false;
+        _strokeInProgress = true;
         _points.add(_DrawPoint(
           offset: p,
-          color: _isEraser ? Colors.white : _selectedColor,
+          color: isEraser ? Colors.white : _selectedColor,
           // Keep visual stroke width constant regardless of zoom level.
-          strokeWidth: (_isEraser ? _strokeWidth * 2 : _strokeWidth) / _scale,
+          strokeWidth: (isEraser ? _strokeWidth * 2 : _strokeWidth) / _scale,
         ));
       });
     }
   }
 
   void _onScaleEnd(ScaleEndDetails details) {
-    if (_isDrawGesture) setState(() => _points.add(null));
+    if (_isDrawGesture && _strokeInProgress) {
+      setState(() {
+        _points.add(null);
+        _actionLog.add(_CanvasAction.stroke);
+      });
+    }
     _isDrawGesture = false;
+    _strokeInProgress = false;
+  }
+
+  /// A plain tap: places a stamp (stamp tool) or a single dot (brush/eraser).
+  void _onTapUp(TapUpDetails details) {
+    final p = (details.localPosition - _offset) / _scale;
+    setState(() {
+      if (_tool == _CanvasTool.stamp) {
+        _stamps.add(_StampMark(offset: p, emoji: _selectedStamp, size: 56 / _scale));
+        _actionLog.add(_CanvasAction.stamp);
+      } else {
+        final isEraser = _tool == _CanvasTool.eraser;
+        _points
+          ..add(_DrawPoint(
+            offset: p,
+            color: isEraser ? Colors.white : _selectedColor,
+            strokeWidth: (isEraser ? _strokeWidth * 2 : _strokeWidth) / _scale,
+          ))
+          ..add(null);
+        _actionLog.add(_CanvasAction.stroke);
+      }
+      _saved = false;
+    });
+  }
+
+  /// Removes the most recent stroke or stamp — the single most-wanted tool
+  /// in any kids drawing app.
+  void _undo() {
+    if (_actionLog.isEmpty) return;
+    setState(() {
+      final last = _actionLog.removeLast();
+      if (last == _CanvasAction.stamp) {
+        if (_stamps.isNotEmpty) _stamps.removeLast();
+      } else {
+        if (_points.isNotEmpty && _points.last == null) _points.removeLast();
+        while (_points.isNotEmpty && _points.last != null) {
+          _points.removeLast();
+        }
+      }
+      _saved = false;
+    });
   }
 
   void _resetZoom() => setState(() {
@@ -565,6 +639,8 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
   void _clear() {
     setState(() {
       _points.clear();
+      _stamps.clear();
+      _actionLog.clear();
       _saved = false;
     });
   }
@@ -595,6 +671,14 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     if (!mounted) return;
     setState(() => _saved = true);
     _starController.forward(from: 0);
+    // Spoken praise in the app language (uses the device's local voice).
+    ref.read(audioServiceProvider).speakLocale(
+          isMalay
+              ? 'Cantik! Lukisan kamu sudah disimpan!'
+              : 'Beautiful! Your drawing is saved!',
+          enabled: ps.voiceEnabled,
+          locale: isMalay ? 'ms-MY' : 'en-US',
+        );
     showDialog(
       context: context,
       builder: (_) => _CelebrationDialog(
@@ -625,11 +709,6 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
             tooltip: isMalay ? 'Padam Semua' : 'Clear All',
             onPressed: _clear,
           ),
-          IconButton(
-            icon: const Icon(Icons.star_rounded),
-            tooltip: isMalay ? 'Selesai!' : 'Done!',
-            onPressed: _celebrate,
-          ),
         ],
       ),
       body: Column(
@@ -645,6 +724,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                   onScaleStart: _onScaleStart,
                   onScaleUpdate: _onScaleUpdate,
                   onScaleEnd: _onScaleEnd,
+                  onTapUp: _onTapUp,
                   onDoubleTap: _resetZoom,
                   child: ClipRect(
                     child: Transform(
@@ -661,25 +741,28 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                           // Layer 1 — white canvas background
                           Container(color: Colors.white),
 
-                          // Layer 2 — persistent guide illustration.
+                          // Layer 2 — drawn strokes + stamps
+                          CustomPaint(
+                            painter: _DrawingPainter(_points, _stamps),
+                            child: const SizedBox.expand(),
+                          ),
+
+                          // Layer 3 — persistent guide illustration (on top of strokes
+                          // so erasers/paint can't hide it).
                           Center(
-                            child: Opacity(
-                              opacity: 0.18,
-                              child: Text(
-                                widget.subject.emoji,
-                                style: const TextStyle(fontSize: 240),
+                            child: IgnorePointer(
+                              child: Opacity(
+                                opacity: 0.25,
+                                child: Text(
+                                  widget.subject.emoji,
+                                  style: const TextStyle(fontSize: 240),
+                                ),
                               ),
                             ),
                           ),
 
-                          // Layer 3 — drawn strokes
-                          CustomPaint(
-                            painter: _DrawingPainter(_points),
-                            child: const SizedBox.expand(),
-                          ),
-
                           // Layer 4 — "draw here" hint; vanishes after first stroke
-                          if (_points.isEmpty)
+                          if (_points.isEmpty && _stamps.isEmpty)
                             Align(
                               alignment: const Alignment(0, 0.65),
                               child: Text(
@@ -748,47 +831,107 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
             ),
           ),
 
-          // ── Stroke size + eraser ──
+          // ── Toolbar: undo + tool tabs + size ──
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
             child: Row(
               children: [
-                Text(
-                  isMalay ? 'Saiz: ' : 'Size: ',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF7A7A9A),
-                    fontSize: 13,
-                  ),
-                ),
-                Expanded(
-                  child: Slider(
-                    value: _strokeWidth,
-                    min: 5,
-                    max: 40,
-                    onChanged: (v) => setState(() => _strokeWidth = v),
-                    activeColor: widget.color,
-                    inactiveColor: widget.color.withValues(alpha: 0.2),
-                  ),
-                ),
+                // Undo — the most-wanted button in a kids drawing app.
                 _ToolButton(
-                  icon: _isEraser
-                      ? Icons.brush_rounded
-                      : Icons.auto_fix_normal_rounded,
-                  label: _isEraser
-                      ? (isMalay ? 'Berus' : 'Brush')
-                      : (isMalay ? 'Pemadam' : 'Eraser'),
+                  icon: Icons.undo_rounded,
+                  label: isMalay ? 'Buat Asal' : 'Undo',
                   color: widget.color,
-                  onTap: () => setState(() => _isEraser = !_isEraser),
+                  onTap: _undo,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _ToolTab(
+                        emoji: '🖌️',
+                        label: isMalay ? 'Berus' : 'Brush',
+                        selected: _tool == _CanvasTool.brush,
+                        color: widget.color,
+                        onTap: () =>
+                            setState(() => _tool = _CanvasTool.brush),
+                      ),
+                      const SizedBox(width: 6),
+                      _ToolTab(
+                        emoji: '🧽',
+                        label: isMalay ? 'Pemadam' : 'Eraser',
+                        selected: _tool == _CanvasTool.eraser,
+                        color: widget.color,
+                        onTap: () =>
+                            setState(() => _tool = _CanvasTool.eraser),
+                      ),
+                      const SizedBox(width: 6),
+                      _ToolTab(
+                        emoji: '✨',
+                        label: isMalay ? 'Pelekat' : 'Stickers',
+                        selected: _tool == _CanvasTool.stamp,
+                        color: widget.color,
+                        onTap: () =>
+                            setState(() => _tool = _CanvasTool.stamp),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
 
-          // ── Colour palette — bigger swatches for small fingers ──
+          // ── Size slider (brush/eraser only) with live preview dot ──
+          if (_tool != _CanvasTool.stamp)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Text(
+                    isMalay ? 'Saiz' : 'Size',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.inkFaint,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Expanded(
+                    child: Slider(
+                      value: _strokeWidth,
+                      min: 5,
+                      max: 40,
+                      onChanged: (v) => setState(() => _strokeWidth = v),
+                      activeColor: widget.color,
+                      inactiveColor: widget.color.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  // Live preview of the brush tip at the chosen size/colour.
+                  SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Center(
+                      child: Container(
+                        width: _strokeWidth.clamp(8, 40),
+                        height: _strokeWidth.clamp(8, 40),
+                        decoration: BoxDecoration(
+                          color: _tool == _CanvasTool.eraser
+                              ? Colors.white
+                              : _selectedColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black26),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // ── Tray: colours (brush/eraser) or stickers (stamp tool) ──
           Container(
-            height: 86,
+            height: 84,
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
@@ -799,42 +942,119 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                 ),
               ],
             ),
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              itemCount: _palette.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, i) {
-                final c = _palette[i];
-                final isSelected = !_isEraser && _selectedColor == c;
-                return GestureDetector(
-                  onTap: () => setState(() {
-                    _selectedColor = c;
-                    _isEraser = false;
-                  }),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: isSelected ? 66 : 58,
-                    height: isSelected ? 66 : 58,
-                    decoration: BoxDecoration(
-                      color: c,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected ? Colors.black87 : Colors.black12,
-                        width: isSelected ? 4 : 1.5,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: c.withValues(alpha: 0.55),
-                                blurRadius: 12,
-                              )
-                            ]
-                          : [],
-                    ),
+            child: _tool == _CanvasTool.stamp
+                ? ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    itemCount: _stampChoices.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, i) {
+                      final e = _stampChoices[i];
+                      final isSelected = _selectedStamp == e;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedStamp = e),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: isSelected ? 64 : 56,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? widget.color.withValues(alpha: 0.15)
+                                : Colors.grey.shade100,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected
+                                  ? widget.color
+                                  : Colors.black12,
+                              width: isSelected ? 3 : 1.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(e,
+                                style: const TextStyle(fontSize: 28)),
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    itemCount: _palette.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, i) {
+                      final c = _palette[i];
+                      final isSelected =
+                          _tool == _CanvasTool.brush && _selectedColor == c;
+                      return GestureDetector(
+                        onTap: () => setState(() {
+                          _selectedColor = c;
+                          _tool = _CanvasTool.brush;
+                        }),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: isSelected ? 64 : 56,
+                          height: isSelected ? 64 : 56,
+                          decoration: BoxDecoration(
+                            color: c,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color:
+                                  isSelected ? Colors.black87 : Colors.black12,
+                              width: isSelected ? 4 : 1.5,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: c.withValues(alpha: 0.55),
+                                      blurRadius: 12,
+                                    )
+                                  ]
+                                : [],
+                          ),
+                          // Check mark — selection isn't colour-only.
+                          child: isSelected
+                              ? Icon(
+                                  Icons.check_rounded,
+                                  color: c.computeLuminance() > 0.6
+                                      ? Colors.black54
+                                      : Colors.white,
+                                )
+                              : null,
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
+          ),
+
+          // ── Big Save button — the one action every session ends with ──
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+            child: SafeArea(
+              top: false,
+              child: ElevatedButton.icon(
+                onPressed: _celebrate,
+                icon: const Text('⭐', style: TextStyle(fontSize: 22)),
+                label: Text(
+                  isMalay ? 'Siap! Simpan Lukisan!' : 'Done! Save My Art!',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.sunnyYellow,
+                  foregroundColor: AppTheme.ink,
+                  minimumSize: const Size.fromHeight(AppTheme.kidTarget),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                  ),
+                  side: const BorderSide(color: Colors.white, width: 2),
+                  elevation: 4,
+                ),
+              ),
             ),
           ),
         ],
@@ -845,11 +1065,27 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
 
 // ── Drawing painter ────────────────────────────────────────────────────────────
 class _DrawingPainter extends CustomPainter {
-  const _DrawingPainter(this.points);
+  const _DrawingPainter(this.points, this.stamps);
   final List<_DrawPoint?> points;
+  final List<_StampMark> stamps;
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Emoji stamps go under fresh strokes so kids can colour over them.
+    for (final stamp in stamps) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: stamp.emoji,
+          style: TextStyle(fontSize: stamp.size),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(
+        canvas,
+        stamp.offset - Offset(tp.width / 2, tp.height / 2),
+      );
+    }
+
     for (var i = 0; i < points.length - 1; i++) {
       final p1 = points[i];
       final p2 = points[i + 1];
@@ -872,7 +1108,7 @@ class _DrawingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DrawingPainter old) => old.points != points;
+  bool shouldRepaint(_DrawingPainter old) => true;
 }
 
 // ── Star burst decoration ──────────────────────────────────────────────────────
@@ -923,6 +1159,58 @@ class _StarBurstPainter extends CustomPainter {
   bool shouldRepaint(_StarBurstPainter old) => old.t != t;
 }
 
+// ── Tool tab (brush / eraser / stickers) ──────────────────────────────────────
+class _ToolTab extends StatelessWidget {
+  const _ToolTab({
+    required this.emoji,
+    required this.label,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+  final String emoji;
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        constraints: const BoxConstraints(minHeight: 48),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.16) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? color : Colors.black12,
+            width: selected ? 2.5 : 1.5,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 18)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: selected ? color : AppTheme.inkFaint,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Tool button ────────────────────────────────────────────────────────────────
 class _ToolButton extends ConsumerWidget {
   const _ToolButton({
@@ -940,6 +1228,7 @@ class _ToolButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(

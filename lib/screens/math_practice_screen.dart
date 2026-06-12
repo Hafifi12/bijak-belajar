@@ -597,16 +597,35 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
     super.dispose();
   }
 
+  /// Question texts already asked this quiz — no child should see the same
+  /// question twice in one session.
+  final Set<String> _askedQuestions = {};
+
   void _generateQuestion() {
     final isMalay =
         ref.read(progressServiceProvider).language == AppLanguage.malay;
-    setState(() {
-      _q = _Question.generate(
+    // Re-roll duplicates. Bounded attempts: easy levels have small pools
+    // (e.g. counting 1–10), so after 15 tries we accept a repeat rather
+    // than loop forever.
+    var candidate = _Question.generate(
+      op: widget.op,
+      level: _level,
+      rng: _rng,
+      isMalay: isMalay,
+    );
+    for (var attempt = 0;
+        attempt < 15 && _askedQuestions.contains(candidate.questionText);
+        attempt++) {
+      candidate = _Question.generate(
         op: widget.op,
         level: _level,
         rng: _rng,
         isMalay: isMalay,
       );
+    }
+    _askedQuestions.add(candidate.questionText);
+    setState(() {
+      _q = candidate;
       _answered = false;
       _selectedOption = null;
     });
@@ -640,6 +659,7 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
     );
 
     await Future.delayed(const Duration(milliseconds: 900));
+    if (!mounted) return; // user may have backed out during the pause
 
     if (_questionIndex < _totalQuestions - 1) {
       setState(() => _questionIndex++);

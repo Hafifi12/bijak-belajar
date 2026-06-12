@@ -102,10 +102,17 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
     _buildRound();
   }
 
+  bool _spokeInitialTarget = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _speakTarget();
+    // Speak only the first time — this callback also fires on MediaQuery
+    // changes and would randomly repeat the prompt mid-round.
+    if (!_spokeInitialTarget) {
+      _spokeInitialTarget = true;
+      _speakTarget();
+    }
   }
 
   @override
@@ -119,11 +126,28 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
 
   // ── Build a new round ──────────────────────────────────────────────────────
 
+  /// Targets are drawn from a shuffled bag without replacement, so the child
+  /// is never asked to find the same object twice until every object has
+  /// been used once. Refilled (reshuffled) when empty.
+  final List<ExplorerItem> _targetBag = [];
+
+  void _refillTargetBag() {
+    _targetBag
+      ..clear()
+      ..addAll(explorerItems)
+      ..shuffle(_rng);
+  }
+
   void _buildRound() {
-    // Pick 4 unique items
-    final shuffled = List<ExplorerItem>.from(explorerItems)..shuffle(_rng);
-    _options = shuffled.take(4).toList();
-    _targetSlot = _rng.nextInt(4);
+    if (_targetBag.isEmpty) _refillTargetBag();
+    final target = _targetBag.removeLast();
+
+    // 3 distractors from the remaining objects.
+    final others = List<ExplorerItem>.from(explorerItems)
+      ..remove(target)
+      ..shuffle(_rng);
+    _options = [target, ...others.take(3)]..shuffle(_rng);
+    _targetSlot = _options.indexOf(target);
     _tappedSlot = -1;
     _roundDone = false;
     _showSpark = false;

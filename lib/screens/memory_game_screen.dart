@@ -72,7 +72,7 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen> {
         title: Text(AppText.categoryTitle(category, language)),
         actions: [
           IconButton(
-            tooltip: 'New game',
+            tooltip: language == AppLanguage.malay ? 'Main semula' : 'New game',
             onPressed: _busy ? null : _startNewGame,
             icon: const Icon(Icons.refresh_rounded),
           ),

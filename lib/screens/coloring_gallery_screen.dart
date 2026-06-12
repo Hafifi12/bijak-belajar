@@ -68,10 +68,42 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
       body: FutureBuilder<List<File>>(
         future: _artworks,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          // An error (e.g. storage plugin not linked after a hot restart)
+          // must never strand the child on an endless spinner.
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('😅', style: TextStyle(fontSize: 56)),
+                    const SizedBox(height: 12),
+                    Text(
+                      isMalay
+                          ? 'Galeri tidak dapat dibuka.\nTutup apl sepenuhnya dan buka semula.'
+                          : 'Could not open the gallery.\nFully close and reopen the app.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.inkMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: _reload,
+                      child: Text(isMalay ? 'Cuba Lagi' : 'Try Again'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
-          final files = snapshot.data!;
+          final files = snapshot.data ?? const <File>[];
           if (files.isEmpty) {
             return Center(
               child: Padding(
@@ -182,12 +214,19 @@ class _ArtworkFullscreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () => Share.shareXFiles(
-              [XFile(file.path)],
-              text: isMalay
-                  ? 'Lihat lukisan saya dari Bijak Belajar! 🎨'
-                  : 'Look at my drawing from Bijak Belajar! 🎨',
-            ),
+            onPressed: () async {
+              try {
+                await Share.shareXFiles(
+                  [XFile(file.path)],
+                  text: isMalay
+                      ? 'Lihat lukisan saya dari Bijak Belajar! 🎨'
+                      : 'Look at my drawing from Bijak Belajar! 🎨',
+                );
+              } catch (e) {
+                // Plugin not linked yet (needs full rebuild) — never crash.
+                debugPrint('[Gallery] share failed: $e');
+              }
+            },
             icon: const Icon(Icons.share_rounded),
             tooltip: isMalay ? 'Kongsi' : 'Share',
           ),

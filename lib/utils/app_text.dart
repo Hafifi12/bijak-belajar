@@ -1329,6 +1329,51 @@ const _numberWords = <String, Map<AppLanguage, String>>{
 };
 
 const _labels = <String, Map<AppLanguage, String>>{
+  // ── Previously untranslated explorer objects: these fell back to English
+  // inside Malay sentences ("cari Apple!") and were mispronounced by the
+  // ms-MY voice. Every object the explorer can ask for MUST have a full set.
+  'object_apple': {
+    AppLanguage.english: 'Apple',
+    AppLanguage.malay: 'Epal',
+    AppLanguage.indonesian: 'Apel',
+    AppLanguage.mandarin: '苹果',
+    AppLanguage.tamil: 'ஆப்பிள்',
+  },
+  'object_banana': {
+    AppLanguage.english: 'Banana',
+    AppLanguage.malay: 'Pisang',
+    AppLanguage.indonesian: 'Pisang',
+    AppLanguage.mandarin: '香蕉',
+    AppLanguage.tamil: 'வாழைப்பழம்',
+  },
+  'object_cat': {
+    AppLanguage.english: 'Cat',
+    AppLanguage.malay: 'Kucing',
+    AppLanguage.indonesian: 'Kucing',
+    AppLanguage.mandarin: '猫',
+    AppLanguage.tamil: 'பூனை',
+  },
+  'object_dog': {
+    AppLanguage.english: 'Dog',
+    AppLanguage.malay: 'Anjing',
+    AppLanguage.indonesian: 'Anjing',
+    AppLanguage.mandarin: '狗',
+    AppLanguage.tamil: 'நாய்',
+  },
+  'object_flower': {
+    AppLanguage.english: 'Flower',
+    AppLanguage.malay: 'Bunga',
+    AppLanguage.indonesian: 'Bunga',
+    AppLanguage.mandarin: '花',
+    AppLanguage.tamil: 'பூ',
+  },
+  'object_star': {
+    AppLanguage.english: 'Star',
+    AppLanguage.malay: 'Bintang',
+    AppLanguage.indonesian: 'Bintang',
+    AppLanguage.mandarin: '星星',
+    AppLanguage.tamil: 'நட்சத்திரம்',
+  },
   'color_red': {
     AppLanguage.english: 'Red',
     AppLanguage.malay: 'Merah',

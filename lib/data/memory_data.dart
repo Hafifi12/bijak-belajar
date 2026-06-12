@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../models/challenge.dart';
@@ -74,11 +76,15 @@ List<MemoryItem> memoryItemsFor(MemoryCategory category, {int pairCount = 6}) {
     MemoryCategory.jawi => jawiMemoryItems,
   };
 
-  if (pairCount <= baseItems.length) {
-    return baseItems.take(pairCount).toList();
+  // Shuffle the pool so each new game deals a different set of cards —
+  // previously the easy board always showed the exact same items.
+  final pool = List<MemoryItem>.from(baseItems)..shuffle(Random());
+
+  if (pairCount <= pool.length) {
+    return pool.take(pairCount).toList();
   }
 
-  final generated = <MemoryItem>[...baseItems];
+  final generated = <MemoryItem>[...pool];
   for (var index = generated.length; index < pairCount; index++) {
     generated.add(_generatedMemoryItem(category, index));
   }

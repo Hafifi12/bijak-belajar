@@ -24,10 +24,65 @@ class AudioService {
     await _tts.awaitSpeakCompletion(true);
   }
 
+  /// Chosen on-device voice per locale. `null` value = searched, none found
+  /// (let the engine use its own mapping).
+  final Map<String, Map<String, String>?> _voiceCache = {};
+
   Future<void> _setLocale(String locale) async {
     if (_currentLocale == locale) return;
     _currentLocale = locale;
     await _tts.setLanguage(locale);
+
+    // setLanguage alone silently falls back to the system default voice
+    // (usually English) when the requested language has no active voice —
+    // which is how Malay words ended up spoken with an English accent.
+    // Explicitly pick the best installed voice for this locale.
+    final voice = await _pickVoice(locale);
+    if (voice != null) {
+      await _tts.setVoice(voice);
+    }
+  }
+
+  /// Best installed voice for [locale]: exact locale match first, then same
+  /// language, then (for Malay only) an Indonesian voice — which pronounces
+  /// Bahasa Melayu far better than any English fallback.
+  Future<Map<String, String>?> _pickVoice(String locale) async {
+    if (_voiceCache.containsKey(locale)) return _voiceCache[locale];
+
+    Map<String, String>? result;
+    try {
+      final raw = await _tts.getVoices;
+      final voices = <Map<String, String>>[
+        if (raw is List)
+          for (final v in raw)
+            if (v is Map && v['name'] != null && v['locale'] != null)
+              {'name': '${v['name']}', 'locale': '${v['locale']}'},
+      ];
+
+      String norm(String s) => s.toLowerCase().replaceAll('_', '-');
+      final want = norm(locale); // e.g. ms-my
+      final wantLang = want.split('-').first; // e.g. ms
+
+      Map<String, String>? firstWhereLocale(bool Function(String) test) {
+        for (final v in voices) {
+          if (test(norm(v['locale']!))) return v;
+        }
+        return null;
+      }
+
+      result = firstWhereLocale((l) => l == want) ??
+          firstWhereLocale((l) => l.split('-').first == wantLang);
+
+      // Malay-specific rescue: an Indonesian voice over an English default.
+      if (result == null && wantLang == 'ms') {
+        result = firstWhereLocale((l) => l.split('-').first == 'id');
+      }
+    } catch (_) {
+      result = null; // voice listing unsupported — engine mapping it is
+    }
+
+    _voiceCache[locale] = result;
+    return result;
   }
 
   // ── Public API (unchanged from previous MethodChannel version) ────────

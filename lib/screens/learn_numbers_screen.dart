@@ -500,10 +500,12 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
     final item = _numbers[_current];
     final audio = ref.read(audioServiceProvider);
     final lang = ps.language;
+    // Speak the numeral in the app language — an English "five" inside a
+    // Malay lesson is exactly the mixed-pronunciation bug parents flagged.
     await audio.speakLocale(
       '${item.number}',
       enabled: true,
-      locale: 'en-US',
+      locale: lang.ttsLocale,
     );
     await Future.delayed(const Duration(milliseconds: 420));
     await audio.speakLocale(
@@ -814,7 +816,9 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
-                    '🎉 Tahniah! Kamu dah kenal nombor 1–100! 🎉',
+                    isMalay
+                        ? '🎉 Tahniah! Kamu dah kenal nombor 1–100! 🎉'
+                        : '🎉 Well done! You know numbers 1–100! 🎉',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,

@@ -29,8 +29,6 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
   bool _recordedInitial = false;
   late AnimationController _bounceController;
   late Animation<double> _bounceAnim;
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnim;
 
   static const _parts = <_BodyPart>[
     _BodyPart(
@@ -213,19 +211,11 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
     _bounceAnim = Tween<double>(begin: 1.0, end: 1.18).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
     );
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-    _pulseAnim = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
   }
 
   @override
   void dispose() {
     _bounceController.dispose();
-    _pulseController.dispose();
     super.dispose();
   }
 
@@ -341,6 +331,7 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
         enabled: ps.voiceEnabled,
         locale: isMalay ? 'ms-MY' : 'en-US',
       );
+      if (!mounted) return;
       if (_dsRound >= _dsTotalRounds) {
         await _finishDoctorSays();
       } else {
@@ -560,21 +551,20 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                       ),
                       child: Column(
                         children: [
+                          // No constant pulse on the chart: the wobble made
+                          // the tap spots feel misaligned and hurt precision.
                           ScaleTransition(
                             scale: _bounceAnim,
-                            child: ScaleTransition(
-                              scale: _pulseAnim,
-                              child: _DoctorBodyChart(
-                                parts: _parts,
-                                // No highlight during the game — it would
-                                // leak hints.
-                                selectedIndex:
-                                    _doctorSaysActive ? -1 : _current,
-                                language: language,
-                                onSelect: _doctorSaysActive
-                                    ? (i) => _handleDoctorTap(i)
-                                    : _goToPart,
-                              ),
+                            child: _DoctorBodyChart(
+                              parts: _parts,
+                              // No highlight during the game — it would
+                              // leak hints.
+                              selectedIndex:
+                                  _doctorSaysActive ? -1 : _current,
+                              language: language,
+                              onSelect: _doctorSaysActive
+                                  ? (i) => _handleDoctorTap(i)
+                                  : _goToPart,
                             ),
                           ),
 
@@ -745,7 +735,9 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                 Padding(
                   padding: const EdgeInsets.only(bottom: 14),
                   child: Text(
-                    '🎉 Tahniah! Kamu dah kenal semua anggota badan! 🧍',
+                    isMalay
+                        ? '🎉 Tahniah! Kamu dah kenal semua anggota badan! 🧍'
+                        : '🎉 Well done! You know all the body parts! 🧍',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -775,21 +767,24 @@ class _DoctorBodyChart extends ConsumerWidget {
   final AppLanguage language;
   final ValueChanged<int> onSelect;
 
+  // Fractional (x, y) positions measured against the actual
+  // body_parts_doctor_photo.png asset (1024×1536, same 2:3 ratio as the
+  // AspectRatio container, so no crop shift). Index order = _parts order.
   static const _spots = <_BodySpot>[
-    _BodySpot(0, 0.52, 0.17, 18),
-    _BodySpot(1, 0.52, 0.19, 14),
-    _BodySpot(2, 0.52, 0.225, 13),
-    _BodySpot(3, 0.52, 0.265, 13),
-    _BodySpot(4, 0.65, 0.19, 13),
-    _BodySpot(5, 0.51, 0.105, 14),
-    _BodySpot(6, 0.52, 0.275, 12),
-    _BodySpot(7, 0.62, 0.345, 16),
-    _BodySpot(8, 0.25, 0.59, 16),
-    _BodySpot(9, 0.20, 0.64, 13),
-    _BodySpot(10, 0.52, 0.49, 18),
-    _BodySpot(11, 0.54, 0.73, 18),
-    _BodySpot(12, 0.55, 0.80, 16),
-    _BodySpot(13, 0.55, 0.955, 16),
+    _BodySpot(0, 0.50, 0.125, 18), // Head (forehead)
+    _BodySpot(1, 0.50, 0.150, 13), // Eyes
+    _BodySpot(2, 0.50, 0.175, 12), // Nose
+    _BodySpot(3, 0.50, 0.205, 12), // Mouth
+    _BodySpot(4, 0.565, 0.160, 12), // Ears (right ear)
+    _BodySpot(5, 0.49, 0.090, 15), // Hair (top of head)
+    _BodySpot(6, 0.50, 0.215, 10), // Teeth (in the smile)
+    _BodySpot(7, 0.615, 0.275, 15), // Shoulder (right)
+    _BodySpot(8, 0.715, 0.520, 16), // Hands (open right palm)
+    _BodySpot(9, 0.285, 0.545, 13), // Fingers (left hand)
+    _BodySpot(10, 0.50, 0.420, 18), // Stomach
+    _BodySpot(11, 0.53, 0.760, 16), // Legs (shin)
+    _BodySpot(12, 0.55, 0.680, 15), // Knees
+    _BodySpot(13, 0.51, 0.930, 16), // Feet
   ];
 
   @override
@@ -858,7 +853,13 @@ class _DoctorBodyChart extends ConsumerWidget {
           const SizedBox(height: 8),
           AspectRatio(
             aspectRatio: 2 / 3,
-            child: LayoutBuilder(
+            // Pinch-zoom: spots live inside the same transformed subtree, so
+            // they stay glued to the photo and remain tappable when zoomed.
+            // panEnabled stays false so one-finger drags still scroll the page.
+            child: InteractiveViewer(
+              maxScale: 3,
+              panEnabled: false,
+              child: LayoutBuilder(
               builder: (context, constraints) {
                 final w = constraints.maxWidth;
                 final h = constraints.maxHeight;
@@ -919,6 +920,7 @@ class _DoctorBodyChart extends ConsumerWidget {
                   ],
                 );
               },
+              ),
             ),
           ),
         ],
@@ -1716,7 +1718,9 @@ class _BodyPronounceButtons extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            '🔊 Sebut dalam:',
+            ref.watch(progressServiceProvider).language == AppLanguage.malay
+                ? '🔊 Sebut dalam:'
+                : '🔊 Say it in:',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,

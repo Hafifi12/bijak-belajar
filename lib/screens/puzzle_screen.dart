@@ -157,7 +157,8 @@ const _puzzles = <_Puzzle>[
 ];
 
 class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
-  int _puzzleIndex = 0;
+  // Random starting picture so each session doesn't always open on puzzle 1.
+  int _puzzleIndex = Random().nextInt(_puzzles.length);
   int _gridSize = 3;
   late List<int?> _tiles;
   int? _emptyIndex;

@@ -336,7 +336,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
 
   Future<void> _initSpeech() async {
     _speechAvailable = await _speech.initialize(
-      onError: (_) => setState(() => _isListening = false),
+      onError: (_) {
+        if (mounted) setState(() => _isListening = false);
+      },
       onStatus: (status) {
         if (status == 'done' || status == 'notListening') {
           if (mounted) setState(() => _isListening = false);
@@ -883,6 +885,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                           _LetterWordTable(item: item, color: color),
                           const SizedBox(height: 14),
                           _PronounceButtons(
+                            isMalay: isMalay,
                             onSpeak: _speakIn,
                             malay: item.letter.toLowerCase(),
                             english: item.letter.toLowerCase(),
@@ -1082,6 +1085,7 @@ class _LetterWordTable extends StatelessWidget {
 // ── Shared 5-language pronounce buttons ──────────────────────────────────────
 class _PronounceButtons extends StatelessWidget {
   const _PronounceButtons({
+    required this.isMalay,
     required this.onSpeak,
     required this.malay,
     required this.english,
@@ -1098,6 +1102,7 @@ class _PronounceButtons extends StatelessWidget {
   final String indonesian;
   final String tamil;
   final Color color;
+  final bool isMalay;
 
   // Language tags only — no country flags (Malaysian community languages).
   static const _langs = [
@@ -1133,7 +1138,7 @@ class _PronounceButtons extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            '🔊 Sebut dalam:',
+            isMalay ? '🔊 Sebut dalam:' : '🔊 Say it in:',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,

@@ -40,7 +40,8 @@ android {
     defaultConfig {
         applicationId = "com.anfstudio.bijakbelajar"
         minSdk = flutter.minSdkVersion
-        targetSdk = 35
+        // Android 16 — Play Store's expected 2026 target requirement.
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

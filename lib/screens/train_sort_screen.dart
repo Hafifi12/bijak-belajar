@@ -106,7 +106,7 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
         title: Text(AppText.trainTitle(_mode, language)),
         actions: [
           IconButton(
-            tooltip: 'New game',
+            tooltip: language == AppLanguage.malay ? 'Main semula' : 'New game',
             onPressed: _startRound,
             icon: const Icon(Icons.refresh_rounded),
           ),
