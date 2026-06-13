@@ -303,8 +303,8 @@ class _HomeHeader extends StatelessWidget {
             // ── Top bar ──
             Row(
               children: [
-                const BijakLogoText(compact: true),
-                const Spacer(),
+                const Flexible(child: BijakLogoText(compact: true)),
+                const SizedBox(width: 8),
                 _IconBtn(
                   icon: Icons.insights_rounded,
                   label: isMalay ? 'Kemajuan' : 'Progress',
@@ -355,6 +355,8 @@ class _HomeHeader extends StatelessWidget {
                                 fontWeight: FontWeight.w900,
                                 color: AppTheme.ink,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             // Level display
@@ -363,12 +365,16 @@ class _HomeHeader extends StatelessWidget {
                                 Text(level.emoji,
                                     style: const TextStyle(fontSize: 14)),
                                 const SizedBox(width: 4),
-                                Text(
-                                  '${isMalay ? 'Tahap' : 'Level'} ${level.level} · ${isMalay ? level.titleMalay : level.title}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    color: level.color,
+                                Expanded(
+                                  child: Text(
+                                    '${isMalay ? 'Tahap' : 'Level'} ${level.level} · ${isMalay ? level.titleMalay : level.title}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: level.color,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
@@ -397,6 +403,8 @@ class _HomeHeader extends StatelessWidget {
                                   fontWeight: FontWeight.w700,
                                   color: level.color.withValues(alpha: 0.8),
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                           ],
                         ),
@@ -1221,15 +1229,18 @@ class _BottomBar extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(item.icon, color: tint, size: 26),
-                        const SizedBox(height: 3),
-                        Text(
-                          item.label,
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: tint,
+                        Icon(item.icon, color: tint, size: 24),
+                        const SizedBox(height: 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            item.label,
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: tint,
+                            ),
                           ),
                         ),
                       ],

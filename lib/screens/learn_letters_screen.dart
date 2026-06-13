@@ -538,26 +538,30 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
           children: [
             Hero(
               tag: 'module-emoji-${LearnLettersScreen.routeName}',
-              child: const Text('🔤', style: TextStyle(fontSize: 26)),
+              child: const Text('🔤', style: TextStyle(fontSize: 24)),
             ),
             const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  isMalay ? 'Belajar Huruf A–Z' : 'Learn Letters A–Z',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-                ),
-                Text(
-                  '${_current + 1} / ${_letters.length}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white70,
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isMalay ? 'Belajar Huruf A–Z' : 'Learn Letters A–Z',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  Text(
+                    '${_current + 1} / ${_letters.length}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -573,440 +577,449 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
         bottomColor: AppTheme.lightBlue,
         showHills: false,
         child: SafeArea(
-          child: Column(
-            children: [
-              // ── Progress bar ───────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-                child: Row(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    AppBar().preferredSize.height,
+              ),
+              child: IntrinsicHeight(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(999),
-                        child: LinearProgressIndicator(
-                          value: (_current + 1) / _letters.length,
-                          minHeight: 13,
-                          backgroundColor: Colors.white,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppTheme.sunnyYellow,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.deepBlue,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Text(
-                        '${_current + 1}/${_letters.length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // ── Instruction hint ───────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.center_focus_strong_rounded,
-                          color: Colors.white,
-                          size: 19,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          isMalay
-                              ? 'Dengar bunyi huruf, lihat contoh, kemudian sebut kuat-kuat!'
-                              : 'Hear the letter sound, see the example, then say it aloud!',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // ── Main card ──────────────────────────────────────
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.deepBlue.withValues(alpha: 0.14),
-                          blurRadius: 18,
-                          offset: const Offset(0, 9),
-                        ),
-                      ],
-                    ),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 16,
-                      ),
-                      child: Column(
+                    // ── Progress bar ───────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                      child: Row(
                         children: [
-                          // Big letter with bounce
-                          ScaleTransition(
-                            scale: _bounceAnim,
-                            child: Container(
-                              width: 140,
-                              height: 140,
-                              decoration: BoxDecoration(
-                                color: color,
-                                borderRadius: BorderRadius.circular(28),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: color.withValues(alpha: 0.4),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: Stack(
-                                children: [
-                                  Center(
-                                    child: Text(
-                                      item.letter,
-                                      style: const TextStyle(
-                                        fontSize: 90,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white,
-                                        height: 1,
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 8,
-                                    right: 14,
-                                    child: Text(
-                                      item.letter.toLowerCase(),
-                                      style: TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white.withValues(
-                                          alpha: 0.65,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: LinearProgressIndicator(
+                                value: (_current + 1) / _letters.length,
+                                minHeight: 13,
+                                backgroundColor: Colors.white,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppTheme.sunnyYellow,
+                                ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          // Emoji + phonics hint
-                          Text(
-                            item.emoji,
-                            style: const TextStyle(fontSize: 52),
-                          ),
-                          const SizedBox(height: 6),
+                          const SizedBox(width: 10),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 6,
+                              horizontal: 12,
+                              vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(50),
+                              color: AppTheme.deepBlue,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: Colors.white, width: 2),
                             ),
                             child: Text(
-                              item.phonicsMalay,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: color,
-                                fontStyle: FontStyle.italic,
+                              '${_current + 1}/${_letters.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ),
-                          const SizedBox(height: 14),
-
-                          // ── 🎤 Speech recognition input ─────────
-                          // Promoted above the word table: "say the letter"
-                          // is this module's core interaction, not a footnote.
-                          if (_speechAvailable) ...[
-                            GestureDetector(
-                              onTap: _isListening
-                                  ? _stopListening
-                                  : _startListening,
-                              child: AnimatedContainer(
-                                duration:
-                                    const Duration(milliseconds: 220),
-                                constraints: const BoxConstraints(
-                                  minHeight: AppTheme.kidTarget,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 22,
-                                  vertical: 14,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _isListening
-                                      ? const Color(0xFFE84393)
-                                      : color,
-                                  borderRadius:
-                                      BorderRadius.circular(28),
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: (_isListening
-                                              ? const Color(0xFFE84393)
-                                              : color)
-                                          .withValues(alpha: 0.45),
-                                      blurRadius: 14,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      _isListening
-                                          ? Icons.stop_circle_rounded
-                                          : Icons.mic_rounded,
-                                      color: Colors.white,
-                                      size: 24,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      _isListening
-                                          ? (isMalay
-                                              ? 'Saya dengar...'
-                                              : 'Listening...')
-                                          : (isMalay
-                                              ? '🎤 Sebut huruf ${item.letter}!'
-                                              : '🎤 Say letter ${item.letter}!'),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ],
+                        ],
+                      ),
+                    ),
+                    // ── Instruction hint ───────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.center_focus_strong_rounded,
+                                color: Colors.white,
+                                size: 19,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                isMalay
+                                    ? 'Dengar bunyi huruf, lihat contoh, kemudian sebut kuat-kuat!'
+                                    : 'Hear the letter sound, see the example, then say it aloud!',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.grey.shade700,
                                 ),
                               ),
                             ),
-                            if (_speechResult.isNotEmpty) ...[
-                              const SizedBox(height: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: (_speechCorrect == true
-                                          ? const Color(0xFF34C759)
-                                          : _speechCorrect == false
-                                              ? AppTheme.appleRed
-                                              : Colors.grey.shade200)
-                                      .withValues(alpha: 0.15),
-                                  borderRadius:
-                                      BorderRadius.circular(18),
-                                  border: Border.all(
-                                    color: _speechCorrect == true
-                                        ? const Color(0xFF34C759)
-                                        : _speechCorrect == false
-                                            ? AppTheme.appleRed
-                                            : Colors.grey.shade400,
-                                    width: 1.5,
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // ── Main card ──────────────────────────────────────
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.deepBlue.withValues(alpha: 0.14),
+                                blurRadius: 18,
+                                offset: const Offset(0, 9),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 16,
+                            ),
+                            child: Column(
+                              children: [
+                                // Big letter with bounce
+                                ScaleTransition(
+                                  scale: _bounceAnim,
+                                  child: Container(
+                                    width: 140,
+                                    height: 140,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      borderRadius: BorderRadius.circular(28),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: color.withValues(alpha: 0.4),
+                                          blurRadius: 18,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        Center(
+                                          child: Text(
+                                            item.letter,
+                                            style: const TextStyle(
+                                              fontSize: 90,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.white,
+                                              height: 1,
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          bottom: 8,
+                                          right: 14,
+                                          child: Text(
+                                            item.letter.toLowerCase(),
+                                            style: TextStyle(
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.65,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      _speechCorrect == true
-                                          ? '✅'
-                                          : _speechCorrect == false
-                                              ? '❌'
-                                              : '🎤',
-                                      style: const TextStyle(
-                                          fontSize: 18),
+                                const SizedBox(height: 12),
+                                // Emoji + phonics hint
+                                Text(
+                                  item.emoji,
+                                  style: const TextStyle(fontSize: 52),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                  child: Text(
+                                    item.phonicsMalay,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: color,
+                                      fontStyle: FontStyle.italic,
                                     ),
-                                    const SizedBox(width: 8),
-                                    Flexible(
-                                      child: Text(
-                                        '"$_speechResult"',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+
+                                // ── 🎤 Speech recognition input ─────────
+                                if (_speechAvailable) ...[
+                                  GestureDetector(
+                                    onTap: _isListening
+                                        ? _stopListening
+                                        : _startListening,
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 220),
+                                      constraints: const BoxConstraints(
+                                        minHeight: AppTheme.kidTarget,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 22,
+                                        vertical: 14,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: _isListening
+                                            ? const Color(0xFFE84393)
+                                            : color,
+                                        borderRadius:
+                                            BorderRadius.circular(28),
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2.5,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: (_isListening
+                                                    ? const Color(0xFFE84393)
+                                                    : color)
+                                                .withValues(alpha: 0.45),
+                                            blurRadius: 14,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            _isListening
+                                                ? Icons.stop_circle_rounded
+                                                : Icons.mic_rounded,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            _isListening
+                                                ? (isMalay
+                                                    ? 'Saya dengar...'
+                                                    : 'Listening...')
+                                                : (isMalay
+                                                    ? '🎤 Sebut huruf ${item.letter}!'
+                                                    : '🎤 Say letter ${item.letter}!'),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  if (_speechResult.isNotEmpty) ...[
+                                    const SizedBox(height: 10),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: (_speechCorrect == true
+                                                ? const Color(0xFF34C759)
+                                                : _speechCorrect == false
+                                                    ? AppTheme.appleRed
+                                                    : Colors.grey.shade200)
+                                            .withValues(alpha: 0.15),
+                                        borderRadius:
+                                            BorderRadius.circular(18),
+                                        border: Border.all(
                                           color: _speechCorrect == true
                                               ? const Color(0xFF34C759)
                                               : _speechCorrect == false
                                                   ? AppTheme.appleRed
-                                                  : AppTheme.ink,
+                                                  : Colors.grey.shade400,
+                                          width: 1.5,
                                         ),
                                       ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _speechCorrect == true
+                                                ? '✅'
+                                                : _speechCorrect == false
+                                                    ? '❌'
+                                                    : '🎤',
+                                            style: const TextStyle(
+                                                fontSize: 18),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              '"$_speechResult"',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: _speechCorrect == true
+                                                    ? const Color(0xFF34C759)
+                                                    : _speechCorrect == false
+                                                        ? AppTheme.appleRed
+                                                        : AppTheme.ink,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
+                                    if (_speechCorrect == true) ...[
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        isMalay
+                                            ? '⭐ +1 Bintang! Bagus sekali!'
+                                            : '⭐ +1 Star! Great job!',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF34C759),
+                                        ),
+                                      ),
+                                    ],
                                   ],
+                                ],
+
+                                const SizedBox(height: 14),
+                                _LetterWordTable(item: item, color: color),
+                                const SizedBox(height: 14),
+                                _PronounceButtons(
+                                  isMalay: isMalay,
+                                  onSpeak: _speakIn,
+                                  malay: '${item.letter}, ${item.malay}',
+                                  english: '${item.letter}, ${item.english}',
+                                  mandarin:
+                                      '${item.letter}, ${_ttsClean(item.mandarin)}',
+                                  indonesian:
+                                      '${item.letter}, ${item.indonesian}',
+                                  tamil: '${item.letter}, ${_ttsClean(item.tamil)}',
+                                  color: color,
+                                ),
+
+                                const SizedBox(height: 4),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // ── Navigation ─────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: isFirst ? null : _prev,
+                              icon: const Icon(Icons.arrow_back_ios_rounded),
+                              label: Text(
+                                isMalay ? 'Sebelum' : 'Back',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              if (_speechCorrect == true) ...[
-                                const SizedBox(height: 6),
-                                Text(
-                                  isMalay
-                                      ? '⭐ +1 Bintang! Bagus sekali!'
-                                      : '⭐ +1 Star! Great job!',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF34C759),
-                                  ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.deepBlue,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size.fromHeight(AppTheme.kidTarget),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                              ],
-                            ],
-                          ],
-
-                          const SizedBox(height: 14),
-                          _LetterWordTable(item: item, color: color),
-                          const SizedBox(height: 14),
-                          _PronounceButtons(
-                            isMalay: isMalay,
-                            onSpeak: _speakIn,
-                            // Letter followed by its example word, per language.
-                            malay: '${item.letter}, ${item.malay}',
-                            english: '${item.letter}, ${item.english}',
-                            mandarin:
-                                '${item.letter}, ${_ttsClean(item.mandarin)}',
-                            indonesian:
-                                '${item.letter}, ${item.indonesian}',
-                            tamil: '${item.letter}, ${_ttsClean(item.tamil)}',
-                            color: color,
+                                elevation: 5,
+                                side: const BorderSide(
+                                  color: Colors.white,
+                                  width: 2.5,
+                                ),
+                              ),
+                            ),
                           ),
-
-                          const SizedBox(height: 4),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: isLast ? null : _next,
+                              label: Text(
+                                isMalay ? 'Seterusnya' : 'Next',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              icon: const Icon(Icons.arrow_forward_ios_rounded),
+                              iconAlignment: IconAlignment.end,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.sunnyYellow,
+                                foregroundColor: AppTheme.ink,
+                                minimumSize: const Size.fromHeight(AppTheme.kidTarget),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                elevation: 6,
+                                side: const BorderSide(
+                                  color: Colors.white,
+                                  width: 2.5,
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                ),
-              ),
 
-              const SizedBox(height: 10),
-
-              // ── Navigation ─────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: isFirst ? null : _prev,
-                        icon: const Icon(Icons.arrow_back_ios_rounded),
-                        label: Text(
-                          isMalay ? 'Sebelum' : 'Back',
-                          style: const TextStyle(
-                            fontSize: 15,
+                    if (isLast)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          '🌟 Bagus! Kamu dah kenal semua huruf A–Z! 🌟',
+                          style: TextStyle(
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
+                            color: color,
                           ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.deepBlue,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(AppTheme.kidTarget),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          elevation: 5,
-                          side: const BorderSide(
-                            color: Colors.white,
-                            width: 2.5,
-                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: isLast ? null : _next,
-                        label: Text(
-                          isMalay ? 'Seterusnya' : 'Next',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        icon: const Icon(Icons.arrow_forward_ios_rounded),
-                        iconAlignment: IconAlignment.end,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.sunnyYellow,
-                          foregroundColor: AppTheme.ink,
-                          minimumSize: const Size.fromHeight(AppTheme.kidTarget),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          elevation: 6,
-                          side: const BorderSide(
-                            color: Colors.white,
-                            width: 2.5,
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
-
-              if (isLast)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    '🌟 Bagus! Kamu dah kenal semua huruf A–Z! 🌟',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
       ),

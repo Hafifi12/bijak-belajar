@@ -95,96 +95,98 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
                 ],
               ),
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // LEVEL UP badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.sunnyYellow,
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: Text(
-                      isMalay ? '⬆ NAIK TAHAP!' : '⬆ LEVEL UP!',
-                      style: const TextStyle(
-                        color: AppTheme.ink,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // LEVEL UP badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.sunnyYellow,
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: Text(
+                        isMalay ? '⬆ NAIK TAHAP!' : '⬆ LEVEL UP!',
+                        style: const TextStyle(
+                          color: AppTheme.ink,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  // Big emoji
-                  Text(level.emoji,
-                      style: const TextStyle(fontSize: 80)),
-                  const SizedBox(height: 12),
+                    // Big emoji
+                    Text(level.emoji,
+                        style: const TextStyle(fontSize: 80)),
+                    const SizedBox(height: 12),
 
-                  // Level number
-                  Text(
-                    isMalay ? 'Tahap ${level.level}' : 'Level ${level.level}',
-                    style: TextStyle(
-                      color: level.color,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.4),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Level title
-                  Text(
-                    isMalay ? level.titleMalay : level.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      height: 1.1,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Continue button
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [level.color, level.color.withValues(alpha: 0.7)],
-                        ),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: Colors.white, width: 2.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: level.color.withValues(alpha: 0.5),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
+                    // Level number
+                    Text(
+                      isMalay ? 'Tahap ${level.level}' : 'Level ${level.level}',
+                      style: TextStyle(
+                        color: level.color,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            blurRadius: 6,
                           ),
                         ],
                       ),
-                      child: Text(
-                        isMalay ? '🚀 Teruskan!' : '🚀 Keep Going!',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Level title
+                    Text(
+                      isMalay ? level.titleMalay : level.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        height: 1.1,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Continue button
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [level.color, level.color.withValues(alpha: 0.7)],
+                          ),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: Colors.white, width: 2.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: level.color.withValues(alpha: 0.5),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          isMalay ? '🚀 Teruskan!' : '🚀 Keep Going!',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

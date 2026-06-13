@@ -121,12 +121,16 @@ class MathPracticeScreen extends ConsumerWidget {
           children: [
             Hero(
               tag: 'module-emoji-${MathPracticeScreen.routeName}',
-              child: const Text('🧮', style: TextStyle(fontSize: 26)),
+              child: const Text('🧮', style: TextStyle(fontSize: 24)),
             ),
             const SizedBox(width: 8),
-            Text(
-              isMalay ? 'Latihan Matematik' : 'Maths Practice',
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            Flexible(
+              child: Text(
+                isMalay ? 'Latihan Matematik' : 'Maths Practice',
+                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -733,215 +737,227 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
         bottomColor: AppTheme.lightBlue,
         showHills: false,
         child: SafeArea(
-          child: Column(
-            children: [
-              // Yellow progress bar + counter pill
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Row(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    AppBar().preferredSize.height,
+              ),
+              child: IntrinsicHeight(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(999),
-                        child: LinearProgressIndicator(
-                          value: (_questionIndex + 1) / _totalQuestions,
-                          minHeight: 13,
-                          backgroundColor: Colors.white,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppTheme.sunnyYellow,
+                    // Yellow progress bar + counter pill
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: LinearProgressIndicator(
+                                value: (_questionIndex + 1) / _totalQuestions,
+                                minHeight: 13,
+                                backgroundColor: Colors.white,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppTheme.sunnyYellow,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.deepBlue,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: Text(
+                              '${_questionIndex + 1}/$_totalQuestions',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Answer history dots
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Row(
+                        children: List.generate(_totalQuestions, (i) {
+                          Color dotColor;
+                          if (i < _answers.length) {
+                            dotColor = _answers[i]
+                                ? AppTheme.leafGreen
+                                : AppTheme.appleRed;
+                          } else if (i == _questionIndex) {
+                            dotColor = color;
+                          } else {
+                            dotColor = Colors.white.withValues(alpha: 0.5);
+                          }
+                          return Expanded(
+                            child: Container(
+                              height: 8,
+                              margin: const EdgeInsets.symmetric(horizontal: 2),
+                              decoration: BoxDecoration(
+                                color: dotColor,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Question card (white container)
+                    AnimatedBuilder(
+                      animation: _popAnim,
+                      builder: (_, child) =>
+                          Transform.scale(scale: _popAnim.value, child: child),
+                      child: AnimatedBuilder(
+                        animation: _shakeAnim,
+                        builder: (_, child) => Transform.translate(
+                          offset: Offset(
+                            sin(_shakeAnim.value * pi * 5) *
+                                10 *
+                                (1 - _shakeAnim.value),
+                            0,
+                          ),
+                          child: child,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 32,
+                              horizontal: 24,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.deepBlue.withValues(alpha: 0.14),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Text(_q.emoji, style: const TextStyle(fontSize: 46)),
+                                if (_q.visualCount != null) ...[
+                                  const SizedBox(height: 10),
+                                  _CountingObjectGrid(
+                                    emoji: _q.emoji,
+                                    count: _q.visualCount!,
+                                    color: color,
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                Text(
+                                  _q.questionText,
+                                  style: TextStyle(
+                                    fontSize: 38,
+                                    fontWeight: FontWeight.w900,
+                                    color: color,
+                                    height: 1.1,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (_q.hint != null) ...[
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    _q.hint!,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade500,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                                if (_answered) ...[
+                                  const SizedBox(height: 12),
+                                  _AnswerFeedback(
+                                    correct:
+                                        _selectedOption != null &&
+                                        _q.options[_selectedOption!] == _q.answer,
+                                    isMalay: isMalay,
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.deepBlue,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Text(
-                        '${_questionIndex + 1}/$_totalQuestions',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
+
+                    const Spacer(),
+
+                    // Answer options grid
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 2.6,
+                        children: _q.options.asMap().entries.map((e) {
+                          final idx = e.key;
+                          final opt = e.value;
+                          final isCorrect = opt == _q.answer;
+                          Color btnColor = Colors.white;
+                          Color textColor = color;
+                          Color borderColor = color.withValues(alpha: 0.4);
+
+                          if (_answered && _selectedOption == idx) {
+                            btnColor = isCorrect
+                                ? AppTheme.leafGreen
+                                : AppTheme.appleRed;
+                            textColor = Colors.white;
+                            borderColor = btnColor;
+                          } else if (_answered && isCorrect) {
+                            btnColor = AppTheme.leafGreen.withValues(alpha: 0.15);
+                            textColor = AppTheme.leafGreen;
+                            borderColor = AppTheme.leafGreen;
+                          }
+
+                          return _AnswerOption(
+                            btnColor: btnColor,
+                            textColor: textColor,
+                            borderColor: borderColor,
+                            elevation: _answered ? 0 : 3,
+                            glowColor: color,
+                            label: '$opt',
+                            enabled: !_answered,
+                            onTap: () => _pick(idx, isCorrect),
+                          );
+                        }).toList(),
                       ),
                     ),
+
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
-
-              // Answer history dots
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Row(
-                  children: List.generate(_totalQuestions, (i) {
-                    Color dotColor;
-                    if (i < _answers.length) {
-                      dotColor = _answers[i]
-                          ? AppTheme.leafGreen
-                          : AppTheme.appleRed;
-                    } else if (i == _questionIndex) {
-                      dotColor = color;
-                    } else {
-                      dotColor = Colors.white.withValues(alpha: 0.5);
-                    }
-                    return Expanded(
-                      child: Container(
-                        height: 8,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          color: dotColor,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-
-              const Spacer(),
-
-              // Question card (white container)
-              AnimatedBuilder(
-                animation: _popAnim,
-                builder: (_, child) =>
-                    Transform.scale(scale: _popAnim.value, child: child),
-                child: AnimatedBuilder(
-                  animation: _shakeAnim,
-                  builder: (_, child) => Transform.translate(
-                    offset: Offset(
-                      sin(_shakeAnim.value * pi * 5) *
-                          10 *
-                          (1 - _shakeAnim.value),
-                      0,
-                    ),
-                    child: child,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 32,
-                        horizontal: 24,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.deepBlue.withValues(alpha: 0.14),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Text(_q.emoji, style: const TextStyle(fontSize: 46)),
-                          if (_q.visualCount != null) ...[
-                            const SizedBox(height: 10),
-                            _CountingObjectGrid(
-                              emoji: _q.emoji,
-                              count: _q.visualCount!,
-                              color: color,
-                            ),
-                          ],
-                          const SizedBox(height: 12),
-                          Text(
-                            _q.questionText,
-                            style: TextStyle(
-                              fontSize: 38,
-                              fontWeight: FontWeight.w900,
-                              color: color,
-                              height: 1.1,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          if (_q.hint != null) ...[
-                            const SizedBox(height: 10),
-                            Text(
-                              _q.hint!,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade500,
-                                fontStyle: FontStyle.italic,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                          if (_answered) ...[
-                            const SizedBox(height: 12),
-                            _AnswerFeedback(
-                              correct:
-                                  _selectedOption != null &&
-                                  _q.options[_selectedOption!] == _q.answer,
-                              isMalay: isMalay,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const Spacer(),
-
-              // Answer options grid
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 2.6,
-                  children: _q.options.asMap().entries.map((e) {
-                    final idx = e.key;
-                    final opt = e.value;
-                    final isCorrect = opt == _q.answer;
-                    Color btnColor = Colors.white;
-                    Color textColor = color;
-                    Color borderColor = color.withValues(alpha: 0.4);
-
-                    if (_answered && _selectedOption == idx) {
-                      btnColor = isCorrect
-                          ? AppTheme.leafGreen
-                          : AppTheme.appleRed;
-                      textColor = Colors.white;
-                      borderColor = btnColor;
-                    } else if (_answered && isCorrect) {
-                      btnColor = AppTheme.leafGreen.withValues(alpha: 0.15);
-                      textColor = AppTheme.leafGreen;
-                      borderColor = AppTheme.leafGreen;
-                    }
-
-                    return _AnswerOption(
-                      btnColor: btnColor,
-                      textColor: textColor,
-                      borderColor: borderColor,
-                      elevation: _answered ? 0 : 3,
-                      glowColor: color,
-                      label: '$opt',
-                      enabled: !_answered,
-                      onTap: () => _pick(idx, isCorrect),
-                    );
-                  }).toList(),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),

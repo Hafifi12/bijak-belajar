@@ -628,6 +628,8 @@ class _ActivityStatsRow extends ConsumerWidget {
                               color: AppTheme.ink,
                               height: 1.2,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),

@@ -279,13 +279,15 @@ class _SectionLabel extends ConsumerWidget {
       children: [
         Text(emoji, style: const TextStyle(fontSize: 20)),
         const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
-            color: color,
-            letterSpacing: 0.5,
+        Flexible(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: color,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
       ],

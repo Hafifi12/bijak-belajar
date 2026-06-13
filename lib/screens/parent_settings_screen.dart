@@ -409,14 +409,16 @@ class _ProgressSummaryCard extends ConsumerWidget {
               children: [
                 const Icon(Icons.bar_chart_rounded, color: Color(0xFF7C4DFF)),
                 const SizedBox(width: 8),
-                Text(
-                  isMalay
-                      ? '📊 Laporan Kemajuan Kanak-Kanak'
-                      : '📊 Child Progress Report',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF123A7A),
+                Expanded(
+                  child: Text(
+                    isMalay
+                        ? '📊 Laporan Kemajuan Kanak-Kanak'
+                        : '📊 Child Progress Report',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF123A7A),
+                    ),
                   ),
                 ),
               ],
@@ -684,21 +686,31 @@ class _DevInfoRow extends ConsumerWidget {
           child: Icon(icon, size: 14, color: const Color(0xFF6C5CE7)),
         ),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.inkFaint,
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.inkFaint,
+            ),
           ),
         ),
         const Spacer(),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.ink,
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.ink,
+            ),
           ),
         ),
       ],

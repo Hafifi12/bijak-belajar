@@ -406,28 +406,34 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
           children: [
             Hero(
               tag: 'module-emoji-${LearnBodyPartsScreen.routeName}',
-              child: const Text('🧍', style: TextStyle(fontSize: 26)),
+              child: const Text('🧍', style: TextStyle(fontSize: 24)),
             ),
             const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  isMalay ? 'Anggota Badan' : 'Body Parts',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-                ),
-                Text(
-                  isMalay
-                      ? 'Bahagian ${_current + 1} dari ${_parts.length}'
-                      : 'Part ${_current + 1} of ${_parts.length}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white70,
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isMalay ? 'Anggota Badan' : 'Body Parts',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  Text(
+                    isMalay
+                        ? 'Bahagian ${_current + 1} dari ${_parts.length}'
+                        : 'Part ${_current + 1} of ${_parts.length}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -624,33 +630,28 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
 
                           const SizedBox(height: 6),
 
-                          // All other languages — 2×2 grid
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          // All other languages — wrap so long Tamil/Mandarin
+                          // words reflow instead of overflowing the row.
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8,
+                            runSpacing: 6,
                             children: [
                               _LangChip(
                                 flag: 'BM',
                                 text: item.malay,
                                 color: color,
                               ),
-                              const SizedBox(width: 8),
                               _LangChip(
                                 flag: '中',
                                 text: item.mandarin,
                                 color: color,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
                               _LangChip(
                                 flag: 'ID',
                                 text: item.indonesian,
                                 color: color,
                               ),
-                              const SizedBox(width: 8),
                               _LangChip(
                                 flag: 'த',
                                 text: item.tamil,
@@ -767,36 +768,44 @@ class _DoctorBodyChart extends ConsumerWidget {
   final AppLanguage language;
   final ValueChanged<int> onSelect;
 
-  // Fractional (x, y) positions measured against the actual
-  // body_parts_doctor_photo.png asset (1024×1536, same 2:3 ratio as the
-  // AspectRatio container, so no crop shift). Index order = _parts order.
+  // Each part has an anatomical TARGET point (tx, ty) measured against the
+  // body_parts_doctor_photo.png asset (2:3 ratio, no crop shift), plus a side
+  // + slot for its label pin. Pins live in the left/right gutters and connect
+  // to the target with a leader-line arrow — so the cramped facial features
+  // (hair/head/eyes/nose/mouth/ears/teeth) never overlap each other.
+  // Slots are spaced ≥0.11 apart vertically so pins can't collide.
   static const _spots = <_BodySpot>[
-    _BodySpot(0, 0.50, 0.125, 18), // Head (forehead)
-    _BodySpot(1, 0.50, 0.150, 13), // Eyes
-    _BodySpot(2, 0.50, 0.175, 12), // Nose
-    _BodySpot(3, 0.50, 0.205, 12), // Mouth
-    _BodySpot(4, 0.565, 0.160, 12), // Ears (right ear)
-    _BodySpot(5, 0.49, 0.090, 15), // Hair (top of head)
-    _BodySpot(6, 0.50, 0.215, 10), // Teeth (in the smile)
-    _BodySpot(7, 0.615, 0.275, 15), // Shoulder (right)
-    _BodySpot(8, 0.715, 0.520, 16), // Hands (open right palm)
-    _BodySpot(9, 0.285, 0.545, 13), // Fingers (left hand)
-    _BodySpot(10, 0.50, 0.420, 18), // Stomach
-    _BodySpot(11, 0.53, 0.760, 16), // Legs (shin)
-    _BodySpot(12, 0.55, 0.680, 15), // Knees
-    _BodySpot(13, 0.51, 0.930, 16), // Feet
+    _BodySpot(0, 0.50, 0.125, _Side.left, 0.15), // Head (forehead)
+    _BodySpot(1, 0.50, 0.150, _Side.left, 0.27), // Eyes
+    _BodySpot(2, 0.50, 0.175, _Side.left, 0.39), // Nose
+    _BodySpot(3, 0.50, 0.205, _Side.left, 0.51), // Mouth
+    _BodySpot(4, 0.565, 0.160, _Side.right, 0.10), // Ears
+    _BodySpot(5, 0.49, 0.090, _Side.left, 0.04), // Hair (top of head)
+    _BodySpot(6, 0.50, 0.215, _Side.right, 0.22), // Teeth (in the smile)
+    _BodySpot(7, 0.615, 0.275, _Side.right, 0.34), // Shoulder
+    _BodySpot(8, 0.715, 0.520, _Side.right, 0.58), // Hands (open right palm)
+    _BodySpot(9, 0.285, 0.545, _Side.left, 0.63), // Fingers (left hand)
+    _BodySpot(10, 0.50, 0.420, _Side.right, 0.46), // Stomach
+    _BodySpot(11, 0.53, 0.760, _Side.right, 0.84), // Legs (shin)
+    _BodySpot(12, 0.55, 0.680, _Side.right, 0.72), // Knees
+    _BodySpot(13, 0.51, 0.930, _Side.left, 0.92), // Feet
   ];
+
+  // Strip parenthetical romanisation so pins stay short, e.g.
+  // "头 (Tóu)" → "头", "தலை (Talai)" → "தலை".
+  static String _shortLabel(String raw) =>
+      raw.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // selectedIndex == -1 → "Doctor says…" game mode: nothing highlighted
-    // and no callout, so the chart cannot leak the answer.
+    // selectedIndex == -1 → "Doctor says…" game mode: nothing highlighted and
+    // pins show no text, so the chart cannot leak the answer.
+    final bool gameMode = selectedIndex < 0;
     final _BodyPart? selected =
         (selectedIndex >= 0 && selectedIndex < parts.length)
             ? parts[selectedIndex]
             : null;
     final accent = selected?.color ?? AppTheme.moduleBodyParts;
-    final label = selected?.wordFor(language);
 
     return Container(
       width: double.infinity,
@@ -839,8 +848,8 @@ class _DoctorBodyChart extends ConsumerWidget {
               Expanded(
                 child: Text(
                   language == AppLanguage.malay
-                      ? 'Foto doktor: sentuh bahagian badan'
-                      : 'Doctor photo: tap a body part',
+                      ? 'Ikut anak panah ke bahagian badan'
+                      : 'Follow the arrow to each body part',
                   style: const TextStyle(
                     color: AppTheme.ink,
                     fontSize: 13,
@@ -853,73 +862,93 @@ class _DoctorBodyChart extends ConsumerWidget {
           const SizedBox(height: 8),
           AspectRatio(
             aspectRatio: 2 / 3,
-            // Pinch-zoom: spots live inside the same transformed subtree, so
-            // they stay glued to the photo and remain tappable when zoomed.
-            // panEnabled stays false so one-finger drags still scroll the page.
+            // Pinch-zoom: pins + leader lines live inside the same transformed
+            // subtree, so they stay glued to the photo and remain tappable when
+            // zoomed. panEnabled stays false so one-finger drags still scroll.
             child: InteractiveViewer(
               maxScale: 3,
               panEnabled: false,
               child: LayoutBuilder(
-              builder: (context, constraints) {
-                final w = constraints.maxWidth;
-                final h = constraints.maxHeight;
-                return Stack(
-                  children: [
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Image.asset(
-                          'assets/images/body_parts_doctor_photo.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: accent.withValues(alpha: 0.38),
-                            width: 2,
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              AppTheme.deepBlue.withValues(alpha: 0.12),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                builder: (context, constraints) {
+                  final w = constraints.maxWidth;
+                  final h = constraints.maxHeight;
+
+                  // Build leader lines (target → gutter anchor) for the painter.
+                  final lines = <_LeaderLine>[
                     for (final spot in _spots)
-                      Positioned(
-                        left: (spot.x * w) - spot.radius,
-                        top: (spot.y * h) - spot.radius,
-                        width: spot.radius * 2,
-                        height: spot.radius * 2,
-                        child: _BodySpotButton(
-                          selected: spot.index == selectedIndex,
-                          color: parts[spot.index].color,
-                          label: parts[spot.index].wordFor(language),
-                          onTap: () => onSelect(spot.index),
+                      _LeaderLine(
+                        target: Offset(spot.tx * w, spot.ty * h),
+                        anchor: Offset(
+                          spot.side == _Side.left ? 16 : w - 16,
+                          spot.slot * h,
+                        ),
+                        color: parts[spot.index].color,
+                        active: !gameMode && spot.index == selectedIndex,
+                      ),
+                  ];
+
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Image.asset(
+                            'assets/images/body_parts_doctor_photo.png',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    if (selected != null && label != null)
-                      Positioned(
-                        left: 12,
-                        right: 12,
-                        bottom: 10,
-                        child: _DoctorCallout(
-                          color: selected.color,
-                          label: label,
-                          english: selected.english,
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: accent.withValues(alpha: 0.38),
+                              width: 2,
+                            ),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                AppTheme.deepBlue.withValues(alpha: 0.12),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                  ],
-                );
-              },
+                      // Leader-line arrows drawn beneath the pins.
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: _LeaderLinesPainter(lines: lines),
+                          ),
+                        ),
+                      ),
+                      // Label pins in the gutters — never overlap each other.
+                      for (final spot in _spots)
+                        Positioned(
+                          top: (spot.slot * h) - 15,
+                          left: spot.side == _Side.left ? 4 : null,
+                          right: spot.side == _Side.right ? 4 : null,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: w * 0.44),
+                            child: _BodyPin(
+                              color: parts[spot.index].color,
+                              label: _shortLabel(
+                                parts[spot.index].wordFor(language),
+                              ),
+                              active: !gameMode &&
+                                  spot.index == selectedIndex,
+                              gameMode: gameMode,
+                              onTap: () => onSelect(spot.index),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -1155,65 +1184,95 @@ class _BodyPartThumbnail extends ConsumerWidget {
   }
 }
 
+enum _Side { left, right }
+
 class _BodySpot {
-  const _BodySpot(this.index, this.x, this.y, this.radius);
+  const _BodySpot(this.index, this.tx, this.ty, this.side, this.slot);
 
   final int index;
-  final double x;
-  final double y;
-  final double radius;
+  final double tx; // anatomical target x (0..1 of width)
+  final double ty; // anatomical target y (0..1 of height)
+  final _Side side; // which gutter the label pin sits in
+  final double slot; // label pin vertical centre (0..1 of height)
 }
 
-class _BodySpotButton extends ConsumerWidget {
-  const _BodySpotButton({
-    required this.selected,
+/// A label pin shown in the gutter. In learn mode it shows a coloured dot + the
+/// part name (the active part is filled). In the "Doctor Says" game it shows a
+/// plain coloured dot only — no text — so the chart never reveals the answer.
+class _BodyPin extends StatelessWidget {
+  const _BodyPin({
     required this.color,
     required this.label,
+    required this.active,
+    required this.gameMode,
     required this.onTap,
   });
 
-  final bool selected;
   final Color color;
   final String label;
+  final bool active;
+  final bool gameMode;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: label,
+      label: gameMode ? null : label,
       child: Material(
         color: Colors.transparent,
-        shape: const CircleBorder(),
+        borderRadius: BorderRadius.circular(999),
         child: InkWell(
-          customBorder: const CircleBorder(),
+          borderRadius: BorderRadius.circular(999),
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
+            padding: gameMode
+                ? const EdgeInsets.all(5)
+                : const EdgeInsets.fromLTRB(6, 5, 10, 5),
             decoration: BoxDecoration(
-              color: selected ? color : Colors.white,
-              shape: BoxShape.circle,
+              color: active ? color : Colors.white,
+              borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: selected ? Colors.white : color,
-                width: selected ? 3 : 2,
+                color: active ? Colors.white : color,
+                width: active ? 2.5 : 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: selected ? 0.42 : 0.18),
-                  blurRadius: selected ? 14 : 7,
+                  color: color.withValues(alpha: active ? 0.40 : 0.16),
+                  blurRadius: active ? 12 : 6,
                   offset: const Offset(0, 3),
                 ),
               ],
             ),
-            child: Center(
-              child: Container(
-                width: selected ? 9 : 7,
-                height: selected ? 9 : 7,
-                decoration: BoxDecoration(
-                  color: selected ? Colors.white : color,
-                  shape: BoxShape.circle,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: active ? 14 : 12,
+                  height: active ? 14 : 12,
+                  decoration: BoxDecoration(
+                    color: active ? Colors.white : color,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
+                if (!gameMode) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      style: TextStyle(
+                        color: active ? Colors.white : AppTheme.ink,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -1222,44 +1281,77 @@ class _BodySpotButton extends ConsumerWidget {
   }
 }
 
-class _DoctorCallout extends ConsumerWidget {
-  const _DoctorCallout({
+class _LeaderLine {
+  const _LeaderLine({
+    required this.target,
+    required this.anchor,
     required this.color,
-    required this.label,
-    required this.english,
+    required this.active,
   });
 
+  final Offset target; // arrowhead tip — the exact body part
+  final Offset anchor; // gutter end, tucked under the pin
   final Color color;
-  final String label;
-  final String english;
+  final bool active;
+}
+
+/// Draws the leader lines + arrowheads from each gutter pin to its body part.
+class _LeaderLinesPainter extends CustomPainter {
+  const _LeaderLinesPainter({required this.lines});
+
+  final List<_LeaderLine> lines;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.28), width: 1.5),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label == english ? label : '$label  •  $english',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: color,
-                fontSize: 17,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  void paint(Canvas canvas, Size size) {
+    // Draw inactive lines first so the active arrow sits on top.
+    final ordered = [
+      ...lines.where((l) => !l.active),
+      ...lines.where((l) => l.active),
+    ];
+    for (final l in ordered) {
+      final lineColor = l.color.withValues(alpha: l.active ? 0.95 : 0.45);
+      final stroke = Paint()
+        ..color = lineColor
+        ..strokeWidth = l.active ? 3.2 : 1.6
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+      canvas.drawLine(l.anchor, l.target, stroke);
+
+      final dir = l.target - l.anchor;
+      final len = dir.distance == 0 ? 1.0 : dir.distance;
+      final ux = dir.dx / len;
+      final uy = dir.dy / len;
+      final head = l.active ? 12.0 : 7.0;
+      final half = l.active ? 6.5 : 4.0;
+      final base = Offset(
+        l.target.dx - ux * head,
+        l.target.dy - uy * head,
+      );
+      final perpX = -uy;
+      final perpY = ux;
+      final tri = Path()
+        ..moveTo(l.target.dx, l.target.dy)
+        ..lineTo(base.dx + perpX * half, base.dy + perpY * half)
+        ..lineTo(base.dx - perpX * half, base.dy - perpY * half)
+        ..close();
+      canvas.drawPath(tri, Paint()..color = lineColor);
+
+      // Small ringed dot exactly on the body part.
+      final dotR = l.active ? 4.5 : 2.6;
+      canvas.drawCircle(l.target, dotR, Paint()..color = Colors.white);
+      canvas.drawCircle(
+        l.target,
+        dotR,
+        Paint()
+          ..color = lineColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
   }
+
+  @override
+  bool shouldRepaint(covariant _LeaderLinesPainter oldDelegate) => true;
 }
 
 // Kept as a code-native fallback if the photo asset is unavailable in a future
@@ -1643,34 +1735,42 @@ class _LangChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(50),
-        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            flag,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              color: color,
+    return ConstrainedBox(
+      // Never let a single chip grow wider than the screen.
+      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 56),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(50),
+          border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              flag,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: color,
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -576,26 +576,32 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
           children: [
             Hero(
               tag: 'module-emoji-${LearnNumbersScreen.routeName}',
-              child: const Text('🔢', style: TextStyle(fontSize: 26)),
+              child: const Text('🔢', style: TextStyle(fontSize: 24)),
             ),
             const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  isMalay ? 'Nombor 1–100' : 'Numbers 1–100',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-                ),
-                Text(
-                  _levelLabel(_current + 1, isMalay),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white70,
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isMalay ? 'Nombor 1–100' : 'Numbers 1–100',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  Text(
+                    _levelLabel(_current + 1, isMalay),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -1313,15 +1319,16 @@ class _NumberPronunciationPanel extends StatelessWidget {
                           ),
                           const SizedBox(width: 10),
                           SizedBox(
-                            width: 86,
+                            width: 72,
                             child: Text(
                               row.label,
                               maxLines: 2,
                               style: TextStyle(
                                 color: color,
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w800,
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Expanded(

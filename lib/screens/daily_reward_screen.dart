@@ -89,220 +89,227 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                 ],
               ),
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Top icon
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.sunnyYellow,
-                        width: 3,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        streak >= 7
-                            ? '🔥'
-                            : streak >= 3
-                                ? '🌟'
-                                : '🎁',
-                        style: const TextStyle(fontSize: 46),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Title
-                  Text(
-                    isMalay ? 'Hadiah Harian! 🎉' : 'Daily Gift! 🎉',
-                    style: const TextStyle(
-                      color: AppTheme.sunnyYellow,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Streak info
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('🔥', style: TextStyle(fontSize: 22)),
-                        const SizedBox(width: 8),
-                        Text(
-                          isMalay
-                              ? '$streak hari berturut-turut!'
-                              : '$streak day streak!',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Stars reward
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 28, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.sunnyYellow.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                          color: AppTheme.sunnyYellow, width: 2),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('⭐',
-                            style: TextStyle(fontSize: 36)),
-                        const SizedBox(width: 10),
-                        Text(
-                          '+$stars',
-                          style: const TextStyle(
-                            color: AppTheme.sunnyYellow,
-                            fontSize: 42,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          isMalay ? 'Bintang' : 'Stars',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Streak bonus note
-                  if (streak >= 3)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        isMalay
-                            ? '🎯 Bonus streak $streak hari!'
-                            : '🎯 $streak-day streak bonus!',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-
-                  // Streak rescued by a freeze token
-                  if (widget.progress.streakFreezeJustUsed)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        isMalay
-                            ? '❄️ Streak kamu diselamatkan! Token beku digunakan.'
-                            : '❄️ Your streak was saved! A freeze token was used.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFFBDE6FF),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-
-                  // Freeze tokens held
-                  if (widget.progress.streakFreezes > 0)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        isMalay
-                            ? '❄️ ${widget.progress.streakFreezes} token beku — melindungi streak kamu jika terlepas sehari'
-                            : '❄️ ${widget.progress.streakFreezes} freeze token${widget.progress.streakFreezes > 1 ? 's' : ''} — protects your streak if you miss a day',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-
-                  // Tomorrow's reward — make the escalating table work for us
-                  Text(
-                    isMalay
-                        ? '⏰ Datang esok untuk +${widget.progress.tomorrowRewardStars} ⭐!'
-                        : '⏰ Come back tomorrow for +${widget.progress.tomorrowRewardStars} ⭐!',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppTheme.sunnyYellow,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Collect button
-                  GestureDetector(
-                    onTap: _collected ? null : _collect,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Top icon
+                    Container(
+                      width: 90,
+                      height: 90,
                       decoration: BoxDecoration(
-                        gradient: _collected
-                            ? const LinearGradient(
-                                colors: [Color(0xFF34C759), Color(0xFF2ECC71)],
-                              )
-                            : const LinearGradient(
-                                colors: [
-                                  AppTheme.sunnyYellow,
-                                  Color(0xFFFFB300)
-                                ],
-                              ),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: Colors.white, width: 2.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.sunnyYellow.withValues(alpha: 0.5),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        color: Colors.white.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppTheme.sunnyYellow,
+                          width: 3,
+                        ),
                       ),
                       child: Center(
                         child: Text(
-                          _collected
-                              ? (isMalay ? '✅ Dikumpul!' : '✅ Collected!')
-                              : (isMalay ? '🎁 Kumpul Hadiah!' : '🎁 Collect Gift!'),
+                          streak >= 7
+                              ? '🔥'
+                              : streak >= 3
+                                  ? '🌟'
+                                  : '🎁',
+                          style: const TextStyle(fontSize: 46),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Title
+                    Text(
+                      isMalay ? 'Hadiah Harian! 🎉' : 'Daily Gift! 🎉',
+                      style: const TextStyle(
+                        color: AppTheme.sunnyYellow,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Streak info
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('🔥', style: TextStyle(fontSize: 22)),
+                          const SizedBox(width: 8),
+                          Text(
+                            isMalay
+                                ? '$streak hari berturut-turut!'
+                                : '$streak day streak!',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Stars reward
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 28, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.sunnyYellow.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                            color: AppTheme.sunnyYellow, width: 2),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('⭐',
+                              style: TextStyle(fontSize: 36)),
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '+$stars',
+                                style: const TextStyle(
+                                  color: AppTheme.sunnyYellow,
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            isMalay ? 'Bintang' : 'Stars',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Streak bonus note
+                    if (streak >= 3)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          isMalay
+                              ? '🎯 Bonus streak $streak hari!'
+                              : '🎯 $streak-day streak bonus!',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+
+                    // Streak rescued by a freeze token
+                    if (widget.progress.streakFreezeJustUsed)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          isMalay
+                              ? '❄️ Streak kamu diselamatkan! Token beku digunakan.'
+                              : '❄️ Your streak was saved! A freeze token was used.',
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
-                            color: AppTheme.ink,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFBDE6FF),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+
+                    // Freeze tokens held
+                    if (widget.progress.streakFreezes > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          isMalay
+                              ? '❄️ ${widget.progress.streakFreezes} token beku — melindungi streak kamu jika terlepas sehari'
+                              : '❄️ ${widget.progress.streakFreezes} freeze token${widget.progress.streakFreezes > 1 ? 's' : ''} — protects your streak if you miss a day',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+
+                    // Tomorrow's reward — make the escalating table work for us
+                    Text(
+                      isMalay
+                          ? '⏰ Datang esok untuk +${widget.progress.tomorrowRewardStars} ⭐!'
+                          : '⏰ Come back tomorrow for +${widget.progress.tomorrowRewardStars} ⭐!',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: AppTheme.sunnyYellow,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Collect button
+                    GestureDetector(
+                      onTap: _collected ? null : _collect,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          gradient: _collected
+                              ? const LinearGradient(
+                                  colors: [Color(0xFF34C759), Color(0xFF2ECC71)],
+                                )
+                              : const LinearGradient(
+                                  colors: [
+                                    AppTheme.sunnyYellow,
+                                    Color(0xFFFFB300)
+                                  ],
+                                ),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: Colors.white, width: 2.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.sunnyYellow.withValues(alpha: 0.5),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            _collected
+                                ? (isMalay ? '✅ Dikumpul!' : '✅ Collected!')
+                                : (isMalay ? '🎁 Kumpul Hadiah!' : '🎁 Collect Gift!'),
+                            style: const TextStyle(
+                              color: AppTheme.ink,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
