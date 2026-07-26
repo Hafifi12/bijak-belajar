@@ -96,8 +96,14 @@ class TinyFinderApp extends StatelessWidget {
       navigatorObservers: [appRouteObserver],
       onGenerateRoute: (settings) {
         final builder = _screens[settings.name];
-        if (builder == null) return null;
-        return _buildRoute(settings.name!, builder, settings);
+        if (builder != null) {
+          return _buildRoute(settings.name!, builder, settings);
+        }
+        return _buildRoute(
+          settings.name ?? '/unknown',
+          (_) => const _UnknownRouteScreen(),
+          settings,
+        );
       },
       builder: (context, child) {
         // Clamp system text scaling: layouts use fixed-height grids and
@@ -115,6 +121,45 @@ class TinyFinderApp extends StatelessWidget {
           child: child!,
         );
       },
+    );
+  }
+}
+
+class _UnknownRouteScreen extends StatelessWidget {
+  const _UnknownRouteScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 96),
+                const Icon(Icons.explore_off_rounded, size: 72),
+                const SizedBox(height: 20),
+                Text(
+                  'Page not found',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () =>
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        HomeScreen.routeName,
+                        (route) => false,
+                      ),
+                  icon: const Icon(Icons.home_rounded),
+                  label: const Text('Return home'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

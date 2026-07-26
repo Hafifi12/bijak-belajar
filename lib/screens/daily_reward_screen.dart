@@ -138,18 +138,20 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const Text('🔥', style: TextStyle(fontSize: 22)),
                           const SizedBox(width: 8),
-                          Text(
-                            isMalay
-                                ? '$streak hari berturut-turut!'
-                                : '$streak day streak!',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                          Flexible(
+                            child: Text(
+                              isMalay
+                                  ? '$streak hari berturut-turut!'
+                                  : '$streak day streak!',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ],
@@ -160,7 +162,7 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                     // Stars reward
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 28,
+                        horizontal: 12,
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
@@ -190,12 +192,14 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            isMalay ? 'Bintang' : 'Stars',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                          Flexible(
+                            child: Text(
+                              isMalay ? 'Bintang' : 'Stars',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ],

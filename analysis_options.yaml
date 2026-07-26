@@ -11,11 +11,8 @@ linter:
     - empty_statements
     - hash_and_equals
     - implementation_imports
-    - iterable_contains_unrelated_type
-    - list_contains_unrelated_type
     - no_duplicate_case_values
     - non_constant_identifier_names
-    - package_api_docs
     - package_names
     - package_prefixed_library_names
     - prefer_final_fields
@@ -24,7 +21,6 @@ linter:
     - test_types_in_equals
     - throw_in_finally
     - type_init_formals
-    - unawaited_futures
     - unnecessary_brace_in_string_interps
     - unnecessary_getters_setters
     - unnecessary_new

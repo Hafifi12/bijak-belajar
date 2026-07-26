@@ -111,10 +111,10 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen> {
                       MemoryStage.easy => 10.0,
                       MemoryStage.normal => 8.0,
                       MemoryStage.medium => 6.0,
-                      MemoryStage.high => 2.0,
+                      MemoryStage.high => 4.0,
                     };
                     final compact = _stage.gridSize >= 5;
-                    final ultraCompact = _stage.gridSize >= 10;
+                    final ultraCompact = _stage.gridSize >= 6;
 
                     return GridView.builder(
                       itemCount: _cards.length,

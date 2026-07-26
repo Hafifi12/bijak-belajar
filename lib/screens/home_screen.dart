@@ -8,6 +8,7 @@ import '../models/quest.dart';
 import '../providers/app_state.dart';
 import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_text.dart';
 import '../utils/route_observer.dart';
 import '../widgets/badge_unlock_overlay.dart';
 import '../widgets/bijak_scene.dart';
@@ -165,7 +166,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                   controller: _mapScroll,
                   physics: const BouncingScrollPhysics(),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+                    padding: const EdgeInsets.fromLTRB(4, 4, 4, 120),
                     child: _AdventureMap(progress: progress, isMalay: isMalay),
                   ),
                 ),
@@ -231,7 +232,7 @@ class _AdventureTopBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  isMalay ? level.titleMalay : level.title,
+                  AppText.levelTitle(level, progress.language),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -254,7 +255,7 @@ class _AdventureTopBar extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${isMalay ? 'Tahap' : 'Level'} ${level.level} · ${progress.stars} ⭐',
+                  '${AppText.ui('levelWord', progress.language)} ${level.level} · ${progress.stars} ⭐',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -322,7 +323,7 @@ class _AdventureMap extends StatelessWidget {
     final zones = <_ZoneData>[
       _ZoneData(
         emoji: '🔢',
-        title: isMalay ? 'Pasar\nNombor' : 'Number\nBazaar',
+        title: AppText.ui('numbers', progress.language),
         color: AppTheme.moduleNumbers,
         route: LearnNumbersScreen.routeName,
         done: progress.getModuleLessons('numbers'),
@@ -332,7 +333,7 @@ class _AdventureMap extends StatelessWidget {
       ),
       _ZoneData(
         emoji: '🔤',
-        title: isMalay ? 'Kampung\nHuruf' : 'Letter\nVillage',
+        title: AppText.ui('letters', progress.language),
         color: AppTheme.moduleLetters,
         route: LearnLettersScreen.routeName,
         done: progress.getModuleLessons('letters'),
@@ -342,7 +343,7 @@ class _AdventureMap extends StatelessWidget {
       ),
       _ZoneData(
         emoji: '🌙',
-        title: isMalay ? 'Pantai\nJawi' : 'Jawi\nBeach',
+        title: AppText.ui('jawi', progress.language),
         color: AppTheme.moduleJawi,
         route: JawiAsasScreen.routeName,
         done: progress.getModuleLessons('jawi'),
@@ -352,7 +353,7 @@ class _AdventureMap extends StatelessWidget {
       ),
       _ZoneData(
         emoji: '🧮',
-        title: isMalay ? 'Hutan\nMatematik' : 'Math\nForest',
+        title: AppText.ui('math', progress.language),
         color: AppTheme.moduleMath,
         route: MathPracticeScreen.routeName,
         done: progress.getModuleLessons('math'),
@@ -362,7 +363,7 @@ class _AdventureMap extends StatelessWidget {
       ),
       _ZoneData(
         emoji: '🧍',
-        title: isMalay ? 'Pulau\nAnggota' : 'Body\nIsle',
+        title: AppText.ui('bodyParts', progress.language),
         color: AppTheme.moduleBodyParts,
         route: LearnBodyPartsScreen.routeName,
         done: progress.getModuleLessons('bodyparts'),
@@ -372,7 +373,7 @@ class _AdventureMap extends StatelessWidget {
       ),
       _ZoneData(
         emoji: '🎨',
-        title: isMalay ? 'Studio\nWarna' : 'Colour\nStudio',
+        title: AppText.ui('colour', progress.language),
         color: AppTheme.moduleColoring,
         route: ColoringScreen.routeName,
         done: progress.coloringSessions,
@@ -382,7 +383,7 @@ class _AdventureMap extends StatelessWidget {
       ),
       _ZoneData(
         emoji: '🎮',
-        title: isMalay ? 'Bandar\nPermainan' : 'Game\nTown',
+        title: AppText.ui('games', progress.language),
         color: AppTheme.moduleGames,
         route: GamesHubScreen.routeName,
         done: 0,
@@ -446,7 +447,7 @@ class _AdventureMap extends StatelessWidget {
               // Zara companion floats near the trail's tail.
               Positioned(
                 right: 4,
-                top: 0.40 * h,
+                top: 0.34 * h,
                 child: _ZaraCompanion(
                   message: active.isNotEmpty
                       ? (isMalay
@@ -844,7 +845,7 @@ class _DailyStrip extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isMalay ? 'Misi Hari Ini' : "Today's Quests",
+                    AppText.ui('todaysQuests', progress.language),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -891,6 +892,9 @@ class _QuestsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+      ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppTheme.nightSurfaceHi, AppTheme.nightDeep],
@@ -901,7 +905,7 @@ class _QuestsSheet extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -920,7 +924,7 @@ class _QuestsSheet extends StatelessWidget {
                   const Text('🎯', style: TextStyle(fontSize: 22)),
                   const SizedBox(width: 8),
                   Text(
-                    isMalay ? 'Misi Hari Ini' : "Today's Quests",
+                    AppText.ui('todaysQuests', progress.language),
                     style: const TextStyle(
                       color: AppTheme.onNight,
                       fontSize: 18,
@@ -1123,26 +1127,26 @@ class _BottomBar extends ConsumerWidget {
     final items = [
       _NavItem(
         icon: Icons.map_rounded,
-        label: isMalay ? 'Peta' : 'Map',
+        label: AppText.ui('navHome', progress.language),
         selected: true,
         onTap: onHome,
       ),
       _NavItem(
         icon: Icons.insights_rounded,
-        label: isMalay ? 'Kemajuan' : 'Progress',
+        label: AppText.ui('navProgress', progress.language),
         selected: false,
         onTap: () => Navigator.of(context).pushNamed(ProgressScreen.routeName),
       ),
       _NavItem(
         icon: voiceEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-        label: isMalay ? 'Suara' : 'Voice',
+        label: AppText.ui('navVoice', progress.language),
         selected: voiceEnabled,
         isToggle: true,
         onTap: () => progress.setVoiceEnabled(!voiceEnabled),
       ),
       _NavItem(
         icon: Icons.settings_rounded,
-        label: isMalay ? 'Tetapan' : 'Settings',
+        label: AppText.ui('navSettings', progress.language),
         selected: false,
         onTap: () =>
             Navigator.of(context).pushNamed(ParentGateScreen.routeName),

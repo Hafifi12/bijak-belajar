@@ -79,8 +79,9 @@ class _SplashScreenState extends State<SplashScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (const String.fromEnvironment('FLUTTER_TEST', defaultValue: 'false') ==
-          'true')
+          'true') {
         return;
+      }
 
       _floatCtrl.repeat(reverse: true);
       _pulseCtrl.repeat(reverse: true);
@@ -117,8 +118,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _goToHome() {
     _autoNavTimer?.cancel();
-    if (mounted)
+    if (mounted) {
       Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+    }
   }
 
   @override
@@ -596,7 +598,7 @@ class _LetsLearnButton extends StatelessWidget {
                   Text('🚀', style: TextStyle(fontSize: 28)),
                   SizedBox(width: 12),
                   Text(
-                    "Jom Belajar!",
+                    'Jom Belajar!',
                     style: TextStyle(
                       color: AppTheme.ink,
                       fontSize: 26,

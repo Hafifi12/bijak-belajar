@@ -16,7 +16,7 @@ extension MemoryStageDetails on MemoryStage {
       case MemoryStage.medium:
         return 5;
       case MemoryStage.high:
-        return 10;
+        return 6;
     }
   }
 

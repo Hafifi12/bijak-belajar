@@ -46,9 +46,7 @@ void main() {
         overrides: [
           progressServiceProvider.overrideWith((ref) => progressService),
         ],
-        child: const TinyFinderApp(
-          initialRoute: HomeScreen.routeName,
-        ),
+        child: const TinyFinderApp(initialRoute: HomeScreen.routeName),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));
@@ -61,7 +59,7 @@ void main() {
     await pumpAppAndOpenHome(tester, progressService);
 
     // The home is now a zone-based adventure map with a bottom nav.
-    expect(find.text('Map'), findsOneWidget); // bottom-nav "Peta"/"Map"
+    expect(find.text('Home'), findsOneWidget); // localized home navigation
     expect(find.textContaining('Number'), findsWidgets); // Number Bazaar zone
     expect(find.textContaining('Letter'), findsWidgets); // Letter Village zone
   });

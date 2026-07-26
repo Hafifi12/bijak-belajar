@@ -429,7 +429,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
   void _goHome(BuildContext context) {
     Navigator.of(
       context,
-    ).popUntil((route) => route.settings.name == HomeScreen.routeName);
+    ).pushNamedAndRemoveUntil(HomeScreen.routeName, (route) => false);
   }
 
   void _playAgain(BuildContext context, RewardArgs? args) {
@@ -437,9 +437,11 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
       _goHome(context);
       return;
     }
-    final navigator = Navigator.of(context);
-    navigator.popUntil((route) => route.settings.name == HomeScreen.routeName);
-    navigator.pushNamed(args.nextRoute, arguments: args.nextArguments);
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      args.nextRoute,
+      (route) => false,
+      arguments: args.nextArguments,
+    );
   }
 }
 

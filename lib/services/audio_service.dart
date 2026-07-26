@@ -5,7 +5,7 @@ import '../models/app_language.dart';
 
 /// Central audio service.
 ///
-/// TTS is handled by [flutter_tts] (offline, zero LLM calls).
+/// TTS is handled by the flutter_tts package (offline, zero LLM calls).
 /// Sound effects fall back to [SystemSound] if no native effect channel is
 /// available — safe for offline use.
 class AudioService {
@@ -18,9 +18,9 @@ class AudioService {
   Future<void> _ensureReady() async {
     if (_ttsReady) return;
     _ttsReady = true;
-    await _tts.setSpeechRate(0.45);   // slightly slow — easier for young kids
+    await _tts.setSpeechRate(0.45); // slightly slow — easier for young kids
     await _tts.setVolume(1.0);
-    await _tts.setPitch(1.2);         // slightly higher — friendlier feel
+    await _tts.setPitch(1.2); // slightly higher — friendlier feel
     await _tts.awaitSpeakCompletion(true);
   }
 
@@ -70,7 +70,8 @@ class AudioService {
         return null;
       }
 
-      result = firstWhereLocale((l) => l == want) ??
+      result =
+          firstWhereLocale((l) => l == want) ??
           firstWhereLocale((l) => l.split('-').first == wantLang);
 
       // Malay-specific rescue: an Indonesian voice over an English default.

@@ -11,7 +11,6 @@ import '../widgets/bijak_scene.dart';
 import '../widgets/pressable.dart';
 import '../widgets/star_counter.dart';
 import '../widgets/xp_popup.dart';
-import '../widgets/zara_prompt.dart';
 
 /// Belajar Anggota Badan — Learn Body Parts
 /// Malaysian kindergarten style for preschool children.
@@ -25,12 +24,9 @@ class LearnBodyPartsScreen extends ConsumerStatefulWidget {
       _LearnBodyPartsScreenState();
 }
 
-class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
-    with TickerProviderStateMixin {
+class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
   int _current = 0;
   bool _recordedInitial = false;
-  late AnimationController _bounceController;
-  late Animation<double> _bounceAnim;
 
   static const _parts = <_BodyPart>[
     _BodyPart(
@@ -204,26 +200,6 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _bounceController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _bounceAnim = Tween<double>(begin: 1.0, end: 1.18).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _bounceController.dispose();
-    super.dispose();
-  }
-
-  Color get _color => _parts[_current].color;
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_recordedInitial) {
@@ -235,7 +211,6 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
   void _next() {
     if (_current < _parts.length - 1) {
       setState(() => _current++);
-      _bounceController.forward(from: 0);
       _recordCurrentLesson();
     }
   }
@@ -243,7 +218,6 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
   void _prev() {
     if (_current > 0) {
       setState(() => _current--);
-      _bounceController.forward(from: 0);
       _recordCurrentLesson();
     }
   }
@@ -253,7 +227,6 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
       return;
     }
     setState(() => _current = index);
-    _bounceController.forward(from: 0);
     _recordCurrentLesson();
   }
 
@@ -388,15 +361,17 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
     );
   }
 
+  void _finishLesson() {
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final language = ref.watch(progressServiceProvider).language;
     final item = _parts[_current];
-    final color = _color;
     final isMalay = language == AppLanguage.malay;
     final isFirst = _current == 0;
     final isLast = _current == _parts.length - 1;
-    final mainWord = item.wordFor(language);
 
     return Scaffold(
       backgroundColor: AppTheme.nightMid,
@@ -409,42 +384,23 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           tooltip: isMalay ? 'Kembali' : 'Back',
         ),
-        // Hero continues the emoji "flight" from the Learning Path card.
-        title: Row(
+        titleSpacing: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Hero(
-              tag: 'module-emoji-${LearnBodyPartsScreen.routeName}',
-              child: const Text('🧍', style: TextStyle(fontSize: 24)),
+            Text(
+              isMalay ? 'Anggota Badan' : 'Body Parts',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
             ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    isMalay ? 'Anggota Badan' : 'Body Parts',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    isMalay
-                        ? 'Bahagian ${_current + 1} dari ${_parts.length}'
-                        : 'Part ${_current + 1} of ${_parts.length}',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white70,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+            Text(
+              isMalay
+                  ? 'Bahagian ${_current + 1} daripada ${_parts.length}'
+                  : 'Part ${_current + 1} of ${_parts.length}',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -461,11 +417,11 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
         bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
+          top: false,
           child: Column(
             children: [
-              // Progress bar + counter pill
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
                 child: Row(
                   children: [
                     Expanded(
@@ -473,8 +429,8 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                         borderRadius: BorderRadius.circular(999),
                         child: LinearProgressIndicator(
                           value: (_current + 1) / _parts.length,
-                          minHeight: 13,
-                          backgroundColor: Colors.white,
+                          minHeight: 10,
+                          backgroundColor: Colors.white24,
                           valueColor: const AlwaysStoppedAnimation<Color>(
                             AppTheme.sunnyYellow,
                           ),
@@ -482,254 +438,182 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.deepBlue,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Text(
-                        '${_current + 1}/${_parts.length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
+                    Text(
+                      '${_current + 1} / ${_parts.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // ── Zara asks the question ─────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ZaraPrompt(
-                  message: isMalay
-                      ? 'Anggota badan apakah ini? Tunjuk & sebut!'
-                      : 'Which body part is this? Point & say it!',
-                  sub: isMalay
-                      ? 'Tunjuk pada badan kamu! ${item.fun}'
-                      : 'Point to yours! ${item.funEnglish}',
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // White content container
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Colors.white, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.deepBlue.withValues(alpha: 0.14),
-                          blurRadius: 18,
-                          offset: const Offset(0, 9),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                  child: Column(
+                    children: [
+                      _DoctorBodyChart(
+                        key: const Key('body-anatomy-stage'),
+                        parts: _parts,
+                        selectedIndex: _doctorSaysActive ? -1 : _current,
+                        language: language,
+                        gameTarget: _doctorSaysActive ? _dsTarget : null,
+                        onSelect: _doctorSaysActive
+                            ? _handleDoctorTap
+                            : _goToPart,
+                      ),
+                      const SizedBox(height: 12),
+                      if (_doctorSaysActive)
+                        _DoctorSaysBar(
+                          active: true,
+                          round: _dsRound,
+                          total: _dsTotalRounds,
+                          targetWord: _dsTarget >= 0
+                              ? (isMalay
+                                    ? _parts[_dsTarget].malay
+                                    : _parts[_dsTarget].english)
+                              : null,
+                          lastCorrect: _dsLastTapCorrect,
+                          isMalay: isMalay,
+                          onStart: _startDoctorSays,
+                          onStop: _stopDoctorSays,
+                          onRepeat: _speakDoctorPrompt,
+                        )
+                      else ...[
+                        _BodyVocabularyCard(
+                          key: const Key('body-vocabulary-card'),
+                          part: item,
+                          language: language,
+                          onSpeak: _speakIn,
+                        ),
+                        const SizedBox(height: 12),
+                        _PartPickerStrip(
+                          parts: _parts,
+                          selectedIndex: _current,
+                          language: language,
+                          onSelect: _goToPart,
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: OutlinedButton.icon(
+                            key: const Key('body-doctor-says-button'),
+                            onPressed: _startDoctorSays,
+                            icon: const Icon(Icons.medical_services_rounded),
+                            label: Text(
+                              isMalay
+                                  ? 'Main “Doktor Kata”'
+                                  : 'Play “Doctor Says”',
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.deepBlue,
+                              backgroundColor: Colors.white,
+                              side: const BorderSide(
+                                color: AppTheme.sunnyYellow,
+                                width: 3,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
-                    ),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 16,
-                      ),
-                      child: Column(
-                        children: [
-                          // No constant pulse on the chart: the wobble made
-                          // the tap spots feel misaligned and hurt precision.
-                          ScaleTransition(
-                            scale: _bounceAnim,
-                            child: _DoctorBodyChart(
-                              parts: _parts,
-                              // No highlight during the game — it would
-                              // leak hints.
-                              selectedIndex: _doctorSaysActive ? -1 : _current,
-                              language: language,
-                              onSelect: _doctorSaysActive
-                                  ? (i) => _handleDoctorTap(i)
-                                  : _goToPart,
-                            ),
-                          ),
-
-                          const SizedBox(height: 10),
-                          _DoctorSaysBar(
-                            active: _doctorSaysActive,
-                            round: _dsRound,
-                            total: _dsTotalRounds,
-                            targetWord: _doctorSaysActive && _dsTarget >= 0
-                                ? (isMalay
-                                      ? _parts[_dsTarget].malay
-                                      : _parts[_dsTarget].english)
-                                : null,
-                            lastCorrect: _dsLastTapCorrect,
-                            isMalay: isMalay,
-                            onStart: _startDoctorSays,
-                            onStop: _stopDoctorSays,
-                            onRepeat: _speakDoctorPrompt,
-                          ),
-
-                          const SizedBox(height: 12),
-                          _PartPickerStrip(
-                            parts: _parts,
-                            selectedIndex: _current,
-                            language: language,
-                            onSelect: _goToPart,
-                          ),
-
-                          const SizedBox(height: 10),
-                          _SelectedPartPhotoCard(
-                            part: item,
-                            language: language,
-                          ),
-
-                          const SizedBox(height: 14),
-
-                          // Selected language word — BIG
-                          Text(
-                            mainWord,
-                            style: TextStyle(
-                              fontSize: 46,
-                              fontWeight: FontWeight.w900,
-                              color: color,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          if (mainWord != item.english)
-                            Text(
-                              item.english,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: color.withValues(alpha: 0.65),
-                              ),
-                            ),
-
-                          const SizedBox(height: 6),
-
-                          // All other languages — wrap so long Tamil/Mandarin
-                          // words reflow instead of overflowing the row.
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 8,
-                            runSpacing: 6,
-                            children: [
-                              _LangChip(
-                                flag: 'BM',
-                                text: item.malay,
-                                color: color,
-                              ),
-                              _LangChip(
-                                flag: '中',
-                                text: item.mandarin,
-                                color: color,
-                              ),
-                              _LangChip(
-                                flag: 'ID',
-                                text: item.indonesian,
-                                color: color,
-                              ),
-                              _LangChip(
-                                flag: 'த',
-                                text: item.tamil,
-                                color: color,
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Pronounce buttons
-                          _BodyPronounceButtons(
-                            onSpeak: _speakIn,
-                            item: item,
-                            color: color,
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
                 ),
               ),
-
-              const SizedBox(height: 10),
-
-              // Navigation buttons
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: isFirst ? null : _prev,
-                        icon: const Icon(Icons.arrow_back_ios_rounded),
-                        label: Text(
-                          isMalay ? 'Sebelum' : 'Back',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey.shade200,
-                          foregroundColor: Colors.grey.shade700,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
+              if (!_doctorSaysActive)
+                Container(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.nightMid.withValues(alpha: 0.98),
+                    border: const Border(
+                      top: BorderSide(color: Colors.white24),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: isLast ? null : _next,
-                        label: Text(
-                          isMalay ? 'Seterusnya' : 'Next',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        icon: const Icon(Icons.arrow_forward_ios_rounded),
-                        iconAlignment: IconAlignment.end,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.skyBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: SizedBox(
+                          height: 56,
+                          child: OutlinedButton.icon(
+                            key: const Key('body-back-button'),
+                            onPressed: isFirst ? null : _prev,
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
+                              size: 21,
+                            ),
+                            label: _ResponsiveButtonLabel(
+                              isMalay ? 'Sebelum' : 'Back',
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              foregroundColor: Colors.white,
+                              disabledForegroundColor: Colors.white38,
+                              side: BorderSide(
+                                color: isFirst
+                                    ? Colors.white24
+                                    : Colors.white54,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              if (isLast)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: Text(
-                    isMalay
-                        ? '🎉 Tahniah! Kamu dah kenal semua anggota badan! 🧍'
-                        : '🎉 Well done! You know all the body parts! 🧍',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.deepBlue,
-                    ),
-                    textAlign: TextAlign.center,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 6,
+                        child: SizedBox(
+                          height: 56,
+                          child: ElevatedButton.icon(
+                            key: const Key('body-next-button'),
+                            onPressed: isLast ? _finishLesson : _next,
+                            label: _ResponsiveButtonLabel(
+                              isLast
+                                  ? (isMalay ? 'Selesai' : 'Finish')
+                                  : (isMalay ? 'Seterusnya' : 'Next'),
+                            ),
+                            icon: Icon(
+                              isLast
+                                  ? Icons.check_circle_rounded
+                                  : Icons.arrow_forward_rounded,
+                            ),
+                            iconAlignment: IconAlignment.end,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isLast
+                                  ? AppTheme.leafGreen
+                                  : AppTheme.skyBlue,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
             ],
@@ -740,238 +624,65 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
   }
 }
 
-class _DoctorBodyChart extends ConsumerWidget {
-  const _DoctorBodyChart({
-    required this.parts,
-    required this.selectedIndex,
-    required this.language,
-    required this.onSelect,
-  });
+class _ResponsiveButtonLabel extends StatelessWidget {
+  const _ResponsiveButtonLabel(this.text);
 
-  final List<_BodyPart> parts;
-  final int selectedIndex;
-  final AppLanguage language;
-  final ValueChanged<int> onSelect;
-
-  // Each part has an anatomical TARGET point (tx, ty) measured against the
-  // body_parts_doctor_photo.png asset (2:3 ratio, no crop shift), plus a side
-  // + slot for its label pin. Pins live in the left/right gutters and connect
-  // to the target with a leader-line arrow — so the cramped facial features
-  // (hair/head/eyes/nose/mouth/ears/teeth) never overlap each other.
-  // Slots are spaced ≥0.11 apart vertically so pins can't collide.
-  static const _spots = <_BodySpot>[
-    _BodySpot(0, 0.50, 0.125, _Side.left, 0.15), // Head (forehead)
-    _BodySpot(1, 0.50, 0.150, _Side.left, 0.27), // Eyes
-    _BodySpot(2, 0.50, 0.175, _Side.left, 0.39), // Nose
-    _BodySpot(3, 0.50, 0.205, _Side.left, 0.51), // Mouth
-    _BodySpot(4, 0.565, 0.160, _Side.right, 0.10), // Ears
-    _BodySpot(5, 0.49, 0.090, _Side.left, 0.04), // Hair (top of head)
-    _BodySpot(6, 0.50, 0.215, _Side.right, 0.22), // Teeth (in the smile)
-    _BodySpot(7, 0.615, 0.275, _Side.right, 0.34), // Shoulder
-    _BodySpot(8, 0.715, 0.520, _Side.right, 0.58), // Hands (open right palm)
-    _BodySpot(9, 0.285, 0.545, _Side.left, 0.63), // Fingers (left hand)
-    _BodySpot(10, 0.50, 0.420, _Side.right, 0.46), // Stomach
-    _BodySpot(11, 0.53, 0.760, _Side.right, 0.84), // Legs (shin)
-    _BodySpot(12, 0.55, 0.680, _Side.right, 0.72), // Knees
-    _BodySpot(13, 0.51, 0.930, _Side.left, 0.92), // Feet
-  ];
-
-  // Strip parenthetical romanisation so pins stay short, e.g.
-  // "头 (Tóu)" → "头", "தலை (Talai)" → "தலை".
-  static String _shortLabel(String raw) =>
-      raw.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+  final String text;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // selectedIndex == -1 → "Doctor says…" game mode: nothing highlighted and
-    // pins show no text, so the chart cannot leak the answer.
-    final bool gameMode = selectedIndex < 0;
-    final _BodyPart? selected =
-        (selectedIndex >= 0 && selectedIndex < parts.length)
-        ? parts[selectedIndex]
-        : null;
-    final accent = selected?.color ?? AppTheme.moduleBodyParts;
-
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 390),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FCFF),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: accent.withValues(alpha: 0.24)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.deepBlue.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              if (selected != null)
-                _BodyPartThumbnail(
-                  asset: selected.photoAsset,
-                  color: selected.color,
-                  size: 42,
-                )
-              else
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.14),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text('🩺', style: TextStyle(fontSize: 22)),
-                ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  language == AppLanguage.malay
-                      ? 'Ikut anak panah ke bahagian badan'
-                      : 'Follow the arrow to each body part',
-                  style: const TextStyle(
-                    color: AppTheme.ink,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          AspectRatio(
-            aspectRatio: 2 / 3,
-            // Pinch-zoom: pins + leader lines live inside the same transformed
-            // subtree, so they stay glued to the photo and remain tappable when
-            // zoomed. panEnabled stays false so one-finger drags still scroll.
-            child: InteractiveViewer(
-              maxScale: 3,
-              panEnabled: false,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final w = constraints.maxWidth;
-                  final h = constraints.maxHeight;
-
-                  // Build leader lines (target → gutter anchor) for the painter.
-                  final lines = <_LeaderLine>[
-                    for (final spot in _spots)
-                      _LeaderLine(
-                        target: Offset(spot.tx * w, spot.ty * h),
-                        anchor: Offset(
-                          spot.side == _Side.left ? 16 : w - 16,
-                          spot.slot * h,
-                        ),
-                        color: parts[spot.index].color,
-                        active: !gameMode && spot.index == selectedIndex,
-                      ),
-                  ];
-
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Positioned.fill(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Image.asset(
-                            'assets/images/body_parts_doctor_photo.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: accent.withValues(alpha: 0.38),
-                              width: 2,
-                            ),
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                AppTheme.deepBlue.withValues(alpha: 0.12),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Leader-line arrows drawn beneath the pins.
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            painter: _LeaderLinesPainter(lines: lines),
-                          ),
-                        ),
-                      ),
-                      // Label pins in the gutters — never overlap each other.
-                      for (final spot in _spots)
-                        Positioned(
-                          top: (spot.slot * h) - 15,
-                          left: spot.side == _Side.left ? 4 : null,
-                          right: spot.side == _Side.right ? 4 : null,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: w * 0.44),
-                            child: _BodyPin(
-                              color: parts[spot.index].color,
-                              label: _shortLabel(
-                                parts[spot.index].wordFor(language),
-                              ),
-                              active: !gameMode && spot.index == selectedIndex,
-                              gameMode: gameMode,
-                              onTap: () => onSelect(spot.index),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        text,
+        maxLines: 1,
+        softWrap: false,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
       ),
     );
   }
 }
 
-class _SelectedPartPhotoCard extends ConsumerWidget {
-  const _SelectedPartPhotoCard({required this.part, required this.language});
+class _BodyVocabularyCard extends StatelessWidget {
+  const _BodyVocabularyCard({
+    super.key,
+    required this.part,
+    required this.language,
+    required this.onSpeak,
+  });
 
   final _BodyPart part;
   final AppLanguage language;
+  final Future<void> Function(String, String) onSpeak;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final label = part.wordFor(language);
+  Widget build(BuildContext context) {
+    final word = part.wordFor(language);
+    final translations = <(String, String, String)>[
+      ('BM', part.malay, 'ms-MY'),
+      ('EN', part.english, 'en-US'),
+      ('中', part.mandarin, 'zh-CN'),
+      ('ID', part.indonesian, 'id-ID'),
+      ('த', part.tamil, 'ta-IN'),
+    ];
 
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(22),
-      elevation: 3,
-      shadowColor: part.color.withValues(alpha: 0.16),
-      child: InkWell(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        onTap: () => _showZoom(context, label),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: part.color.withValues(alpha: 0.20)),
-          ),
-          child: Row(
+        border: Border.all(color: part.color.withValues(alpha: 0.28), width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              _ExactBodyPartPhoto(
+              _BodyPartThumbnail(
                 asset: part.photoAsset,
                 color: part.color,
-                size: 104,
+                size: 58,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -979,33 +690,194 @@ class _SelectedPartPhotoCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      language == AppLanguage.malay
-                          ? 'Foto sebenar bahagian ini'
-                          : 'Real photo of this part',
-                      style: const TextStyle(
-                        color: Color(0xFF68789F),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      label,
+                      word,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: part.color,
-                        fontSize: 20,
+                        fontSize: 30,
+                        height: 1,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    if (word != part.english) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        part.english,
+                        style: const TextStyle(
+                          color: AppTheme.ink,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: IconButton.filled(
+                  onPressed: () => onSpeak(word, language.ttsLocale),
+                  tooltip: 'Pronounce $word',
+                  style: IconButton.styleFrom(backgroundColor: part.color),
+                  icon: const Icon(
+                    Icons.volume_up_rounded,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final entry in translations)
+                ActionChip(
+                  avatar: Text(
+                    entry.$1,
+                    style: TextStyle(
+                      color: part.color,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  label: Text(
+                    entry.$2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  onPressed: () => onSpeak(entry.$2, entry.$3),
+                  backgroundColor: part.color.withValues(alpha: 0.09),
+                  side: BorderSide(color: part.color.withValues(alpha: 0.22)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DoctorBodyChart extends StatelessWidget {
+  const _DoctorBodyChart({
+    super.key,
+    required this.parts,
+    required this.selectedIndex,
+    required this.language,
+    required this.onSelect,
+    this.gameTarget,
+  });
+
+  final List<_BodyPart> parts;
+  final int selectedIndex;
+  final AppLanguage language;
+  final ValueChanged<int> onSelect;
+  final int? gameTarget;
+
+  static const _spots = <_BodySpot>[
+    _BodySpot(0, 0.50, 0.125, _Side.left, 0.15),
+    _BodySpot(1, 0.50, 0.150, _Side.left, 0.27),
+    _BodySpot(2, 0.50, 0.175, _Side.left, 0.39),
+    _BodySpot(3, 0.50, 0.205, _Side.left, 0.51),
+    _BodySpot(4, 0.565, 0.160, _Side.right, 0.10),
+    _BodySpot(5, 0.49, 0.090, _Side.left, 0.04),
+    _BodySpot(6, 0.50, 0.215, _Side.right, 0.22),
+    _BodySpot(7, 0.615, 0.275, _Side.right, 0.34),
+    _BodySpot(8, 0.715, 0.520, _Side.right, 0.58),
+    _BodySpot(9, 0.285, 0.545, _Side.left, 0.63),
+    _BodySpot(10, 0.50, 0.420, _Side.right, 0.46),
+    _BodySpot(11, 0.53, 0.760, _Side.right, 0.84),
+    _BodySpot(12, 0.55, 0.680, _Side.right, 0.72),
+    _BodySpot(13, 0.51, 0.930, _Side.left, 0.92),
+  ];
+
+  static String _shortLabel(String raw) =>
+      raw.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+
+  void _selectNearest(Offset point, Size size) {
+    // One gesture surface owns the whole anatomy image. This deliberately avoids
+    // stacked hit regions around the face, where eyes, nose, mouth and teeth sit
+    // close together. The closest anatomical point always wins deterministically.
+    var nearest = _spots.first;
+    var distance = double.infinity;
+    for (final spot in _spots) {
+      final dx = point.dx - spot.tx * size.width;
+      final dy = point.dy - spot.ty * size.height;
+      final candidate = dx * dx + dy * dy;
+      if (candidate < distance) {
+        distance = candidate;
+        nearest = spot;
+      }
+    }
+    onSelect(nearest.index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gameMode = selectedIndex < 0;
+    final selected = !gameMode && selectedIndex < parts.length
+        ? parts[selectedIndex]
+        : null;
+    final accent = selected?.color ?? AppTheme.moduleBodyParts;
+    final isMalay = language == AppLanguage.malay;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FCFF),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: accent.withValues(alpha: 0.32), width: 2),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  gameMode
+                      ? Icons.medical_services_rounded
+                      : Icons.touch_app_rounded,
+                  color: accent,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      language == AppLanguage.malay
-                          ? 'Tekan untuk zum foto sebenar.'
-                          : 'Tap to zoom the real photo.',
+                      gameMode
+                          ? (isMalay
+                                ? 'Doktor kata: sentuh bahagian yang disebut'
+                                : 'Doctor says: touch the named body part')
+                          : (isMalay
+                                ? 'Tekan mana-mana bahagian badan'
+                                : 'Tap any body part'),
                       style: const TextStyle(
                         color: AppTheme.ink,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      isMalay
+                          ? 'Ikut anak panah atau pilih daripada senarai'
+                          : 'Follow the arrow or choose from the list',
+                      style: const TextStyle(
+                        color: Color(0xFF68789F),
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1013,84 +885,226 @@ class _SelectedPartPhotoCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: part.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: part.color.withValues(alpha: 0.28)),
-                ),
-                child: Text(
-                  language == AppLanguage.malay ? 'Zum' : 'Zoom',
-                  style: TextStyle(
-                    color: part.color,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
             ],
           ),
-        ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final imageWidth = min(220.0, constraints.maxWidth);
+              final imageSize = Size(imageWidth, imageWidth * 1.5);
+              return Center(
+                child: SizedBox(
+                  width: imageSize.width,
+                  height: imageSize.height,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTapUp: (details) =>
+                        _selectNearest(details.localPosition, imageSize),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(22),
+                            child: Image.asset(
+                              'assets/images/body_parts_doctor_photo.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: accent.withValues(alpha: 0.4),
+                                  width: 2,
+                                ),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    AppTheme.deepBlue.withValues(alpha: 0.12),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (selected != null)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: _SelectedPartPointer(
+                                spot: _spots[selectedIndex],
+                                text: _shortLabel(selected.wordFor(language)),
+                                color: selected.color,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
+}
 
-  void _showZoom(BuildContext context, String label) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return SafeArea(
-          child: Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.deepBlue.withValues(alpha: 0.18),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
+class _SelectedPartPointer extends StatelessWidget {
+  const _SelectedPartPointer({
+    required this.spot,
+    required this.text,
+    required this.color,
+  });
+
+  final _BodySpot spot;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const labelWidth = 92.0;
+        const labelHeight = 34.0;
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        final labelLeft = spot.side == _Side.left
+            ? 8.0
+            : size.width - labelWidth - 8;
+        final labelTop = (spot.slot * size.height - labelHeight / 2).clamp(
+          8.0,
+          size.height - labelHeight - 8,
+        );
+        final labelCenter = Offset(
+          labelLeft + labelWidth / 2,
+          labelTop + labelHeight / 2,
+        );
+        final target = Offset(spot.tx * size.width, spot.ty * size.height);
+
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _BodyPartArrowPainter(
+                  start: labelCenter,
+                  target: target,
+                  color: color,
                 ),
-              ],
+              ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          color: part.color,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _ExactBodyPartPhoto(
-                  asset: part.photoAsset,
-                  color: part.color,
-                  size: 260,
-                ),
-              ],
+            Positioned(
+              left: labelLeft,
+              top: labelTop,
+              child: _PartNameTag(text: text, color: color, width: labelWidth),
             ),
-          ),
+          ],
         );
       },
+    );
+  }
+}
+
+class _BodyPartArrowPainter extends CustomPainter {
+  const _BodyPartArrowPainter({
+    required this.start,
+    required this.target,
+    required this.color,
+  });
+
+  final Offset start;
+  final Offset target;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final delta = target - start;
+    final length = delta.distance;
+    if (length == 0) return;
+
+    final direction = delta / length;
+    final normal = Offset(-direction.dy, direction.dx);
+    final arrowBase = target - direction * 12;
+    final outline = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 7
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final line = Paint()
+      ..color = color
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawLine(start, arrowBase, outline);
+    canvas.drawLine(start, arrowBase, line);
+
+    final arrow = Path()
+      ..moveTo(target.dx, target.dy)
+      ..lineTo(arrowBase.dx + normal.dx * 7, arrowBase.dy + normal.dy * 7)
+      ..lineTo(arrowBase.dx - normal.dx * 7, arrowBase.dy - normal.dy * 7)
+      ..close();
+    canvas.drawPath(arrow, Paint()..color = Colors.white);
+    canvas.drawPath(
+      arrow,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BodyPartArrowPainter oldDelegate) =>
+      oldDelegate.start != start ||
+      oldDelegate.target != target ||
+      oldDelegate.color != color;
+}
+
+/// Floating name label for the current body part, shown just above its hotspot.
+class _PartNameTag extends StatelessWidget {
+  const _PartNameTag({
+    required this.text,
+    required this.color,
+    required this.width,
+  });
+
+  final String text;
+  final Color color;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.5),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
     );
   }
 }
@@ -1178,161 +1192,6 @@ class _BodySpot {
   final double ty; // anatomical target y (0..1 of height)
   final _Side side; // which gutter the label pin sits in
   final double slot; // label pin vertical centre (0..1 of height)
-}
-
-/// A label pin shown in the gutter. In learn mode it shows a coloured dot + the
-/// part name (the active part is filled). In the "Doctor Says" game it shows a
-/// plain coloured dot only — no text — so the chart never reveals the answer.
-class _BodyPin extends StatelessWidget {
-  const _BodyPin({
-    required this.color,
-    required this.label,
-    required this.active,
-    required this.gameMode,
-    required this.onTap,
-  });
-
-  final Color color;
-  final String label;
-  final bool active;
-  final bool gameMode;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: gameMode ? null : label,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: gameMode
-                ? const EdgeInsets.all(5)
-                : const EdgeInsets.fromLTRB(6, 5, 10, 5),
-            decoration: BoxDecoration(
-              color: active ? color : Colors.white,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: active ? Colors.white : color,
-                width: active ? 2.5 : 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: active ? 0.40 : 0.16),
-                  blurRadius: active ? 12 : 6,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: active ? 14 : 12,
-                  height: active ? 14 : 12,
-                  decoration: BoxDecoration(
-                    color: active ? Colors.white : color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                if (!gameMode) ...[
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: false,
-                      style: TextStyle(
-                        color: active ? Colors.white : AppTheme.ink,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LeaderLine {
-  const _LeaderLine({
-    required this.target,
-    required this.anchor,
-    required this.color,
-    required this.active,
-  });
-
-  final Offset target; // arrowhead tip — the exact body part
-  final Offset anchor; // gutter end, tucked under the pin
-  final Color color;
-  final bool active;
-}
-
-/// Draws the leader lines + arrowheads from each gutter pin to its body part.
-class _LeaderLinesPainter extends CustomPainter {
-  const _LeaderLinesPainter({required this.lines});
-
-  final List<_LeaderLine> lines;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Draw inactive lines first so the active arrow sits on top.
-    final ordered = [
-      ...lines.where((l) => !l.active),
-      ...lines.where((l) => l.active),
-    ];
-    for (final l in ordered) {
-      final lineColor = l.color.withValues(alpha: l.active ? 0.95 : 0.45);
-      final stroke = Paint()
-        ..color = lineColor
-        ..strokeWidth = l.active ? 3.2 : 1.6
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke;
-      canvas.drawLine(l.anchor, l.target, stroke);
-
-      final dir = l.target - l.anchor;
-      final len = dir.distance == 0 ? 1.0 : dir.distance;
-      final ux = dir.dx / len;
-      final uy = dir.dy / len;
-      final head = l.active ? 12.0 : 7.0;
-      final half = l.active ? 6.5 : 4.0;
-      final base = Offset(l.target.dx - ux * head, l.target.dy - uy * head);
-      final perpX = -uy;
-      final perpY = ux;
-      final tri = Path()
-        ..moveTo(l.target.dx, l.target.dy)
-        ..lineTo(base.dx + perpX * half, base.dy + perpY * half)
-        ..lineTo(base.dx - perpX * half, base.dy - perpY * half)
-        ..close();
-      canvas.drawPath(tri, Paint()..color = lineColor);
-
-      // Small ringed dot exactly on the body part.
-      final dotR = l.active ? 4.5 : 2.6;
-      canvas.drawCircle(l.target, dotR, Paint()..color = Colors.white);
-      canvas.drawCircle(
-        l.target,
-        dotR,
-        Paint()
-          ..color = lineColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _LeaderLinesPainter oldDelegate) => true;
 }
 
 // Kept as a code-native fallback if the photo asset is unavailable in a future
@@ -1703,199 +1562,6 @@ class _PartPickerStrip extends ConsumerWidget {
 }
 
 /// Small chip showing a flag + translated word.
-class _LangChip extends ConsumerWidget {
-  const _LangChip({
-    required this.flag,
-    required this.text,
-    required this.color,
-  });
-
-  final String flag;
-  final String text;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ConstrainedBox(
-      // Never let a single chip grow wider than the screen.
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.sizeOf(context).width - 56,
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(50),
-          border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              flag,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: color,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                text,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BodyPronounceButtons extends ConsumerWidget {
-  const _BodyPronounceButtons({
-    required this.onSpeak,
-    required this.item,
-    required this.color,
-  });
-
-  final Future<void> Function(String word, String locale) onSpeak;
-  final _BodyPart item;
-  final Color color;
-
-  // Language tags only — no country flags (Malaysian community languages).
-  static const _langs = [
-    (label: 'BM', locale: 'ms-MY'),
-    (label: 'EN', locale: 'en-US'),
-    (label: '中文', locale: 'zh-CN'),
-    (label: 'ID', locale: 'id-ID'),
-    (label: 'தமிழ்', locale: 'ta-IN'),
-  ];
-
-  String _wordFor(String locale) {
-    final raw = switch (locale) {
-      'ms-MY' => item.malay,
-      'en-US' => item.english,
-      'zh-CN' => item.mandarin,
-      'id-ID' => item.indonesian,
-      'ta-IN' => item.tamil,
-      _ => item.english,
-    };
-    // Strip parenthetical romanisation (e.g. "头 (Tóu)" → "头",
-    // "தலை (Talai)" → "தலை") so TTS engines only receive the target script.
-    return raw.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            ref.watch(progressServiceProvider).language == AppLanguage.malay
-                ? '🔊 Sebut dalam:'
-                : '🔊 Say it in:',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _langs.map((l) {
-            return Material(
-              color: color.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(50),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(50),
-                onTap: () => onSpeak(_wordFor(l.locale), l.locale),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.35),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l.label,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: color,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.volume_up_rounded, size: 15, color: color),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-}
-
-class _BodyPart {
-  const _BodyPart({
-    required this.malay,
-    required this.english,
-    required this.indonesian,
-    required this.mandarin,
-    required this.tamil,
-    required this.emoji,
-    required this.bodyEmoji,
-    required this.fun,
-    required this.color,
-    required this.photoAsset,
-  });
-
-  final String malay;
-  final String english;
-  final String indonesian;
-  final String mandarin;
-  final String tamil;
-  final String emoji;
-  final String bodyEmoji;
-  final String fun;
-  final Color color;
-  final String photoAsset;
-
-  String wordFor(AppLanguage language) {
-    return switch (language) {
-      AppLanguage.malay => malay,
-      AppLanguage.english => english,
-      AppLanguage.mandarin => mandarin,
-      AppLanguage.tamil => tamil,
-      AppLanguage.indonesian => indonesian,
-    };
-  }
-
-  String get funEnglish => 'Say "$english" and point gently.';
-}
-
 // ── "Doctor says…" control bar ───────────────────────────────────────────────
 class _DoctorSaysBar extends StatelessWidget {
   const _DoctorSaysBar({
@@ -2043,4 +1709,42 @@ class _DoctorSaysBar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _BodyPart {
+  const _BodyPart({
+    required this.malay,
+    required this.english,
+    required this.indonesian,
+    required this.mandarin,
+    required this.tamil,
+    required this.emoji,
+    required this.bodyEmoji,
+    required this.fun,
+    required this.color,
+    required this.photoAsset,
+  });
+
+  final String malay;
+  final String english;
+  final String indonesian;
+  final String mandarin;
+  final String tamil;
+  final String emoji;
+  final String bodyEmoji;
+  final String fun;
+  final Color color;
+  final String photoAsset;
+
+  String wordFor(AppLanguage language) {
+    return switch (language) {
+      AppLanguage.malay => malay,
+      AppLanguage.english => english,
+      AppLanguage.mandarin => mandarin,
+      AppLanguage.tamil => tamil,
+      AppLanguage.indonesian => indonesian,
+    };
+  }
+
+  String get funEnglish => 'Say "$english" and point gently.';
 }

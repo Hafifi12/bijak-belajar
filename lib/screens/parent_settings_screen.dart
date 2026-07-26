@@ -177,19 +177,21 @@ class ParentSettingsScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(AppText.ui('selectLanguage', progress.language)),
-        content: RadioGroup<AppLanguage>(
-          groupValue: progress.language,
-          onChanged: (value) => Navigator.of(dialogContext).pop(value),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final language in AppLanguage.values)
-                RadioListTile<AppLanguage>(
-                  value: language,
-                  title: Text(language.nativeName),
-                  subtitle: Text(language.displayName),
-                ),
-            ],
+        content: SingleChildScrollView(
+          child: RadioGroup<AppLanguage>(
+            groupValue: progress.language,
+            onChanged: (value) => Navigator.of(dialogContext).pop(value),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final language in AppLanguage.values)
+                  RadioListTile<AppLanguage>(
+                    value: language,
+                    title: Text(language.nativeName),
+                    subtitle: Text(language.displayName),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
