@@ -7,7 +7,6 @@ import '../providers/app_state.dart';
 
 import '../models/badge.dart';
 import '../theme/app_theme.dart';
-import '../utils/app_text.dart';
 import 'home_screen.dart';
 
 class RewardArgs {
@@ -24,6 +23,9 @@ class RewardArgs {
   final FinderBadge? badge;
 }
 
+/// The emotional peak of a session — "Lesson Complete". A star-burst, Zara the
+/// owl reacting with praise, the rewards earned, and a story-style track that
+/// shows how close the child is to the next level, all forward-first.
 class RewardScreen extends ConsumerStatefulWidget {
   const RewardScreen({super.key});
   static const routeName = '/reward';
@@ -33,10 +35,12 @@ class RewardScreen extends ConsumerStatefulWidget {
 }
 
 class _RewardScreenState extends ConsumerState<RewardScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final ConfettiController _confettiController;
   late final AnimationController _scaleCtrl;
+  late final AnimationController _zaraCtrl;
   late final Animation<double> _scale;
+  late final Animation<double> _zaraScale;
 
   @override
   void initState() {
@@ -49,12 +53,21 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
       duration: const Duration(milliseconds: 700),
     )..forward();
     _scale = CurvedAnimation(parent: _scaleCtrl, curve: Curves.elasticOut);
+    _zaraCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _zaraScale = CurvedAnimation(parent: _zaraCtrl, curve: Curves.elasticOut);
+    Future.delayed(const Duration(milliseconds: 320), () {
+      if (mounted) _zaraCtrl.forward();
+    });
   }
 
   @override
   void dispose() {
     _confettiController.dispose();
     _scaleCtrl.dispose();
+    _zaraCtrl.dispose();
     super.dispose();
   }
 
@@ -64,205 +77,290 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
     final badge = args?.badge;
     final progress = ref.watch(progressServiceProvider);
     final language = progress.language;
-    final isMalay = progress.language.name == 'malay';
+    final isMalay = language.name == 'malay';
+    final level = progress.currentLevel;
+    final modeLabel = args?.modeLabel ?? 'Bijak Belajar';
+
+    final frac = level.progressFraction(progress.stars).clamp(0.0, 1.0);
+    final toNext = level.starsToNext(progress.stars);
+    final maxed = level.maxStars < 0;
 
     return Scaffold(
       body: Stack(
         alignment: Alignment.topCenter,
         children: [
-          // ── Gradient background ──
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF0A1F6B), Color(0xFF1565C0), AppTheme.skyBlue],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+          // ── Radial night-violet backdrop ──
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment(0, -0.45),
+                radius: 1.15,
+                colors: [Color(0xFF2D1060), Color(0xFF0A0F1E)],
               ),
             ),
+            child: SizedBox.expand(),
           ),
-
-          // ── Floating stars ──
           ..._buildBgStars(),
 
           // ── Content ──
           SafeArea(
-            child: ScaleTransition(
-              scale: _scale,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
-                children: [
-                  // Top close button
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: GestureDetector(
-                      onTap: () => _goHome(context),
-                      child: Container(
-                        width: 36, height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ── Trophy animation ──
-                  Center(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 36),
+              children: [
+                // Close
+                Align(
+                  alignment: Alignment.topRight,
+                  child: GestureDetector(
+                    onTap: () => _goHome(context),
                     child: Container(
-                      width: 140, height: 140,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.sunnyYellow, width: 4),
-                        boxShadow: [BoxShadow(color: AppTheme.sunnyYellow.withValues(alpha: 0.5), blurRadius: 40, spreadRadius: 5)],
                       ),
-                      child: Center(
-                        child: Text(
-                          badge != null ? '🏅' : '⭐',
-                          style: const TextStyle(fontSize: 72),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Star burst + complete badge ──
+                ScaleTransition(
+                  scale: _scale,
+                  child: Column(
+                    children: [
+                      Text(
+                        badge != null ? '🏅' : '⭐⭐⭐',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: badge != null ? 74 : 46,
+                          letterSpacing: 2,
+                          shadows: [
+                            Shadow(
+                              color: AppTheme.gold.withValues(alpha: 0.85),
+                              blurRadius: 26,
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppTheme.gold, AppTheme.ember],
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.ember.withValues(alpha: 0.5),
+                              blurRadius: 18,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          badge != null
+                              ? (isMalay ? '🎉 LENCANA BARU!' : '🎉 NEW BADGE!')
+                              : (isMalay
+                                    ? '🎉 PELAJARAN SELESAI!'
+                                    : '🎉 LESSON COMPLETE!'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
 
-                  const SizedBox(height: 24),
+                const SizedBox(height: 22),
 
-                  // ── Heading ──
-                  Text(
-                    badge == null
-                        ? (isMalay ? 'Tahniah! 🎉' : 'Well Done! 🎉')
-                        : (isMalay ? 'Lencana Baru! 🏅' : 'New Badge! 🏅'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppTheme.sunnyYellow,
-                      fontSize: 38,
-                      fontWeight: FontWeight.w900,
-                      shadows: [Shadow(color: Color(0x55000000), blurRadius: 8, offset: Offset(0, 4))],
-                    ),
+                // ── Zara reacts ──
+                ScaleTransition(
+                  scale: _zaraScale,
+                  child: Column(
+                    children: [
+                      const Text('🦉', style: TextStyle(fontSize: 62)),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.10),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
+                            bottomLeft: Radius.circular(4),
+                            bottomRight: Radius.circular(16),
+                          ),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              badge != null
+                                  ? (isMalay
+                                        ? 'Wah! Kamu buka lencana baru! 🌟'
+                                        : 'Wow! You unlocked a new badge! 🌟')
+                                  : (isMalay
+                                        ? 'Hebat sekali! Kamu selesai $modeLabel!'
+                                        : 'Amazing! You finished $modeLabel!'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              _encouragement(progress.stars, isMalay),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    badge == null
-                        ? '${AppText.ui('greatWorkIn', language)} ${args?.modeLabel ?? 'Bijak Belajar'}!'
-                        : '${badge.title}: ${badge.description}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      height: 1.4,
+                ),
+
+                const SizedBox(height: 18),
+
+                // ── Reward chips ──
+                Row(
+                  children: [
+                    Expanded(
+                      child: _RewardChip(
+                        icon: '⭐',
+                        value: '${progress.stars}',
+                        label: isMalay ? 'Bintang' : 'Stars',
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _RewardChip(
+                        icon: '🔥',
+                        value: '${progress.currentStreak}',
+                        label: isMalay ? 'Streak' : 'Streak',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _RewardChip(
+                        icon: level.emoji,
+                        value: '${level.level}',
+                        label: isMalay ? 'Tahap' : 'Level',
+                      ),
+                    ),
+                  ],
+                ),
 
-                  const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
-                  // ── Star counter card ──
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                // ── Level "story" track ──
+                _LevelTrack(
+                  isMalay: isMalay,
+                  fraction: frac.toDouble(),
+                  starsToNext: toNext,
+                  nextLevel: level.level + 1,
+                  maxed: maxed,
+                  levelTitle: isMalay ? level.titleMalay : level.title,
+                ),
+
+                const SizedBox(height: 22),
+
+                // ── Buttons (forward-first) ──
+                GestureDetector(
+                  onTap: () => _playAgain(context, args),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                      gradient: const LinearGradient(
+                        colors: [AppTheme.violet, AppTheme.lilac],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.violet.withValues(alpha: 0.6),
+                          blurRadius: 22,
+                          offset: const Offset(0, 7),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('⭐', style: TextStyle(fontSize: 32)),
+                        const Text('🚀', style: TextStyle(fontSize: 22)),
                         const SizedBox(width: 10),
-                        Column(
-                          children: [
-                            Text(
-                              '${progress.stars}',
-                              style: const TextStyle(color: AppTheme.sunnyYellow, fontSize: 32, fontWeight: FontWeight.w900),
-                            ),
-                            Text(
-                              isMalay ? 'jumlah bintang' : 'total stars',
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12, fontWeight: FontWeight.w700),
-                            ),
-                          ],
+                        Text(
+                          isMalay
+                              ? 'Teruskan Pengembaraan!'
+                              : 'Continue the Adventure!',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 32),
-
-                  // ── Encouragement message ──
-                  Container(
-                    padding: const EdgeInsets.all(16),
+                ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () => _goHome(context),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      _encouragement(progress.stars, isMalay),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // ── Action buttons ──
-                  GestureDetector(
-                    onTap: () => _playAgain(context, args),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppTheme.sunnyYellow, Color(0xFFFFB300)],
-                        ),
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: [BoxShadow(color: AppTheme.sunnyYellow.withValues(alpha: 0.6), blurRadius: 20, offset: const Offset(0, 6))],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('🚀', style: TextStyle(fontSize: 24)),
-                          const SizedBox(width: 10),
-                          Text(
-                            AppText.ui('playAgain', language),
-                            style: const TextStyle(color: AppTheme.ink, fontSize: 20, fontWeight: FontWeight.w900),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: () => _goHome(context),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
                         color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.home_rounded, color: Colors.white, size: 22),
-                          const SizedBox(width: 8),
-                          Text(
-                            AppText.ui('home', language),
-                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
-                          ),
-                        ],
                       ),
                     ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('🗺️', style: TextStyle(fontSize: 17)),
+                        const SizedBox(width: 8),
+                        Text(
+                          isMalay ? 'Kembali ke Peta' : 'Back to Map',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 
@@ -276,7 +374,13 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
               emissionFrequency: 0.06,
               numberOfParticles: 20,
               gravity: 0.2,
-              colors: const [AppTheme.sunnyYellow, Colors.white, AppTheme.turquoise, AppTheme.appleRed, AppTheme.leafGreen],
+              colors: const [
+                AppTheme.gold,
+                AppTheme.lilac,
+                AppTheme.coral,
+                AppTheme.turquoise,
+                Colors.white,
+              ],
             ),
           ),
         ],
@@ -285,34 +389,242 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
   }
 
   String _encouragement(int stars, bool isMalay) {
-    if (stars < 5) return isMalay ? '🌱 Permulaan yang hebat! Teruskan belajar setiap hari!' : '🌱 Great start! Keep learning every day!';
-    if (stars < 20) return isMalay ? '🌟 Kamu semakin bijak! Setiap bintang = ilmu baru!' : '🌟 You\'re getting smarter! Every star = new knowledge!';
-    if (stars < 50) return isMalay ? '🏅 Pelajar yang cemerlang! Ibu bapa bangga dengan kamu!' : '🏅 Excellent learner! Your parents are proud of you!';
-    return isMalay ? '🏆 WOW! Kamu seorang bintang belajar sejati! Luar biasa!' : '🏆 WOW! You\'re a true learning star! Incredible!';
+    if (stars < 5) {
+      return isMalay
+          ? 'Permulaan yang hebat — teruskan!'
+          : 'A great start — keep going!';
+    }
+    if (stars < 20) {
+      return isMalay
+          ? 'Kamu semakin bijak setiap hari!'
+          : "You're getting smarter every day!";
+    }
+    if (stars < 50) {
+      return isMalay
+          ? 'Pelajar yang cemerlang!'
+          : "You're an excellent learner!";
+    }
+    return isMalay
+        ? 'Kamu bintang belajar sejati!'
+        : "You're a true learning star!";
   }
 
   List<Widget> _buildBgStars() {
     final rng = math.Random(42);
-    return List.generate(12, (i) {
+    return List.generate(14, (i) {
       return Positioned(
         left: rng.nextDouble() * 400,
         top: rng.nextDouble() * 800,
         child: Opacity(
-          opacity: 0.08 + rng.nextDouble() * 0.12,
-          child: Text('⭐', style: TextStyle(fontSize: 20 + rng.nextDouble() * 20)),
+          opacity: 0.08 + rng.nextDouble() * 0.14,
+          child: Text(
+            i.isEven ? '⭐' : '✨',
+            style: TextStyle(fontSize: 14 + rng.nextDouble() * 20),
+          ),
         ),
       );
     });
   }
 
   void _goHome(BuildContext context) {
-    Navigator.of(context).popUntil((route) => route.settings.name == HomeScreen.routeName);
+    Navigator.of(
+      context,
+    ).popUntil((route) => route.settings.name == HomeScreen.routeName);
   }
 
   void _playAgain(BuildContext context, RewardArgs? args) {
-    if (args == null) { _goHome(context); return; }
+    if (args == null) {
+      _goHome(context);
+      return;
+    }
     final navigator = Navigator.of(context);
     navigator.popUntil((route) => route.settings.name == HomeScreen.routeName);
     navigator.pushNamed(args.nextRoute, arguments: args.nextArguments);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reward chip (glass)
+// ─────────────────────────────────────────────────────────────────────────────
+class _RewardChip extends StatelessWidget {
+  const _RewardChip({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+  final String icon, value, label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 22)),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Level story-track (nodes + connectors + unlock text)
+// ─────────────────────────────────────────────────────────────────────────────
+class _LevelTrack extends StatelessWidget {
+  const _LevelTrack({
+    required this.isMalay,
+    required this.fraction,
+    required this.starsToNext,
+    required this.nextLevel,
+    required this.maxed,
+    required this.levelTitle,
+  });
+  final bool isMalay;
+  final double fraction;
+  final int starsToNext;
+  final int nextLevel;
+  final bool maxed;
+  final String levelTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    const nodeCount = 5;
+    final doneCount = maxed
+        ? nodeCount
+        : (fraction * (nodeCount - 1)).round().clamp(0, nodeCount - 1);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isMalay ? 'KEMAJUAN — $levelTitle' : 'PROGRESS — $levelTitle',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              for (var i = 0; i < nodeCount; i++) ...[
+                _node(i, doneCount, nodeCount),
+                if (i < nodeCount - 1)
+                  Expanded(
+                    child: Container(
+                      height: 3,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        color: i < doneCount
+                            ? AppTheme.leafGreen
+                            : Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: Text(
+              maxed
+                  ? (isMalay
+                        ? '👑 Kamu di tahap tertinggi!'
+                        : '👑 You reached the top level!')
+                  : (isMalay
+                        ? 'Lagi $starsToNext bintang untuk Tahap $nextLevel!'
+                        : '$starsToNext more stars to reach Level $nextLevel!'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppTheme.lilac,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _node(int i, int doneCount, int nodeCount) {
+    final isDone = i < doneCount;
+    final isCurrent = i == doneCount;
+    final isTrophy = i == nodeCount - 1;
+
+    Color bg;
+    Color border;
+    String glyph;
+    if (isDone) {
+      bg = AppTheme.leafGreen;
+      border = AppTheme.leafGreen;
+      glyph = '✓';
+    } else if (isCurrent) {
+      bg = AppTheme.violet;
+      border = AppTheme.lilac;
+      glyph = '📍';
+    } else {
+      bg = Colors.white.withValues(alpha: 0.05);
+      border = Colors.white.withValues(alpha: 0.12);
+      glyph = isTrophy ? '🏆' : '🔒';
+    }
+
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        color: bg,
+        shape: BoxShape.circle,
+        border: Border.all(color: border, width: 2),
+        boxShadow: isCurrent
+            ? [
+                BoxShadow(
+                  color: AppTheme.violet.withValues(alpha: 0.6),
+                  blurRadius: 10,
+                ),
+              ]
+            : null,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        glyph,
+        style: TextStyle(
+          fontSize: isDone ? 14 : 12,
+          fontWeight: FontWeight.w900,
+          color: Colors.white,
+        ),
+      ),
+    );
   }
 }

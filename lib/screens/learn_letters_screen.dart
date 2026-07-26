@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
 import '../widgets/xp_popup.dart';
+import '../widgets/zara_prompt.dart';
 
 class LearnLettersScreen extends ConsumerStatefulWidget {
   const LearnLettersScreen({super.key});
@@ -15,8 +16,7 @@ class LearnLettersScreen extends ConsumerStatefulWidget {
   static const routeName = '/learn-letters';
 
   @override
-  ConsumerState<LearnLettersScreen> createState() =>
-      _LearnLettersScreenState();
+  ConsumerState<LearnLettersScreen> createState() => _LearnLettersScreenState();
 }
 
 class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
@@ -416,11 +416,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
     final audio = ref.read(audioServiceProvider);
     final lang = ps.language;
     // Letter name in the app language's voice, then the example phrase.
-    await audio.speakLocale(
-      item.letter,
-      enabled: true,
-      locale: lang.ttsLocale,
-    );
+    await audio.speakLocale(item.letter, enabled: true, locale: lang.ttsLocale);
     await Future.delayed(const Duration(milliseconds: 380));
     await audio.speakLocale(
       _letterPhrase(item, lang),
@@ -523,9 +519,10 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
     final isLast = _current == _letters.length - 1;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
-        backgroundColor: AppTheme.moduleLetters,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleLetters),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -548,7 +545,10 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                 children: [
                   Text(
                     isMalay ? 'Belajar Huruf A–Z' : 'Learn Letters A–Z',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -573,14 +573,15 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
         ],
       ),
       body: BijakScene(
-        topColor: const Color(0xFFE9F8FF),
-        bottomColor: AppTheme.lightBlue,
+        topColor: AppTheme.nightTop,
+        bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
           child: SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height -
+                minHeight:
+                    MediaQuery.of(context).size.height -
                     MediaQuery.of(context).padding.top -
                     MediaQuery.of(context).padding.bottom -
                     AppBar().preferredSize.height,
@@ -629,49 +630,16 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                         ],
                       ),
                     ),
-                    // ── Instruction hint ───────────────────────────────
+                    // ── Zara asks the question ─────────────────────────
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.center_focus_strong_rounded,
-                                color: Colors.white,
-                                size: 19,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                isMalay
-                                    ? 'Dengar bunyi huruf, lihat contoh, kemudian sebut kuat-kuat!'
-                                    : 'Hear the letter sound, see the example, then say it aloud!',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: ZaraPrompt(
+                        message: isMalay
+                            ? 'Huruf apakah ini? Dengar & sebut kuat-kuat!'
+                            : 'What letter is this? Listen & say it aloud!',
+                        sub: isMalay
+                            ? 'What letter is this?'
+                            : 'Dengar & sebut huruf ini',
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -686,7 +654,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.deepBlue.withValues(alpha: 0.14),
+                                color: AppTheme.deepBlue.withValues(
+                                  alpha: 0.14,
+                                ),
                                 blurRadius: 18,
                                 offset: const Offset(0, 9),
                               ),
@@ -783,8 +753,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                         ? _stopListening
                                         : _startListening,
                                     child: AnimatedContainer(
-                                      duration:
-                                          const Duration(milliseconds: 220),
+                                      duration: const Duration(
+                                        milliseconds: 220,
+                                      ),
                                       constraints: const BoxConstraints(
                                         minHeight: AppTheme.kidTarget,
                                       ),
@@ -796,18 +767,20 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                         color: _isListening
                                             ? const Color(0xFFE84393)
                                             : color,
-                                        borderRadius:
-                                            BorderRadius.circular(28),
+                                        borderRadius: BorderRadius.circular(28),
                                         border: Border.all(
                                           color: Colors.white,
                                           width: 2.5,
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: (_isListening
-                                                    ? const Color(0xFFE84393)
-                                                    : color)
-                                                .withValues(alpha: 0.45),
+                                            color:
+                                                (_isListening
+                                                        ? const Color(
+                                                            0xFFE84393,
+                                                          )
+                                                        : color)
+                                                    .withValues(alpha: 0.45),
                                             blurRadius: 14,
                                             offset: const Offset(0, 4),
                                           ),
@@ -828,11 +801,11 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                           Text(
                                             _isListening
                                                 ? (isMalay
-                                                    ? 'Saya dengar...'
-                                                    : 'Listening...')
+                                                      ? 'Saya dengar...'
+                                                      : 'Listening...')
                                                 : (isMalay
-                                                    ? '🎤 Sebut huruf ${item.letter}!'
-                                                    : '🎤 Say letter ${item.letter}!'),
+                                                      ? '🎤 Sebut huruf ${item.letter}!'
+                                                      : '🎤 Say letter ${item.letter}!'),
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 15,
@@ -851,20 +824,20 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                         vertical: 10,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: (_speechCorrect == true
-                                                ? const Color(0xFF34C759)
-                                                : _speechCorrect == false
+                                        color:
+                                            (_speechCorrect == true
+                                                    ? const Color(0xFF34C759)
+                                                    : _speechCorrect == false
                                                     ? AppTheme.appleRed
                                                     : Colors.grey.shade200)
-                                            .withValues(alpha: 0.15),
-                                        borderRadius:
-                                            BorderRadius.circular(18),
+                                                .withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(18),
                                         border: Border.all(
                                           color: _speechCorrect == true
                                               ? const Color(0xFF34C759)
                                               : _speechCorrect == false
-                                                  ? AppTheme.appleRed
-                                                  : Colors.grey.shade400,
+                                              ? AppTheme.appleRed
+                                              : Colors.grey.shade400,
                                           width: 1.5,
                                         ),
                                       ),
@@ -875,10 +848,11 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                             _speechCorrect == true
                                                 ? '✅'
                                                 : _speechCorrect == false
-                                                    ? '❌'
-                                                    : '🎤',
+                                                ? '❌'
+                                                : '🎤',
                                             style: const TextStyle(
-                                                fontSize: 18),
+                                              fontSize: 18,
+                                            ),
                                           ),
                                           const SizedBox(width: 8),
                                           Flexible(
@@ -890,8 +864,8 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                                 color: _speechCorrect == true
                                                     ? const Color(0xFF34C759)
                                                     : _speechCorrect == false
-                                                        ? AppTheme.appleRed
-                                                        : AppTheme.ink,
+                                                    ? AppTheme.appleRed
+                                                    : AppTheme.ink,
                                               ),
                                             ),
                                           ),
@@ -926,7 +900,8 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                       '${item.letter}, ${_ttsClean(item.mandarin)}',
                                   indonesian:
                                       '${item.letter}, ${item.indonesian}',
-                                  tamil: '${item.letter}, ${_ttsClean(item.tamil)}',
+                                  tamil:
+                                      '${item.letter}, ${_ttsClean(item.tamil)}',
                                   color: color,
                                 ),
 
@@ -959,7 +934,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.deepBlue,
                                 foregroundColor: Colors.white,
-                                minimumSize: const Size.fromHeight(AppTheme.kidTarget),
+                                minimumSize: const Size.fromHeight(
+                                  AppTheme.kidTarget,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
@@ -987,7 +964,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.sunnyYellow,
                                 foregroundColor: AppTheme.ink,
-                                minimumSize: const Size.fromHeight(AppTheme.kidTarget),
+                                minimumSize: const Size.fromHeight(
+                                  AppTheme.kidTarget,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),

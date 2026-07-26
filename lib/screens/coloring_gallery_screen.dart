@@ -8,6 +8,7 @@ import '../models/app_language.dart';
 import '../providers/app_state.dart';
 import '../services/artwork_store.dart';
 import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
 import '../widgets/pressable.dart';
 
 /// Gallery of the child's saved coloring artwork.
@@ -51,9 +52,10 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
         ref.watch(progressServiceProvider).language == AppLanguage.malay;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8E7),
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
-        backgroundColor: AppTheme.moduleColoring,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleColoring),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -87,7 +89,7 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.inkMuted,
+                        color: AppTheme.onNightMuted,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -121,7 +123,7 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.inkMuted,
+                        color: AppTheme.onNightMuted,
                       ),
                     ),
                   ],
@@ -206,6 +208,7 @@ class _ArtworkFullscreen extends StatelessWidget {
       backgroundColor: const Color(0xFF1A1A2E),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        flexibleSpace: NightBar(Colors.transparent),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),

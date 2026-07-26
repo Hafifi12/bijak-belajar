@@ -58,13 +58,20 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
   }
 
   void _check() {
-    final isMalay = ref.read(progressServiceProvider).language == AppLanguage.malay;
+    final isMalay =
+        ref.read(progressServiceProvider).language == AppLanguage.malay;
     if (_ctrl.text.trim() == '$_answer') {
       HapticFeedback.lightImpact();
-      Navigator.of(context).pushReplacementNamed(ParentSettingsScreen.routeName);
+      Navigator.of(
+        context,
+      ).pushReplacementNamed(ParentSettingsScreen.routeName);
     } else {
       HapticFeedback.heavyImpact();
-      setState(() => _error = isMalay ? 'Kurang tepat — cuba lagi! 🤔' : 'Not quite — try again! 🤔');
+      setState(
+        () => _error = isMalay
+            ? 'Kurang tepat — cuba lagi! 🤔'
+            : 'Not quite — try again! 🤔',
+      );
       _ctrl.clear();
       _shakeCtrl.forward(from: 0);
       _generateChallenge();
@@ -73,7 +80,8 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isMalay = ref.watch(progressServiceProvider).language == AppLanguage.malay;
+    final isMalay =
+        ref.watch(progressServiceProvider).language == AppLanguage.malay;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -97,13 +105,18 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
         centerTitle: true,
       ),
       body: BijakScene(
-        topColor: AppTheme.deepBlue,
-        bottomColor: AppTheme.skyBlue,
+        topColor: AppTheme.nightTop,
+        bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
           child: SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom),
+              constraints: BoxConstraints(
+                minHeight:
+                    MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom,
+              ),
               child: IntrinsicHeight(
                 child: Column(
                   children: [
@@ -112,7 +125,9 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                     const _ShieldBadge(),
                     const SizedBox(height: 12),
                     Text(
-                      isMalay ? 'Akses Ibu Bapa & Guru' : 'Parent & Teacher Access',
+                      isMalay
+                          ? 'Akses Ibu Bapa & Guru'
+                          : 'Parent & Teacher Access',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 26,
@@ -122,7 +137,9 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      isMalay ? 'Selesaikan jumlah untuk buka tetapan' : 'Solve the sum to unlock settings',
+                      isMalay
+                          ? 'Selesaikan jumlah untuk buka tetapan'
+                          : 'Solve the sum to unlock settings',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.75),
                         fontSize: 14,
@@ -177,11 +194,15 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    isMalay ? 'Berapakah jawapannya?' : 'What is the answer?',
+                                    isMalay
+                                        ? 'Berapakah jawapannya?'
+                                        : 'What is the answer?',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: AppTheme.ink.withValues(alpha: 0.55),
+                                      color: AppTheme.ink.withValues(
+                                        alpha: 0.55,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -202,25 +223,45 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                               ),
                               decoration: InputDecoration(
                                 hintText: '—',
-                                hintStyle: TextStyle(color: Colors.grey.shade300, fontSize: 32),
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade300,
+                                  fontSize: 32,
+                                ),
                                 errorText: _error,
-                                errorStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                                contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                                errorStyle: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(18),
-                                  borderSide: BorderSide(color: Colors.grey.shade200, width: 2),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade200,
+                                    width: 2,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(18),
-                                  borderSide: const BorderSide(color: AppTheme.skyBlue, width: 2.5),
+                                  borderSide: const BorderSide(
+                                    color: AppTheme.skyBlue,
+                                    width: 2.5,
+                                  ),
                                 ),
                                 errorBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(18),
-                                  borderSide: const BorderSide(color: AppTheme.appleRed, width: 2),
+                                  borderSide: const BorderSide(
+                                    color: AppTheme.appleRed,
+                                    width: 2,
+                                  ),
                                 ),
                                 focusedErrorBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(18),
-                                  borderSide: const BorderSide(color: AppTheme.appleRed, width: 2.5),
+                                  borderSide: const BorderSide(
+                                    color: AppTheme.appleRed,
+                                    width: 2.5,
+                                  ),
                                 ),
                               ),
                               onSubmitted: (_) => _check(),
@@ -232,12 +273,19 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                               width: double.infinity,
                               child: FilledButton.icon(
                                 onPressed: _check,
-                                icon: const Icon(Icons.lock_open_rounded, size: 22),
-                                label: Text(isMalay ? 'Buka Tetapan' : 'Unlock Settings'),
+                                icon: const Icon(
+                                  Icons.lock_open_rounded,
+                                  size: 22,
+                                ),
+                                label: Text(
+                                  isMalay ? 'Buka Tetapan' : 'Unlock Settings',
+                                ),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppTheme.deepBlue,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 18),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(18),
                                   ),
@@ -297,11 +345,14 @@ class _ShieldBadgeState extends State<_ShieldBadge>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))
-      ..repeat(reverse: true);
-    _pulse = Tween<double>(begin: 0.92, end: 1.06).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _pulse = Tween<double>(
+      begin: 0.92,
+      end: 1.06,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -320,7 +371,10 @@ class _ShieldBadgeState extends State<_ShieldBadge>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white.withValues(alpha: 0.15),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 3),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.35),
+            width: 3,
+          ),
         ),
         child: const Icon(Icons.shield_rounded, color: Colors.white, size: 56),
       ),

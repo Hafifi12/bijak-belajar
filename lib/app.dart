@@ -9,7 +9,6 @@ import 'screens/jawi_asas_screen.dart';
 import 'screens/learn_body_parts_screen.dart';
 import 'screens/learn_letters_screen.dart';
 import 'screens/learn_numbers_screen.dart';
-import 'screens/learning_path_screen.dart';
 import 'screens/math_practice_screen.dart';
 import 'screens/memory_category_screen.dart';
 import 'screens/memory_game_screen.dart';
@@ -23,10 +22,7 @@ import 'screens/train_sort_screen.dart';
 import 'theme/app_theme.dart';
 
 class TinyFinderApp extends StatelessWidget {
-  const TinyFinderApp({
-    super.key,
-    this.initialRoute = SplashScreen.routeName,
-  });
+  const TinyFinderApp({super.key, this.initialRoute = SplashScreen.routeName});
 
   final String initialRoute;
 
@@ -50,8 +46,7 @@ class TinyFinderApp extends StatelessWidget {
     PuzzleScreen.routeName: (_) => const PuzzleScreen(),
     // ── Creative ────────────────────────────────────────────
     ColoringScreen.routeName: (_) => const ColoringScreen(),
-    // ── Syllabus & Progress ─────────────────────────────────
-    LearningPathScreen.routeName: (_) => const LearningPathScreen(),
+    // ── Progress ────────────────────────────────────────────
     ProgressScreen.routeName: (_) => const ProgressScreen(),
     RewardScreen.routeName: (_) => const RewardScreen(),
     // ── Parent / Teacher ────────────────────────────────────
@@ -71,8 +66,7 @@ class TinyFinderApp extends StatelessWidget {
       settings: settings,
       transitionDuration: const Duration(milliseconds: 320),
       reverseTransitionDuration: const Duration(milliseconds: 260),
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          builder(context),
+      pageBuilder: (context, animation, secondaryAnimation) => builder(context),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final curved = CurvedAnimation(
           parent: animation,
@@ -95,32 +89,32 @@ class TinyFinderApp extends StatelessWidget {
     // ProviderScope is initialised in main.dart — services are provided via
     // Riverpod providers in lib/providers/app_state.dart.
     return MaterialApp(
-        title: 'Bijak Belajar',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        initialRoute: initialRoute,
-        navigatorObservers: [appRouteObserver],
-        onGenerateRoute: (settings) {
-          final builder = _screens[settings.name];
-          if (builder == null) return null;
-          return _buildRoute(settings.name!, builder, settings);
-        },
-        builder: (context, child) {
-          // Clamp system text scaling: layouts use fixed-height grids and
-          // compact labels, so unbounded scaling overflows them, while very
-          // small scales make kid-facing text illegible. 0.9–1.3 keeps both
-          // accessibility headroom and layout integrity.
-          final media = MediaQuery.of(context);
-          return MediaQuery(
-            data: media.copyWith(
-              textScaler: media.textScaler.clamp(
-                minScaleFactor: 0.9,
-                maxScaleFactor: 1.3,
-              ),
+      title: 'Bijak Belajar',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      initialRoute: initialRoute,
+      navigatorObservers: [appRouteObserver],
+      onGenerateRoute: (settings) {
+        final builder = _screens[settings.name];
+        if (builder == null) return null;
+        return _buildRoute(settings.name!, builder, settings);
+      },
+      builder: (context, child) {
+        // Clamp system text scaling: layouts use fixed-height grids and
+        // compact labels, so unbounded scaling overflows them, while very
+        // small scales make kid-facing text illegible. 0.9–1.3 keeps both
+        // accessibility headroom and layout integrity.
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            textScaler: media.textScaler.clamp(
+              minScaleFactor: 0.9,
+              maxScaleFactor: 1.3,
             ),
-            child: child!,
-          );
-        },
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

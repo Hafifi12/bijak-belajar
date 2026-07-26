@@ -11,6 +11,7 @@ import '../widgets/bijak_scene.dart';
 import '../widgets/pressable.dart';
 import '../widgets/star_counter.dart';
 import '../widgets/xp_popup.dart';
+import '../widgets/zara_prompt.dart';
 
 /// Belajar Anggota Badan — Learn Body Parts
 /// Malaysian kindergarten style for preschool children.
@@ -20,7 +21,8 @@ class LearnBodyPartsScreen extends ConsumerStatefulWidget {
   static const routeName = '/learn-body-parts';
 
   @override
-  ConsumerState<LearnBodyPartsScreen> createState() => _LearnBodyPartsScreenState();
+  ConsumerState<LearnBodyPartsScreen> createState() =>
+      _LearnBodyPartsScreenState();
 }
 
 class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
@@ -257,7 +259,9 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
 
   void _recordCurrentLesson() {
     final item = _parts[_current];
-    ref.read(progressServiceProvider).markModuleLesson('bodyparts', item.english);
+    ref
+        .read(progressServiceProvider)
+        .markModuleLesson('bodyparts', item.english);
   }
 
   // ── "Doctor says…" mini-game ──────────────────────────────────
@@ -308,7 +312,9 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
     final ps = ref.read(progressServiceProvider);
     final isMalay = ps.language == AppLanguage.malay;
     final word = isMalay ? _parts[_dsTarget].malay : _parts[_dsTarget].english;
-    await ref.read(audioServiceProvider).speakLocale(
+    await ref
+        .read(audioServiceProvider)
+        .speakLocale(
           isMalay
               ? 'Doktor kata: sentuh $word!'
               : 'Doctor says: touch your $word!',
@@ -361,7 +367,9 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
       if (!mounted) return;
       XpPopup.show(context, amount: earned);
     }
-    await ref.read(audioServiceProvider).speakLocale(
+    await ref
+        .read(audioServiceProvider)
+        .speakLocale(
           isMalay
               ? 'Permainan tamat! Kamu dapat $earned bintang!'
               : 'Game over! You earned $earned stars!',
@@ -391,9 +399,10 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
     final mainWord = item.wordFor(language);
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
-        backgroundColor: AppTheme.moduleBodyParts,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleBodyParts),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -416,7 +425,10 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                 children: [
                   Text(
                     isMalay ? 'Anggota Badan' : 'Body Parts',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -445,8 +457,8 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
         ],
       ),
       body: BijakScene(
-        topColor: const Color(0xFFE9F8FF),
-        bottomColor: AppTheme.lightBlue,
+        topColor: AppTheme.nightTop,
+        bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
           child: Column(
@@ -493,42 +505,16 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                 ),
               ),
 
-              // Instruction hint
+              // ── Zara asks the question ─────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: color.withValues(alpha: 0.20)),
-                  ),
-                  child: Row(
-                    children: [
-                      _BodyPartThumbnail(
-                        asset: item.photoAsset,
-                        color: color,
-                        size: 36,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          isMalay
-                              ? 'Tunjuk anggota badan kamu! ${item.fun}'
-                              : 'Point to yours! ${item.funEnglish}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: color,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                child: ZaraPrompt(
+                  message: isMalay
+                      ? 'Anggota badan apakah ini? Tunjuk & sebut!'
+                      : 'Which body part is this? Point & say it!',
+                  sub: isMalay
+                      ? 'Tunjuk pada badan kamu! ${item.fun}'
+                      : 'Point to yours! ${item.funEnglish}',
                 ),
               ),
               const SizedBox(height: 8),
@@ -565,8 +551,7 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                               parts: _parts,
                               // No highlight during the game — it would
                               // leak hints.
-                              selectedIndex:
-                                  _doctorSaysActive ? -1 : _current,
+                              selectedIndex: _doctorSaysActive ? -1 : _current,
                               language: language,
                               onSelect: _doctorSaysActive
                                   ? (i) => _handleDoctorTap(i)
@@ -581,8 +566,8 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen>
                             total: _dsTotalRounds,
                             targetWord: _doctorSaysActive && _dsTarget >= 0
                                 ? (isMalay
-                                    ? _parts[_dsTarget].malay
-                                    : _parts[_dsTarget].english)
+                                      ? _parts[_dsTarget].malay
+                                      : _parts[_dsTarget].english)
                                 : null,
                             lastCorrect: _dsLastTapCorrect,
                             isMalay: isMalay,
@@ -803,8 +788,8 @@ class _DoctorBodyChart extends ConsumerWidget {
     final bool gameMode = selectedIndex < 0;
     final _BodyPart? selected =
         (selectedIndex >= 0 && selectedIndex < parts.length)
-            ? parts[selectedIndex]
-            : null;
+        ? parts[selectedIndex]
+        : null;
     final accent = selected?.color ?? AppTheme.moduleBodyParts;
 
     return Container(
@@ -939,8 +924,7 @@ class _DoctorBodyChart extends ConsumerWidget {
                               label: _shortLabel(
                                 parts[spot.index].wordFor(language),
                               ),
-                              active: !gameMode &&
-                                  spot.index == selectedIndex,
+                              active: !gameMode && spot.index == selectedIndex,
                               gameMode: gameMode,
                               onTap: () => onSelect(spot.index),
                             ),
@@ -1323,10 +1307,7 @@ class _LeaderLinesPainter extends CustomPainter {
       final uy = dir.dy / len;
       final head = l.active ? 12.0 : 7.0;
       final half = l.active ? 6.5 : 4.0;
-      final base = Offset(
-        l.target.dx - ux * head,
-        l.target.dy - uy * head,
-      );
+      final base = Offset(l.target.dx - ux * head, l.target.dy - uy * head);
       final perpX = -uy;
       final perpY = ux;
       final tri = Path()
@@ -1737,7 +1718,9 @@ class _LangChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ConstrainedBox(
       // Never let a single chip grow wider than the screen.
-      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 56),
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width - 56,
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
@@ -1993,8 +1976,11 @@ class _DoctorSaysBar extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.play_circle_fill_rounded,
-                  color: Colors.white, size: 30),
+              const Icon(
+                Icons.play_circle_fill_rounded,
+                color: Colors.white,
+                size: 30,
+              ),
             ],
           ),
         ),
@@ -2004,8 +1990,8 @@ class _DoctorSaysBar extends StatelessWidget {
     final feedbackEmoji = lastCorrect == null
         ? '🩺'
         : lastCorrect == true
-            ? '✅'
-            : '❌';
+        ? '✅'
+        : '❌';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),

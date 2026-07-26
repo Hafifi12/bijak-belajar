@@ -18,9 +18,9 @@ import 'reward_screen.dart';
 // Each position is expressed as (alignX, alignY) in Alignment space (-1..1)
 const _slotAlignments = [
   Alignment(-0.55, -0.55), // top-left
-  Alignment(0.55, -0.55),  // top-right
-  Alignment(-0.55, 0.50),  // bottom-left
-  Alignment(0.55, 0.50),   // bottom-right
+  Alignment(0.55, -0.55), // top-right
+  Alignment(-0.55, 0.50), // bottom-left
+  Alignment(0.55, 0.50), // bottom-right
 ];
 
 class FindExplorerScreen extends ConsumerStatefulWidget {
@@ -67,32 +67,57 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
   void initState() {
     super.initState();
 
-    _floatCtrls = List.generate(4, (i) => AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 1800 + i * 250),
-    )..repeat(reverse: true));
-    _floatAnims = List.generate(4, (i) => Tween<double>(begin: -8, end: 8)
-        .animate(CurvedAnimation(parent: _floatCtrls[i], curve: Curves.easeInOut)));
+    _floatCtrls = List.generate(
+      4,
+      (i) => AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: 1800 + i * 250),
+      )..repeat(reverse: true),
+    );
+    _floatAnims = List.generate(
+      4,
+      (i) => Tween<double>(begin: -8, end: 8).animate(
+        CurvedAnimation(parent: _floatCtrls[i], curve: Curves.easeInOut),
+      ),
+    );
 
-    _shakeCtrls = List.generate(4, (_) => AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 400)));
-    _shakeAnims = List.generate(4, (i) => TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -12.0), weight: 15),
-      TweenSequenceItem(tween: Tween(begin: -12.0, end: 12.0), weight: 30),
-      TweenSequenceItem(tween: Tween(begin: 12.0, end: -10.0), weight: 25),
-      TweenSequenceItem(tween: Tween(begin: -10.0, end: 0.0), weight: 30),
-    ]).animate(CurvedAnimation(parent: _shakeCtrls[i], curve: Curves.linear)));
+    _shakeCtrls = List.generate(
+      4,
+      (_) => AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 400),
+      ),
+    );
+    _shakeAnims = List.generate(
+      4,
+      (i) => TweenSequence<double>([
+        TweenSequenceItem(tween: Tween(begin: 0.0, end: -12.0), weight: 15),
+        TweenSequenceItem(tween: Tween(begin: -12.0, end: 12.0), weight: 30),
+        TweenSequenceItem(tween: Tween(begin: 12.0, end: -10.0), weight: 25),
+        TweenSequenceItem(tween: Tween(begin: -10.0, end: 0.0), weight: 30),
+      ]).animate(CurvedAnimation(parent: _shakeCtrls[i], curve: Curves.linear)),
+    );
 
-    _popCtrls = List.generate(4, (_) => AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 550)));
-    _popAnims = List.generate(4, (i) => TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.4), weight: 35),
-      TweenSequenceItem(tween: Tween(begin: 1.4, end: 0.9), weight: 30),
-      TweenSequenceItem(tween: Tween(begin: 0.9, end: 1.05), weight: 35),
-    ]).animate(CurvedAnimation(parent: _popCtrls[i], curve: Curves.easeOut)));
+    _popCtrls = List.generate(
+      4,
+      (_) => AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 550),
+      ),
+    );
+    _popAnims = List.generate(
+      4,
+      (i) => TweenSequence<double>([
+        TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.4), weight: 35),
+        TweenSequenceItem(tween: Tween(begin: 1.4, end: 0.9), weight: 30),
+        TweenSequenceItem(tween: Tween(begin: 0.9, end: 1.05), weight: 35),
+      ]).animate(CurvedAnimation(parent: _popCtrls[i], curve: Curves.easeOut)),
+    );
 
     _sparkCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1000));
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
     _sparkCtrl.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted) {
         setState(() => _showSpark = false);
@@ -117,9 +142,15 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
 
   @override
   void dispose() {
-    for (final c in _floatCtrls) { c.dispose(); }
-    for (final c in _shakeCtrls) { c.dispose(); }
-    for (final c in _popCtrls) { c.dispose(); }
+    for (final c in _floatCtrls) {
+      c.dispose();
+    }
+    for (final c in _shakeCtrls) {
+      c.dispose();
+    }
+    for (final c in _popCtrls) {
+      c.dispose();
+    }
     _sparkCtrl.dispose();
     super.dispose();
   }
@@ -153,8 +184,12 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
     _showSpark = false;
 
     // Reset animations
-    for (final c in _shakeCtrls) { c.reset(); }
-    for (final c in _popCtrls) { c.reset(); }
+    for (final c in _shakeCtrls) {
+      c.reset();
+    }
+    for (final c in _popCtrls) {
+      c.reset();
+    }
     _sparkCtrl.reset();
   }
 
@@ -180,7 +215,9 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
 
       final progressService = ref.read(progressServiceProvider);
       final audioService = ref.read(audioServiceProvider);
-      final badge = await progressService.completeChallenge(ChallengeMode.findExplorer);
+      final badge = await progressService.completeChallenge(
+        ChallengeMode.findExplorer,
+      );
       await audioService.playCelebration(enabled: progressService.soundEnabled);
 
       if (!mounted) return;
@@ -214,11 +251,13 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _options.isEmpty) return;
       final progressService = ref.read(progressServiceProvider);
-      ref.read(audioServiceProvider).speak(
-        AppText.findExplorerPrompt(_target, progressService.language),
-        enabled: progressService.voiceEnabled,
-        language: progressService.language,
-      );
+      ref
+          .read(audioServiceProvider)
+          .speak(
+            AppText.findExplorerPrompt(_target, progressService.language),
+            enabled: progressService.voiceEnabled,
+            language: progressService.language,
+          );
     });
   }
 
@@ -232,7 +271,7 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF1565C0), Color(0xFF1E88E5), Color(0xFF26C6DA)],
+            colors: [Color(0xFF1B1638), Color(0xFF2A2065), Color(0xFF00B894)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -288,11 +327,16 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white60, width: 2),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 14),
+                          horizontal: 18,
+                          vertical: 14,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
                         textStyle: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w800),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ],
@@ -327,8 +371,11 @@ class _TopBar extends ConsumerWidget {
               customBorder: const CircleBorder(),
               child: const Padding(
                 padding: EdgeInsets.all(10),
-                child: Icon(Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white, size: 20),
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
           ),
@@ -349,9 +396,10 @@ class _TopBar extends ConsumerWidget {
                 Text(
                   'Tap the right object!',
                   style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700),
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -366,8 +414,11 @@ class _TopBar extends ConsumerWidget {
 // Mission card
 // ─────────────────────────────────────────────────────────────────────────────
 class _MissionCard extends ConsumerWidget {
-  const _MissionCard(
-      {required this.target, required this.language, required this.onSpeak});
+  const _MissionCard({
+    required this.target,
+    required this.language,
+    required this.onSpeak,
+  });
   final ExplorerItem target;
   final dynamic language;
   final VoidCallback onSpeak;
@@ -381,9 +432,10 @@ class _MissionCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 20,
-              offset: const Offset(0, 6)),
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
       child: Row(
@@ -442,12 +494,16 @@ class _MissionCard extends ConsumerWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                      color: target.color.withValues(alpha: 0.4),
-                      blurRadius: 10)
+                    color: target.color.withValues(alpha: 0.4),
+                    blurRadius: 10,
+                  ),
                 ],
               ),
-              child: const Icon(Icons.volume_up_rounded,
-                  color: Colors.white, size: 24),
+              child: const Icon(
+                Icons.volume_up_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
             ),
           ),
         ],
@@ -593,7 +649,9 @@ class _FloatingObject extends ConsumerWidget {
                   border: Border.all(color: borderColor, width: 4),
                   boxShadow: [
                     BoxShadow(
-                      color: item.color.withValues(alpha: isCorrect ? 0.5 : 0.25),
+                      color: item.color.withValues(
+                        alpha: isCorrect ? 0.5 : 0.25,
+                      ),
                       blurRadius: isCorrect ? 36 : 18,
                       spreadRadius: isCorrect ? 4 : 0,
                     ),
@@ -604,24 +662,23 @@ class _FloatingObject extends ConsumerWidget {
                   children: [
                     // Emoji or icon
                     if (item.emoji != null)
-                      Text(
-                        item.emoji!,
-                        style: const TextStyle(fontSize: 62),
-                      )
+                      Text(item.emoji!, style: const TextStyle(fontSize: 62))
                     else
-                      Icon(item.icon,
-                          size: 64,
-                          color: isWrong ? AppTheme.appleRed : item.color),
+                      Icon(
+                        item.icon,
+                        size: 64,
+                        color: isWrong ? AppTheme.appleRed : item.color,
+                      ),
                     // Label underneath icon
                     Positioned(
                       bottom: 12,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: isCorrect
-                              ? AppTheme.leafGreen
-                              : item.color,
+                          color: isCorrect ? AppTheme.leafGreen : item.color,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -645,11 +702,13 @@ class _FloatingObject extends ConsumerWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: AppTheme.leafGreen,
-                            border:
-                                Border.all(color: Colors.white, width: 2.5),
+                            border: Border.all(color: Colors.white, width: 2.5),
                           ),
-                          child: const Icon(Icons.check_rounded,
-                              color: Colors.white, size: 18),
+                          child: const Icon(
+                            Icons.check_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
                     // ❌ overlay on wrong
@@ -663,11 +722,13 @@ class _FloatingObject extends ConsumerWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: AppTheme.appleRed,
-                            border:
-                                Border.all(color: Colors.white, width: 2.5),
+                            border: Border.all(color: Colors.white, width: 2.5),
                           ),
-                          child: const Icon(Icons.close_rounded,
-                              color: Colors.white, size: 18),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
                   ],
@@ -690,18 +751,22 @@ class _BgStars extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Positioned.fill(
-      child: IgnorePointer(
-        child: CustomPaint(painter: _StarsPainter()),
-      ),
+      child: IgnorePointer(child: CustomPaint(painter: _StarsPainter())),
     );
   }
 }
 
 class _StarsPainter extends CustomPainter {
   final _positions = const [
-    Offset(0.15, 0.12), Offset(0.85, 0.08), Offset(0.05, 0.5),
-    Offset(0.92, 0.45), Offset(0.5, 0.15), Offset(0.3, 0.88),
-    Offset(0.72, 0.82), Offset(0.5, 0.92), Offset(0.18, 0.72),
+    Offset(0.15, 0.12),
+    Offset(0.85, 0.08),
+    Offset(0.05, 0.5),
+    Offset(0.92, 0.45),
+    Offset(0.5, 0.15),
+    Offset(0.3, 0.88),
+    Offset(0.72, 0.82),
+    Offset(0.5, 0.92),
+    Offset(0.18, 0.72),
     Offset(0.80, 0.65),
   ];
   final _sizes = [8.0, 6.0, 10.0, 7.0, 9.0, 6.0, 11.0, 7.0, 8.0, 6.0];

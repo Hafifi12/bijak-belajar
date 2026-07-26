@@ -11,6 +11,7 @@ import '../models/app_language.dart';
 import '../services/artwork_store.dart';
 import '../theme/app_theme.dart';
 import 'coloring_gallery_screen.dart';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Data models
 // ─────────────────────────────────────────────────────────────────────────────
@@ -163,21 +164,20 @@ class ColoringScreen extends ConsumerWidget {
                 crossAxisSpacing: 14,
                 childAspectRatio: 1.1,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, i) {
-                  final cat = _categories[i];
-                  return _CategoryCard(
-                    category: cat,
-                    isMalay: isMalay,
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
+              delegate: SliverChildBuilderDelegate((context, i) {
+                final cat = _categories[i];
+                return _CategoryCard(
+                  category: cat,
+                  isMalay: isMalay,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
                         builder: (_) => _SubjectPickerScreen(category: cat),
-                      ));
-                    },
-                  );
-                },
-                childCount: _categories.length,
-              ),
+                      ),
+                    );
+                  },
+                );
+              }, childCount: _categories.length),
             ),
           ),
         ],
@@ -380,12 +380,12 @@ class _SubjectPickerScreen extends ConsumerWidget {
             color: category.color,
             isMalay: isMalay,
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => ColoringCanvasScreen(
-                  subject: sub,
-                  color: category.color,
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      ColoringCanvasScreen(subject: sub, color: category.color),
                 ),
-              ));
+              );
             },
           );
         },
@@ -468,7 +468,8 @@ class ColoringCanvasScreen extends ConsumerStatefulWidget {
   final Color color;
 
   @override
-  ConsumerState<ColoringCanvasScreen> createState() => _ColoringCanvasScreenState();
+  ConsumerState<ColoringCanvasScreen> createState() =>
+      _ColoringCanvasScreenState();
 }
 
 enum _CanvasTool { brush, eraser, stamp }
@@ -476,7 +477,11 @@ enum _CanvasTool { brush, eraser, stamp }
 enum _CanvasAction { stroke, stamp }
 
 class _StampMark {
-  const _StampMark({required this.offset, required this.emoji, required this.size});
+  const _StampMark({
+    required this.offset,
+    required this.emoji,
+    required this.size,
+  });
   final Offset offset;
   final String emoji;
   final double size;
@@ -498,7 +503,18 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
   bool _strokeInProgress = false;
 
   static const _stampChoices = [
-    '⭐', '❤️', '🌈', '🦋', '🌸', '🌟', '🍎', '⚽', '🚗', '🐱', '🐶', '🦄',
+    '⭐',
+    '❤️',
+    '🌈',
+    '🦋',
+    '🌸',
+    '🌟',
+    '🍎',
+    '⚽',
+    '🚗',
+    '🐱',
+    '🐶',
+    '🦄',
   ];
 
   // Zoom + pan state
@@ -534,7 +550,10 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _starAnim = CurvedAnimation(parent: _starController, curve: Curves.elasticOut);
+    _starAnim = CurvedAnimation(
+      parent: _starController,
+      curve: Curves.elasticOut,
+    );
   }
 
   @override
@@ -570,12 +589,14 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
       setState(() {
         _saved = false;
         _strokeInProgress = true;
-        _points.add(_DrawPoint(
-          offset: p,
-          color: isEraser ? Colors.white : _selectedColor,
-          // Keep visual stroke width constant regardless of zoom level.
-          strokeWidth: (isEraser ? _strokeWidth * 2 : _strokeWidth) / _scale,
-        ));
+        _points.add(
+          _DrawPoint(
+            offset: p,
+            color: isEraser ? Colors.white : _selectedColor,
+            // Keep visual stroke width constant regardless of zoom level.
+            strokeWidth: (isEraser ? _strokeWidth * 2 : _strokeWidth) / _scale,
+          ),
+        );
       });
     }
   }
@@ -596,16 +617,21 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     final p = (details.localPosition - _offset) / _scale;
     setState(() {
       if (_tool == _CanvasTool.stamp) {
-        _stamps.add(_StampMark(offset: p, emoji: _selectedStamp, size: 56 / _scale));
+        _stamps.add(
+          _StampMark(offset: p, emoji: _selectedStamp, size: 56 / _scale),
+        );
         _actionLog.add(_CanvasAction.stamp);
       } else {
         final isEraser = _tool == _CanvasTool.eraser;
         _points
-          ..add(_DrawPoint(
-            offset: p,
-            color: isEraser ? Colors.white : _selectedColor,
-            strokeWidth: (isEraser ? _strokeWidth * 2 : _strokeWidth) / _scale,
-          ))
+          ..add(
+            _DrawPoint(
+              offset: p,
+              color: isEraser ? Colors.white : _selectedColor,
+              strokeWidth:
+                  (isEraser ? _strokeWidth * 2 : _strokeWidth) / _scale,
+            ),
+          )
           ..add(null);
         _actionLog.add(_CanvasAction.stroke);
       }
@@ -632,9 +658,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
   }
 
   void _resetZoom() => setState(() {
-        _scale = 1.0;
-        _offset = Offset.zero;
-      });
+    _scale = 1.0;
+    _offset = Offset.zero;
+  });
 
   void _clear() {
     setState(() {
@@ -649,8 +675,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
   /// local gallery. Failure is non-fatal — the celebration still runs.
   Future<void> _saveArtwork() async {
     try {
-      final boundary = _canvasKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _canvasKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return;
       final image = await boundary.toImage(pixelRatio: 2.0);
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -672,7 +699,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     setState(() => _saved = true);
     _starController.forward(from: 0);
     // Spoken praise in the app language (uses the device's local voice).
-    ref.read(audioServiceProvider).speakLocale(
+    ref
+        .read(audioServiceProvider)
+        .speakLocale(
           isMalay
               ? 'Cantik! Lukisan kamu sudah disimpan!'
               : 'Beautiful! Your drawing is saved!',
@@ -736,45 +765,47 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                       child: RepaintBoundary(
                         key: _canvasKey,
                         child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          // Layer 1 — white canvas background
-                          Container(color: Colors.white),
+                          fit: StackFit.expand,
+                          children: [
+                            // Layer 1 — white canvas background
+                            Container(color: Colors.white),
 
-                          // Layer 2 — drawn strokes + stamps
-                          CustomPaint(
-                            painter: _DrawingPainter(_points, _stamps),
-                            child: const SizedBox.expand(),
-                          ),
+                            // Layer 2 — drawn strokes + stamps
+                            CustomPaint(
+                              painter: _DrawingPainter(_points, _stamps),
+                              child: const SizedBox.expand(),
+                            ),
 
-                          // Layer 3 — persistent guide illustration (on top of strokes
-                          // so erasers/paint can't hide it).
-                          Center(
-                            child: IgnorePointer(
-                              child: Opacity(
-                                opacity: 0.25,
+                            // Layer 3 — persistent guide illustration (on top of strokes
+                            // so erasers/paint can't hide it).
+                            Center(
+                              child: IgnorePointer(
+                                child: Opacity(
+                                  opacity: 0.25,
+                                  child: Text(
+                                    widget.subject.emoji,
+                                    style: const TextStyle(fontSize: 240),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Layer 4 — "draw here" hint; vanishes after first stroke
+                            if (_points.isEmpty && _stamps.isEmpty)
+                              Align(
+                                alignment: const Alignment(0, 0.65),
                                 child: Text(
-                                  widget.subject.emoji,
-                                  style: const TextStyle(fontSize: 240),
+                                  isMalay
+                                      ? '👆 Lukis di sini!'
+                                      : '👆 Draw here!',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFBBBBBB),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-
-                          // Layer 4 — "draw here" hint; vanishes after first stroke
-                          if (_points.isEmpty && _stamps.isEmpty)
-                            Align(
-                              alignment: const Alignment(0, 0.65),
-                              child: Text(
-                                isMalay ? '👆 Lukis di sini!' : '👆 Draw here!',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFFBBBBBB),
-                                ),
-                              ),
-                            ),
-                        ],
+                          ],
                         ),
                       ),
                     ),
@@ -791,7 +822,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                       onTap: _resetZoom,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black54,
                           borderRadius: BorderRadius.circular(20),
@@ -799,8 +832,11 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.zoom_out_map_rounded,
-                                color: Colors.white, size: 16),
+                            const Icon(
+                              Icons.zoom_out_map_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '${_scale.toStringAsFixed(1)}×',
@@ -854,8 +890,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                         label: isMalay ? 'Berus' : 'Brush',
                         selected: _tool == _CanvasTool.brush,
                         color: widget.color,
-                        onTap: () =>
-                            setState(() => _tool = _CanvasTool.brush),
+                        onTap: () => setState(() => _tool = _CanvasTool.brush),
                       ),
                       const SizedBox(width: 6),
                       _ToolTab(
@@ -863,8 +898,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                         label: isMalay ? 'Pemadam' : 'Eraser',
                         selected: _tool == _CanvasTool.eraser,
                         color: widget.color,
-                        onTap: () =>
-                            setState(() => _tool = _CanvasTool.eraser),
+                        onTap: () => setState(() => _tool = _CanvasTool.eraser),
                       ),
                       const SizedBox(width: 6),
                       _ToolTab(
@@ -872,8 +906,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                         label: isMalay ? 'Pelekat' : 'Stickers',
                         selected: _tool == _CanvasTool.stamp,
                         color: widget.color,
-                        onTap: () =>
-                            setState(() => _tool = _CanvasTool.stamp),
+                        onTap: () => setState(() => _tool = _CanvasTool.stamp),
                       ),
                     ],
                   ),
@@ -946,7 +979,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                 ? ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     itemCount: _stampChoices.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 10),
                     itemBuilder: (context, i) {
@@ -963,15 +998,15 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                                 : Colors.grey.shade100,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: isSelected
-                                  ? widget.color
-                                  : Colors.black12,
+                              color: isSelected ? widget.color : Colors.black12,
                               width: isSelected ? 3 : 1.5,
                             ),
                           ),
                           child: Center(
-                            child: Text(e,
-                                style: const TextStyle(fontSize: 28)),
+                            child: Text(
+                              e,
+                              style: const TextStyle(fontSize: 28),
+                            ),
                           ),
                         ),
                       );
@@ -980,7 +1015,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                 : ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     itemCount: _palette.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 10),
                     itemBuilder: (context, i) {
@@ -1000,8 +1037,9 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                             color: c,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color:
-                                  isSelected ? Colors.black87 : Colors.black12,
+                              color: isSelected
+                                  ? Colors.black87
+                                  : Colors.black12,
                               width: isSelected ? 4 : 1.5,
                             ),
                             boxShadow: isSelected
@@ -1009,7 +1047,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                                     BoxShadow(
                                       color: c.withValues(alpha: 0.55),
                                       blurRadius: 12,
-                                    )
+                                    ),
                                   ]
                                 : [],
                           ),
@@ -1080,10 +1118,7 @@ class _DrawingPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      tp.paint(
-        canvas,
-        stamp.offset - Offset(tp.width / 2, tp.height / 2),
-      );
+      tp.paint(canvas, stamp.offset - Offset(tp.width / 2, tp.height / 2));
     }
 
     for (var i = 0; i < points.length - 1; i++) {
@@ -1149,9 +1184,12 @@ class _StarBurstPainter extends CustomPainter {
         Colors.orange,
         Colors.pink,
         color,
-      ][i % 4]
-          .withValues(alpha: (1.0 - t * 0.5));
-      canvas.drawCircle(offset, (6 + r.nextDouble() * 6) * (1 - t * 0.3), paint);
+      ][i % 4].withValues(alpha: (1.0 - t * 0.5));
+      canvas.drawCircle(
+        offset,
+        (6 + r.nextDouble() * 6) * (1 - t * 0.3),
+        paint,
+      );
     }
   }
 

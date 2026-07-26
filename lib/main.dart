@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 import 'app.dart';
 import 'providers/app_state.dart';
@@ -19,7 +18,6 @@ Future<void> main() async {
   ]);
 
   final progressService = ProgressService();
-  final packageInfo = await PackageInfo.fromPlatform();
 
   try {
     await progressService.load();
@@ -35,7 +33,6 @@ Future<void> main() async {
         // Inject the pre-loaded ProgressService so Riverpod providers
         // can depend on it without a second async load.
         progressServiceProvider.overrideWith((ref) => progressService),
-        packageInfoProvider.overrideWith((ref) => packageInfo),
       ],
       child: const TinyFinderApp(),
     ),

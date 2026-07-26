@@ -6,10 +6,7 @@ import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
 
 class DailyRewardDialog extends StatefulWidget {
-  const DailyRewardDialog({
-    super.key,
-    required this.progress,
-  });
+  const DailyRewardDialog({super.key, required this.progress});
 
   final ProgressService progress;
 
@@ -110,8 +107,8 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                           streak >= 7
                               ? '🔥'
                               : streak >= 3
-                                  ? '🌟'
-                                  : '🎁',
+                              ? '🌟'
+                              : '🎁',
                           style: const TextStyle(fontSize: 46),
                         ),
                       ),
@@ -133,7 +130,9 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                     // Streak info
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
@@ -161,18 +160,21 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                     // Stars reward
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 16),
+                        horizontal: 28,
+                        vertical: 16,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.sunnyYellow.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(22),
                         border: Border.all(
-                            color: AppTheme.sunnyYellow, width: 2),
+                          color: AppTheme.sunnyYellow,
+                          width: 2,
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text('⭐',
-                              style: TextStyle(fontSize: 36)),
+                          const Text('⭐', style: TextStyle(fontSize: 36)),
                           const SizedBox(width: 10),
                           Flexible(
                             child: FittedBox(
@@ -276,19 +278,24 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                         decoration: BoxDecoration(
                           gradient: _collected
                               ? const LinearGradient(
-                                  colors: [Color(0xFF34C759), Color(0xFF2ECC71)],
+                                  colors: [
+                                    Color(0xFF34C759),
+                                    Color(0xFF2ECC71),
+                                  ],
                                 )
                               : const LinearGradient(
                                   colors: [
                                     AppTheme.sunnyYellow,
-                                    Color(0xFFFFB300)
+                                    Color(0xFFFFB300),
                                   ],
                                 ),
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(color: Colors.white, width: 2.5),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.sunnyYellow.withValues(alpha: 0.5),
+                              color: AppTheme.sunnyYellow.withValues(
+                                alpha: 0.5,
+                              ),
                               blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),
@@ -298,7 +305,9 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                           child: Text(
                             _collected
                                 ? (isMalay ? '✅ Dikumpul!' : '✅ Collected!')
-                                : (isMalay ? '🎁 Kumpul Hadiah!' : '🎁 Collect Gift!'),
+                                : (isMalay
+                                      ? '🎁 Kumpul Hadiah!'
+                                      : '🎁 Collect Gift!'),
                             style: const TextStyle(
                               color: AppTheme.ink,
                               fontSize: 20,

@@ -7,16 +7,11 @@ import '../providers/app_state.dart';
 
 import '../data/badge_data.dart';
 import '../models/app_language.dart';
-import '../models/challenge.dart';
-import '../models/train_mode.dart';
 import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
 import '../utils/app_text.dart';
 import '../widgets/badge_card.dart';
-import 'learning_path_screen.dart';
-import 'memory_category_screen.dart';
-import 'puzzle_screen.dart';
-import 'train_sort_screen.dart';
 
 class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
@@ -55,9 +50,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
-        backgroundColor: AppTheme.skyBlue,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleGames),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -76,32 +72,6 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
           slivers: [
             SliverToBoxAdapter(
               child: _StarHeroBanner(progress: progress, isMalay: isMalay),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: _SyllabusProgressShortcut(
-                  progress: progress,
-                  isMalay: isMalay,
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                child: _SectionHeader(
-                  emoji: '🎮',
-                  title: isMalay
-                      ? 'Aktiviti & Permainan'
-                      : 'Activities & Games',
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: _ActivityStatsRow(progress: progress, isMalay: isMalay),
-              ),
             ),
             SliverToBoxAdapter(
               child: Padding(
@@ -379,140 +349,6 @@ class _HeroBubble extends ConsumerWidget {
   }
 }
 
-// ── Syllabus Shortcut ─────────────────────────────────────────────────────────
-class _SyllabusProgressShortcut extends ConsumerWidget {
-  const _SyllabusProgressShortcut({
-    required this.progress,
-    required this.isMalay,
-  });
-
-  final ProgressService progress;
-  final bool isMalay;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(22),
-      elevation: 5,
-      shadowColor: AppTheme.skyBlue.withValues(alpha: 0.18),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: () =>
-            Navigator.of(context).pushNamed(LearningPathScreen.routeName),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppTheme.skyBlue.withValues(alpha: 0.25)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.skyBlue, AppTheme.purple],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Center(
-                  child: Text('📚', style: TextStyle(fontSize: 27)),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isMalay ? 'Kemajuan Sukatan' : 'Syllabus Progress',
-                      style: const TextStyle(
-                        color: AppTheme.ink,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      isMalay
-                          ? 'Lihat kemajuan modul lengkap di Laluan Pembelajaran.'
-                          : 'See full module progress in the Learning Path.',
-                      style: const TextStyle(
-                        color: Color(0xFF68789F),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        height: 1.25,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: [
-                        _MiniProgressPill(
-                          label:
-                              '⭐ ${progress.stars} ${isMalay ? "bintang" : "stars"}',
-                        ),
-                        _MiniProgressPill(
-                          label:
-                              '✅ ${progress.completedChallenges} ${isMalay ? "aktiviti" : "activities"}',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: AppTheme.skyBlue.withValues(alpha: 0.14),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: AppTheme.skyBlue,
-                  size: 20,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniProgressPill extends ConsumerWidget {
-  const _MiniProgressPill({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppTheme.lightBlue,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppTheme.skyBlue.withValues(alpha: 0.18)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppTheme.ink,
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
-}
-
 // ── Section Header ─────────────────────────────────────────────────────────────
 class _SectionHeader extends ConsumerWidget {
   const _SectionHeader({required this.emoji, required this.title});
@@ -529,133 +365,10 @@ class _SectionHeader extends ConsumerWidget {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w900,
-            color: AppTheme.ink,
+            color: AppTheme.onNight,
           ),
         ),
       ],
     );
   }
-}
-
-// ── Activity Stats ─────────────────────────────────────────────────────────────
-class _ActivityStatsRow extends ConsumerWidget {
-  const _ActivityStatsRow({required this.progress, required this.isMalay});
-  final ProgressService progress;
-  final bool isMalay;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final stats = [
-      _ActivityStat(
-        '🚂',
-        isMalay ? 'Tren\nNombor' : 'Number\nTrain',
-        progress.countFor(ChallengeMode.numberTrain),
-        AppTheme.appleRed,
-        () => Navigator.of(context).pushNamed(
-          TrainSortScreen.routeName,
-          arguments: const TrainSortArgs(mode: TrainMode.numbers),
-        ),
-      ),
-      _ActivityStat(
-        '🚃',
-        isMalay ? 'Tren\nHuruf' : 'Letter\nTrain',
-        progress.countFor(ChallengeMode.letterTrain),
-        AppTheme.turquoise,
-        () => Navigator.of(context).pushNamed(
-          TrainSortScreen.routeName,
-          arguments: const TrainSortArgs(mode: TrainMode.letters),
-        ),
-      ),
-      _ActivityStat(
-        '🃏',
-        isMalay ? 'Permainan\nMemori' : 'Memory\nGame',
-        progress.countFor(ChallengeMode.memory),
-        AppTheme.purple,
-        () => Navigator.of(context).pushNamed(MemoryCategoryScreen.routeName),
-      ),
-      _ActivityStat(
-        '🧩',
-        isMalay ? 'Teka-Teki\nGambar' : 'Puzzle\nGame',
-        progress.countFor(ChallengeMode.puzzle),
-        AppTheme.leafGreen,
-        () => Navigator.of(context).pushNamed(PuzzleScreen.routeName),
-      ),
-    ];
-    return Row(
-      children: [
-        for (var index = 0; index < stats.length; index++) ...[
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                right: index == stats.length - 1 ? 0 : 8,
-              ),
-              child: Semantics(
-                button: true,
-                label:
-                    '${stats[index].label.replaceAll('\n', ' ')}: ${stats[index].count}',
-                child: Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  elevation: 4,
-                  shadowColor: stats[index].color.withValues(alpha: 0.2),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(18),
-                    onTap: stats[index].onTap,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: Column(
-                        children: [
-                          Text(
-                            stats[index].emoji,
-                            style: const TextStyle(fontSize: 28),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${stats[index].count}',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: stats[index].color,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            stats[index].label,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.ink,
-                              height: 1.2,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _ActivityStat {
-  const _ActivityStat(
-    this.emoji,
-    this.label,
-    this.count,
-    this.color,
-    this.onTap,
-  );
-
-  final String emoji, label;
-  final int count;
-  final Color color;
-  final VoidCallback onTap;
 }

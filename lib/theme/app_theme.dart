@@ -30,11 +30,49 @@ class AppTheme {
   /// Tertiary text (hints, captions) on light surfaces.
   static const inkFaint = Color(0xFF7A7A9A);
 
-  static const primary = deepBlue;
-  static const secondary = appleRed;
+  // ── Night-sky "Adventures" palette ─────────────────────────────
+  // The app now lives inside a starry Malaysian adventure world. Content
+  // sits on bright cards that float over a deep night gradient — so the
+  // existing dark [ink] text on white cards stays fully legible, while the
+  // world around it turns immersive and magical.
+  static const nightTop = Color(0xFF1B1638);
+  static const nightMid = Color(0xFF191A38);
+  static const nightDeep = Color(0xFF12132B);
+  static const nightBottom = Color(0xFF0F3460);
+
+  /// Elevated dark surface (for panels that intentionally stay dark).
+  static const nightSurface = Color(0xFF241F45);
+  static const nightSurfaceHi = Color(0xFF2E2856);
+
+  /// Signature violets + coral of the "Adventures" identity.
+  static const violet = Color(0xFF6C5CE7);
+  static const lilac = Color(0xFFA29BFE);
+  static const coral = Color(0xFFFD79A8);
+  static const gold = Color(0xFFFDCB6E);
+  static const ember = Color(0xFFE17055);
+
+  /// Text/foreground colors for content placed directly on the night sky.
+  static const onNight = Color(0xFFF3F1FF);
+  static const onNightMuted = Color(0xFFB9B4E0);
+  static const onNightFaint = Color(0xFF8C86BC);
+
+  static const primary = violet;
+  static const secondary = coral;
   static const accent = sunnyYellow;
   static const teal = turquoise;
-  static const bg = lightBlue;
+  static const bg = nightMid;
+
+  // ── Signature gradients ────────────────────────────────────────
+  static const auroraGradient = LinearGradient(
+    colors: [violet, lilac, coral],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const nightGradient = LinearGradient(
+    colors: [nightTop, nightMid, nightDeep],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
 
   // ── Module identity colors (single source of truth) ────────────
   // The SAME color must represent a module on every screen — Home grid,
@@ -80,6 +118,9 @@ class AppTheme {
   static const double textDisplay = 26;
 
   static ThemeData light() {
+    // Kept as a light ColorScheme so the app's bright cards, dialogs, and
+    // dark-on-white text render exactly as designed — the "night" is supplied
+    // by the scene background + scaffold, not by inverting every surface.
     final colorScheme = ColorScheme.fromSeed(
       seedColor: primary,
       brightness: Brightness.light,
@@ -93,17 +134,20 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: bg,
       fontFamily: 'Roboto',
+      // App bars float over the night sky (or a saturated module color), so
+      // their content is light.
       appBarTheme: const AppBarTheme(
         centerTitle: false,
         backgroundColor: Colors.transparent,
-        foregroundColor: ink,
+        foregroundColor: onNight,
         elevation: 0,
         scrolledUnderElevation: 0,
+        iconTheme: IconThemeData(color: onNight),
         titleTextStyle: TextStyle(
           fontFamily: 'Roboto',
           fontSize: 24,
           fontWeight: FontWeight.w900,
-          color: ink,
+          color: onNight,
         ),
       ),
       cardTheme: CardThemeData(
@@ -126,9 +170,7 @@ class AppTheme {
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(88, kidTarget),
-        ),
+        style: ElevatedButton.styleFrom(minimumSize: const Size(88, kidTarget)),
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(

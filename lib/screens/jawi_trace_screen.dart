@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/app_language.dart';
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
 import '../widgets/xp_popup.dart';
 
 /// Jawi letter tracing — Jawi v2's first piece.
@@ -35,13 +36,12 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
 
   /// Enough drawn points to plausibly cover a letterform — gates the star so
   /// a single dot doesn't pay out.
-  bool get _traceSubstantial =>
-      _points.where((p) => p != null).length >= 60;
+  bool get _traceSubstantial => _points.where((p) => p != null).length >= 60;
 
   void _clear() => setState(() {
-        _points.clear();
-        _rewarded = false;
-      });
+    _points.clear();
+    _rewarded = false;
+  });
 
   Future<void> _finish() async {
     if (_rewarded || !_traceSubstantial) return;
@@ -51,7 +51,9 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
     await ps.addStars(1);
     if (!mounted) return;
     XpPopup.show(context, amount: 1);
-    await ref.read(audioServiceProvider).speakLocale(
+    await ref
+        .read(audioServiceProvider)
+        .speakLocale(
           isMalay
               ? 'Cantik! Kamu jejak huruf ${widget.letterName}!'
               : 'Beautiful! You traced ${widget.letterName}!',
@@ -67,9 +69,10 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
     final color = widget.color;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
-        backgroundColor: color,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: NightBar(color),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -103,7 +106,7 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w900,
-                  color: AppTheme.ink,
+                  color: AppTheme.onNight,
                 ),
               ),
             ),
@@ -191,8 +194,9 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _rewarded ? AppTheme.leafGreen : AppTheme.sunnyYellow,
+                  backgroundColor: _rewarded
+                      ? AppTheme.leafGreen
+                      : AppTheme.sunnyYellow,
                   foregroundColor: AppTheme.ink,
                   minimumSize: const Size.fromHeight(AppTheme.kidTarget),
                   shape: RoundedRectangleBorder(

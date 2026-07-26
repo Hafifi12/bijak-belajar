@@ -7,6 +7,8 @@ import '../data/memory_data.dart';
 import '../models/app_language.dart';
 import '../models/challenge.dart';
 import '../models/memory_item.dart';
+import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
 import '../utils/app_text.dart';
 import '../widgets/shape_display.dart';
 import '../widgets/star_counter.dart';
@@ -63,7 +65,11 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen> {
     final totalPairs = _cards.length ~/ 2;
 
     return Scaffold(
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(Color(0xFF7E57C2)),
+        foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),

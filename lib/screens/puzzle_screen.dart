@@ -242,9 +242,9 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
     if (!mounted) {
       return;
     }
-    await ref.read(audioServiceProvider).playCelebration(
-      enabled: progressService.soundEnabled,
-    );
+    await ref
+        .read(audioServiceProvider)
+        .playCelebration(enabled: progressService.soundEnabled);
   }
 
   void _nextPuzzle() => setState(() {
@@ -265,9 +265,10 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
     const color = AppTheme.skyBlue;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
-        backgroundColor: AppTheme.skyBlue,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(Color(0xFF00897B)),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -300,8 +301,8 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
         ],
       ),
       body: BijakScene(
-        topColor: const Color(0xFFE9F8FF),
-        bottomColor: AppTheme.lightBlue,
+        topColor: AppTheme.nightTop,
+        bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
           child: Column(

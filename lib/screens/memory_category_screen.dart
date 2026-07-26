@@ -8,6 +8,7 @@ import '../models/memory_item.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_text.dart';
 import '../utils/constants.dart';
+import '../widgets/bijak_scene.dart';
 import 'memory_game_screen.dart';
 
 class MemoryCategoryScreen extends ConsumerWidget {
@@ -20,7 +21,11 @@ class MemoryCategoryScreen extends ConsumerWidget {
     final language = ref.watch(progressServiceProvider).language;
 
     return Scaffold(
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(Color(0xFF7E57C2)),
+        foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
@@ -28,20 +33,28 @@ class MemoryCategoryScreen extends ConsumerWidget {
         ),
         title: Text(AppText.ui('memoryGame', language)),
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: AppConstants.pagePadding,
-          children: [
-            Text(
-              AppText.ui('pickMemoryGame', language),
-              style: Theme.of(context).textTheme.displaySmall,
-            ),
-            const SizedBox(height: 22),
-            for (final category in MemoryCategory.values) ...[
-              _MemoryCategoryStageCard(category: category, language: language),
-              const SizedBox(height: 12),
+      body: BijakScene(
+        showHills: false,
+        child: SafeArea(
+          child: ListView(
+            padding: AppConstants.pagePadding,
+            children: [
+              Text(
+                AppText.ui('pickMemoryGame', language),
+                style: Theme.of(
+                  context,
+                ).textTheme.displaySmall?.copyWith(color: AppTheme.onNight),
+              ),
+              const SizedBox(height: 22),
+              for (final category in MemoryCategory.values) ...[
+                _MemoryCategoryStageCard(
+                  category: category,
+                  language: language,
+                ),
+                const SizedBox(height: 12),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

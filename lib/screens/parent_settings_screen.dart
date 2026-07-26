@@ -18,13 +18,13 @@ class ParentSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(progressServiceProvider);
-    final packageInfo = ref.watch(packageInfoProvider);
     final language = progress.language;
     final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.skyBlue,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleGames),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -34,8 +34,8 @@ class ParentSettingsScreen extends ConsumerWidget {
         title: Text(AppText.ui('parentSettings', language)),
       ),
       body: BijakScene(
-        topColor: AppTheme.lightBlue,
-        bottomColor: Colors.white,
+        topColor: AppTheme.nightTop,
+        bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
           child: ListView(
@@ -44,14 +44,6 @@ class ParentSettingsScreen extends ConsumerWidget {
               Card(
                 child: Column(
                   children: [
-                    SwitchListTile(
-                      value: progress.backgroundMusicEnabled,
-                      onChanged: progress.setBackgroundMusicEnabled,
-                      title: const Text('Background Music'),
-                      subtitle: const Text('Soft music toggle for local audio'),
-                      secondary: const Icon(Icons.music_note_rounded),
-                    ),
-                    const Divider(height: 1),
                     SwitchListTile(
                       value: progress.soundEnabled,
                       onChanged: progress.setSoundEnabled,
@@ -124,7 +116,9 @@ class ParentSettingsScreen extends ConsumerWidget {
                       OutlinedButton.icon(
                         onPressed: () => _confirmReset(context, ref),
                         icon: const Icon(Icons.restart_alt_rounded),
-                        label: Text(isMalay ? 'Set Semula Kemajuan' : 'Reset Progress'),
+                        label: Text(
+                          isMalay ? 'Set Semula Kemajuan' : 'Reset Progress',
+                        ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red,
                           side: const BorderSide(color: Colors.red),
@@ -142,137 +136,6 @@ class ParentSettingsScreen extends ConsumerWidget {
                   subtitle: Text(progress.language.nativeName),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => _selectLanguage(context, ref),
-                ),
-              ),
-              const SizedBox(height: 14),
-              _SectionHeader(
-                emoji: '👨‍💻',
-                label: isMalay ? 'MAKLUMAT PEMBANGUN' : 'DEVELOPER INFO',
-                color: const Color(0xFF6C5CE7),
-              ),
-              const SizedBox(height: 12),
-              // Developer info card
-              Card(
-                elevation: 4,
-                shadowColor: const Color(0xFF6C5CE7).withValues(alpha: 0.2),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide(
-                    color: const Color(0xFF6C5CE7).withValues(alpha: 0.2),
-                    width: 2,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // Logo / icon
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF6C5CE7), Color(0xFFA29BFE)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(22),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF6C5CE7).withValues(alpha: 0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'ANF',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'ANF Studio',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF6C5CE7),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        isMalay
-                            ? 'Dibangunkan dengan ❤️ untuk anak-anak Malaysia'
-                            : 'Developed with ❤️ for Malaysian children',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6C5CE7).withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Column(
-                          children: [
-                            _DevInfoRow(
-                              icon: Icons.apps_rounded,
-                              label: isMalay ? 'Apl' : 'App',
-                              value: 'Bijak Belajar',
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Divider(height: 1, thickness: 0.5),
-                            ),
-                            _DevInfoRow(
-                              icon: Icons.business_rounded,
-                              label: 'Studio',
-                              value: 'ANF Studio',
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Divider(height: 1, thickness: 0.5),
-                            ),
-                            _DevInfoRow(
-                              icon: Icons.flag_rounded,
-                              label: isMalay ? 'Negara' : 'Country',
-                              value: 'Malaysia 🇲🇾',
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Divider(height: 1, thickness: 0.5),
-                            ),
-                            _DevInfoRow(
-                              icon: Icons.child_care_rounded,
-                              label: isMalay ? 'Sasaran' : 'Target',
-                              value: isMalay ? 'Kanak-kanak 3–8 tahun' : 'Kids aged 3–8',
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Divider(height: 1, thickness: 0.5),
-                            ),
-                            _DevInfoRow(
-                              icon: Icons.verified_rounded,
-                              label: isMalay ? 'Versi' : 'Version',
-                              value: '${packageInfo.version}+${packageInfo.buildNumber}',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -339,10 +202,7 @@ class ParentSettingsScreen extends ConsumerWidget {
 }
 
 class _ProgressSummaryCard extends ConsumerWidget {
-  const _ProgressSummaryCard({
-    required this.progress,
-    required this.isMalay,
-  });
+  const _ProgressSummaryCard({required this.progress, required this.isMalay});
   final ProgressService progress;
   final bool isMalay;
 
@@ -479,61 +339,63 @@ class _ProgressSummaryCard extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
 
-            ...modules.map((m) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(m.emoji, style: const TextStyle(fontSize: 16)),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              m.label,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: m.color,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            '${m.done}/${m.total}',
+            ...modules.map(
+              (m) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(m.emoji, style: const TextStyle(fontSize: 16)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            m.label,
                             style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
                               color: m.color,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: m.total > 0
-                              ? (m.done / m.total).clamp(0.0, 1.0)
-                              : 0,
-                          minHeight: 7,
-                          backgroundColor: m.color.withValues(alpha: 0.15),
-                          valueColor: AlwaysStoppedAnimation<Color>(m.color),
                         ),
-                      ),
-                      if (m.last.isNotEmpty) ...[
-                        const SizedBox(height: 2),
                         Text(
-                          '📌 ${isMalay ? "Terakhir" : "Last"}: ${m.last}',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF9090A8),
-                            fontWeight: FontWeight.w600,
+                          '${m.done}/${m.total}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: m.color,
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: m.total > 0
+                            ? (m.done / m.total).clamp(0.0, 1.0)
+                            : 0,
+                        minHeight: 7,
+                        backgroundColor: m.color.withValues(alpha: 0.15),
+                        valueColor: AlwaysStoppedAnimation<Color>(m.color),
+                      ),
+                    ),
+                    if (m.last.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '📌 ${isMalay ? "Terakhir" : "Last"}: ${m.last}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFF9090A8),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
-                  ),
-                )),
+                  ],
+                ),
+              ),
+            ),
 
             const SizedBox(height: 6),
             Container(
@@ -658,108 +520,6 @@ class _SafetyBadge extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _DevInfoRow extends ConsumerWidget {
-  const _DevInfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: const Color(0xFF6C5CE7).withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 14, color: const Color(0xFF6C5CE7)),
-        ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.inkFaint,
-            ),
-          ),
-        ),
-        const Spacer(),
-        const SizedBox(width: 12),
-        Flexible(
-          child: Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.ink,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.emoji,
-    required this.label,
-    required this.color,
-  });
-  final String emoji;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(50),
-            border: Border.all(
-              color: color.withValues(alpha: 0.45),
-              width: 1.4,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 15)),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  color: color,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

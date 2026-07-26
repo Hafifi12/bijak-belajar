@@ -54,16 +54,16 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
   }
 
-  testWidgets('shows the Bijak Belajar home modes', (tester) async {
+  testWidgets('shows the Bijak Belajar adventure-map home', (tester) async {
     final progressService = ProgressService();
     await progressService.load();
 
     await pumpAppAndOpenHome(tester, progressService);
 
-    expect(find.text('Bijak'), findsWidgets);
-    expect(find.text('Belajar'), findsWidgets);
-    expect(find.text('Numbers'), findsWidgets);
-    expect(find.text('Letters'), findsWidgets);
+    // The home is now a zone-based adventure map with a bottom nav.
+    expect(find.text('Map'), findsOneWidget); // bottom-nav "Peta"/"Map"
+    expect(find.textContaining('Number'), findsWidgets); // Number Bazaar zone
+    expect(find.textContaining('Letter'), findsWidgets); // Letter Village zone
   });
 
   testWidgets('opens the number train sorting game', (tester) async {

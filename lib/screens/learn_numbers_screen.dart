@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
 import '../widgets/xp_popup.dart';
+import '../widgets/zara_prompt.dart';
 
 class LearnNumbersScreen extends ConsumerStatefulWidget {
   const LearnNumbersScreen({super.key});
@@ -467,7 +468,8 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
   void _recordCurrentLesson() {
     final ps = ref.read(progressServiceProvider);
     final item = _numbers[_current];
-    final isNewBandEnd = _bandEnds.contains(item.number) &&
+    final isNewBandEnd =
+        _bandEnds.contains(item.number) &&
         !ps.hasSeenLesson('numbers', '${item.number}');
     ps.markModuleLesson('numbers', '${item.number}');
     if (isNewBandEnd) {
@@ -485,7 +487,9 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
     XpPopup.show(context, amount: 5);
     _bounceController.forward(from: 0);
     final isMalay = ps.language == AppLanguage.malay;
-    await ref.read(audioServiceProvider).speakLocale(
+    await ref
+        .read(audioServiceProvider)
+        .speakLocale(
           isMalay
               ? 'Hebat! Kamu sudah sampai nombor $n! Lima bintang bonus!'
               : 'Amazing! You reached number $n! Five bonus stars!',
@@ -558,11 +562,12 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
     final isLast = _current == _numbers.length - 1;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
         // Module identity color — must match the Numbers tile on Home and
         // the Learning Path card so pre-readers know where they are.
-        backgroundColor: AppTheme.moduleNumbers,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleNumbers),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -586,7 +591,10 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                 children: [
                   Text(
                     isMalay ? 'Nombor 1–100' : 'Numbers 1–100',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -613,8 +621,8 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
         ],
       ),
       body: BijakScene(
-        topColor: const Color(0xFFE9F8FF),
-        bottomColor: AppTheme.lightBlue,
+        topColor: AppTheme.nightTop,
+        bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
           child: Column(
@@ -662,11 +670,13 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _FocusInstruction(
-                  color: color,
-                  text: isMalay
-                      ? 'Baca perkataan, kira objek, kemudian cuba sebut sendiri.'
-                      : 'Read the word, count the objects, then try saying it yourself.',
+                child: ZaraPrompt(
+                  message: isMalay
+                      ? 'Nombor apakah ini? Kira & sebut kuat-kuat!'
+                      : 'What number is this? Count & say it aloud!',
+                  sub: isMalay
+                      ? 'What number is this?'
+                      : 'Kira objek & sebut nombor',
                 ),
               ),
               const SizedBox(height: 8),
@@ -769,11 +779,13 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.deepBlue,
                             foregroundColor: Colors.white,
-                            minimumSize:
-                                const Size.fromHeight(AppTheme.kidTarget),
+                            minimumSize: const Size.fromHeight(
+                              AppTheme.kidTarget,
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusLg),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusLg,
+                              ),
                             ),
                             elevation: 5,
                             side: const BorderSide(
@@ -800,11 +812,13 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.sunnyYellow,
                           foregroundColor: AppTheme.ink,
-                          minimumSize:
-                              const Size.fromHeight(AppTheme.kidTarget),
+                          minimumSize: const Size.fromHeight(
+                            AppTheme.kidTarget,
+                          ),
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusLg),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusLg,
+                            ),
                           ),
                           elevation: 6,
                           side: const BorderSide(
@@ -836,51 +850,6 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _FocusInstruction extends StatelessWidget {
-  const _FocusInstruction({required this.color, required this.text});
-
-  final Color color;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white, width: 2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            child: const Icon(
-              Icons.center_focus_strong_rounded,
-              color: Colors.white,
-              size: 19,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: AppTheme.ink,
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                height: 1.22,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1033,7 +1002,8 @@ class _CountingObjectsPanel extends ConsumerStatefulWidget {
   final bool isMalay;
 
   @override
-  ConsumerState<_CountingObjectsPanel> createState() => _CountingObjectsPanelState();
+  ConsumerState<_CountingObjectsPanel> createState() =>
+      _CountingObjectsPanelState();
 }
 
 class _CountingObjectsPanelState extends ConsumerState<_CountingObjectsPanel> {

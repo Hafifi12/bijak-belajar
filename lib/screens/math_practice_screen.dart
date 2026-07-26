@@ -11,6 +11,7 @@ import '../widgets/bijak_scene.dart';
 import '../widgets/pressable.dart';
 import '../widgets/star_counter.dart';
 import '../widgets/xp_popup.dart';
+import '../widgets/zara_prompt.dart';
 
 // ── Entry point (topic picker) ─────────────────────────────────────────────────
 class MathPracticeScreen extends ConsumerWidget {
@@ -108,7 +109,7 @@ class MathPracticeScreen extends ConsumerWidget {
     final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -127,14 +128,18 @@ class MathPracticeScreen extends ConsumerWidget {
             Flexible(
               child: Text(
                 isMalay ? 'Latihan Matematik' : 'Maths Practice',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 17,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
-        backgroundColor: AppTheme.moduleMath,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleMath),
         foregroundColor: Colors.white,
         actions: const [
           Padding(
@@ -144,86 +149,32 @@ class MathPracticeScreen extends ConsumerWidget {
         ],
       ),
       body: BijakScene(
-        topColor: const Color(0xFFE9F8FF),
-        bottomColor: AppTheme.lightBlue,
-        showHills: false,
         child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              // Header banner
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.skyBlue, AppTheme.turquoise],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Zara welcomes the child to the Math Forest.
+                  ZaraPrompt(
+                    message: isMalay
+                        ? 'Selamat datang ke Hutan Matematik!'
+                        : 'Welcome to the Math Forest!',
+                    sub: isMalay
+                        ? 'Ketuk stesen di jejak untuk berlatih.'
+                        : 'Tap a station on the trail to practise.',
                   ),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.skyBlue.withValues(alpha: 0.3),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Text('🧮', style: TextStyle(fontSize: 52)),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isMalay
-                                ? 'Matematik Prasekolah'
-                                : 'Preschool Maths',
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            isMalay
-                                ? 'Pilih topik untuk berlatih!'
-                                : 'Choose a topic to practise!',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  const SizedBox(height: 12),
+                  // Daily 5 — the module's daily comeback hook.
+                  _Daily5Card(isMalay: isMalay),
+                  const SizedBox(height: 4),
+                  // Interactive trail of math-topic stations.
+                  _MathForestMap(topics: _topics, isMalay: isMalay),
+                ],
               ),
-
-              const SizedBox(height: 14),
-
-              // Daily 5 — the module's daily comeback hook.
-              _Daily5Card(isMalay: isMalay),
-
-              const SizedBox(height: 22),
-
-              // Level selector hint
-              _LevelHintBar(isMalay: isMalay),
-
-              const SizedBox(height: 16),
-
-              // Topic buttons
-              ..._topics.map(
-                (topic) => Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: _TopicCard(topic: topic, isMalay: isMalay),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -269,7 +220,10 @@ class _Daily5Card extends ConsumerWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: done
-                ? [AppTheme.leafGreen, AppTheme.leafGreen.withValues(alpha: 0.8)]
+                ? [
+                    AppTheme.leafGreen,
+                    AppTheme.leafGreen.withValues(alpha: 0.8),
+                  ]
                 : [color, color.withValues(alpha: 0.78)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -278,8 +232,9 @@ class _Daily5Card extends ConsumerWidget {
           border: Border.all(color: Colors.white, width: 2.5),
           boxShadow: [
             BoxShadow(
-              color: (done ? AppTheme.leafGreen : color)
-                  .withValues(alpha: 0.35),
+              color: (done ? AppTheme.leafGreen : color).withValues(
+                alpha: 0.35,
+              ),
               blurRadius: 14,
               offset: const Offset(0, 5),
             ),
@@ -305,11 +260,11 @@ class _Daily5Card extends ConsumerWidget {
                   Text(
                     done
                         ? (isMalay
-                            ? 'Selesai hari ini! Datang lagi esok ⭐'
-                            : 'Done today! Come back tomorrow ⭐')
+                              ? 'Selesai hari ini! Datang lagi esok ⭐'
+                              : 'Done today! Come back tomorrow ⭐')
                         : (isMalay
-                            ? '5 soalan pantas • Bonus +5 ⭐'
-                            : '5 quick questions • +5 ⭐ bonus'),
+                              ? '5 soalan pantas • Bonus +5 ⭐'
+                              : '5 quick questions • +5 ⭐ bonus'),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -319,8 +274,11 @@ class _Daily5Card extends ConsumerWidget {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                color: Colors.white, size: 20),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -328,173 +286,381 @@ class _Daily5Card extends ConsumerWidget {
   }
 }
 
-class _LevelHintBar extends ConsumerWidget {
-  const _LevelHintBar({required this.isMalay});
+// ── Math Forest map (interactive topic trail) ───────────────────────────────
+class _MathForestMap extends StatelessWidget {
+  const _MathForestMap({required this.topics, required this.isMalay});
+
+  final List<_MathTopic> topics;
   final bool isMalay;
 
+  // Serpentine station positions (fractions of the map's width/height).
+  static const _pos = <Offset>[
+    Offset(0.22, 0.015),
+    Offset(0.72, 0.11),
+    Offset(0.30, 0.22),
+    Offset(0.72, 0.33),
+    Offset(0.24, 0.44),
+    Offset(0.68, 0.545),
+    Offset(0.32, 0.655),
+    Offset(0.70, 0.76),
+    Offset(0.40, 0.87),
+  ];
+
+  // Decorative trees scattered through the forest.
+  static const _trees = <Offset>[
+    Offset(0.50, 0.05),
+    Offset(0.12, 0.28),
+    Offset(0.90, 0.20),
+    Offset(0.48, 0.39),
+    Offset(0.13, 0.58),
+    Offset(0.88, 0.66),
+    Offset(0.55, 0.80),
+    Offset(0.86, 0.90),
+  ];
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    const levels = [
-      (color: Color(0xFF1DD1A1), label: 'Tahap 1', labelEn: 'Level 1'),
-      (color: Color(0xFFFF9F43), label: 'Tahap 2', labelEn: 'Level 2'),
-      (color: Color(0xFFFF6B6B), label: 'Tahap 3', labelEn: 'Level 3'),
-    ];
-    return Row(
-      children: levels
-          .map(
-            (l) => Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: l.color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: l.color.withValues(alpha: 0.4)),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      isMalay ? l.label : l.labelEn,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: l.color,
-                      ),
-                    ),
-                    Text(
-                      isMalay
-                          ? (l.label == 'Tahap 1'
-                                ? 'Mudah'
-                                : l.label == 'Tahap 2'
-                                ? 'Sederhana'
-                                : 'Susah')
-                          : (l.labelEn == 'Level 1'
-                                ? 'Easy'
-                                : l.labelEn == 'Level 2'
-                                ? 'Medium'
-                                : 'Hard'),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: l.color.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                ),
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final h = max(800.0, w * 2.2);
+        final n = min(topics.length, _pos.length);
+        final centers = [
+          for (var i = 0; i < n; i++)
+            Offset(_pos[i].dx * w, _pos[i].dy * h + 34),
+        ];
+
+        return SizedBox(
+          width: w,
+          height: h,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Winding forest trail behind the stations.
+              Positioned.fill(
+                child: CustomPaint(painter: _MathTrailPainter(centers)),
               ),
-            ),
-          )
-          .toList(),
+              // Trees.
+              for (var i = 0; i < _trees.length; i++)
+                Positioned(
+                  left: _trees[i].dx * w - 14,
+                  top: _trees[i].dy * h,
+                  child: Opacity(
+                    opacity: 0.55,
+                    child: Text(
+                      i.isEven ? '🌲' : '🌳',
+                      style: const TextStyle(fontSize: 28),
+                    ),
+                  ),
+                ),
+              // Topic stations.
+              for (var i = 0; i < n; i++)
+                Positioned(
+                  left: _pos[i].dx * w - 54,
+                  top: _pos[i].dy * h,
+                  child: _TopicNode(topic: topics[i], isMalay: isMalay),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
-class _TopicCard extends ConsumerWidget {
-  const _TopicCard({required this.topic, required this.isMalay});
+class _TopicNode extends StatelessWidget {
+  const _TopicNode({required this.topic, required this.isMalay});
+
   final _MathTopic topic;
   final bool isMalay;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      elevation: 4,
-      shadowColor: topic.color.withValues(alpha: 0.2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => MathQuizScreen(op: topic.op, color: topic.color),
-          ),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: topic.color.withValues(alpha: 0.3),
-              width: 2,
+  Widget build(BuildContext context) {
+    final label = isMalay ? topic.labelMs : topic.labelEn;
+    return Pressable(
+      onTap: () => _showTopicLevels(context, topic, isMalay),
+      pressedScale: 0.92,
+      semanticLabel: label,
+      child: SizedBox(
+        width: 108,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 66,
+              height: 66,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [topic.color, topic.color.withValues(alpha: 0.72)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: topic.color.withValues(alpha: 0.55),
+                    blurRadius: 18,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: Icon(topic.icon, color: Colors.white, size: 30),
             ),
-          ),
-          child: Row(
+            const SizedBox(height: 5),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppTheme.onNight,
+                fontSize: 11,
+                height: 1.12,
+                fontWeight: FontWeight.w800,
+                shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+              ),
+            ),
+            const SizedBox(height: 3),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: topic.color.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: topic.color.withValues(alpha: 0.5),
+                  width: 1,
+                ),
+              ),
+              child: const Text(
+                '1 · 2 · 3',
+                style: TextStyle(
+                  color: AppTheme.onNight,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Dashed trail connecting the topic stations in order.
+class _MathTrailPainter extends CustomPainter {
+  const _MathTrailPainter(this.centers);
+  final List<Offset> centers;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppTheme.gold.withValues(alpha: 0.35)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < centers.length - 1; i++) {
+      _dashed(canvas, centers[i], centers[i + 1], paint);
+    }
+  }
+
+  void _dashed(Canvas canvas, Offset a, Offset b, Paint paint) {
+    final total = (b - a).distance;
+    const dash = 9.0, gap = 8.0;
+    double d = 0;
+    while (d < total) {
+      final f1 = d / total;
+      final f2 = min(d + dash, total) / total;
+      canvas.drawLine(Offset.lerp(a, b, f1)!, Offset.lerp(a, b, f2)!, paint);
+      d += dash + gap;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MathTrailPainter oldDelegate) =>
+      oldDelegate.centers != centers;
+}
+
+/// Bottom sheet to pick a difficulty level (Tahap 1–3) for a topic.
+void _showTopicLevels(BuildContext context, _MathTopic topic, bool isMalay) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _LevelSheet(topic: topic, isMalay: isMalay),
+  );
+}
+
+class _LevelSheet extends StatelessWidget {
+  const _LevelSheet({required this.topic, required this.isMalay});
+
+  final _MathTopic topic;
+  final bool isMalay;
+
+  static const _levels = [
+    (level: 1, color: Color(0xFF1DD1A1), ms: 'Mudah', en: 'Easy'),
+    (level: 2, color: Color(0xFFFF9F43), ms: 'Sederhana', en: 'Medium'),
+    (level: 3, color: Color(0xFFFF6B6B), ms: 'Susah', en: 'Hard'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.nightSurfaceHi, AppTheme.nightDeep],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 10, 18, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 56,
-                height: 56,
+                width: 44,
+                height: 5,
                 decoration: BoxDecoration(
-                  color: topic.color,
-                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                child: Icon(topic.icon, color: Colors.white, size: 28),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isMalay ? topic.labelMs : topic.labelEn,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: topic.color,
-                      ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: topic.color,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    Text(
-                      isMalay ? topic.subtitleMs : topic.subtitleEn,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
+                    child: Icon(topic.icon, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isMalay ? topic.labelMs : topic.labelEn,
+                          style: const TextStyle(
+                            color: AppTheme.onNight,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isMalay ? topic.subtitleMs : topic.subtitleEn,
+                          style: const TextStyle(
+                            color: AppTheme.onNightMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    // Level chips
-                    Row(
-                      children: [1, 2, 3]
-                          .map(
-                            (l) => GestureDetector(
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => MathQuizScreen(
-                                    op: topic.op,
-                                    color: topic.color,
-                                    level: l,
-                                  ),
-                                ),
-                              ),
-                              child: Container(
-                                margin: const EdgeInsets.only(right: 6),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: topic.color.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: topic.color.withValues(alpha: 0.35),
-                                  ),
-                                ),
-                                child: Text(
-                                  isMalay ? 'Tahap $l' : 'Level $l',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: topic.color,
-                                  ),
-                                ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  isMalay ? 'PILIH TAHAP' : 'PICK A LEVEL',
+                  style: const TextStyle(
+                    color: AppTheme.onNightFaint,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              for (final l in _levels)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Pressable(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => MathQuizScreen(
+                            op: topic.op,
+                            color: topic.color,
+                            level: l.level,
+                          ),
+                        ),
+                      );
+                    },
+                    pressedScale: 0.98,
+                    semanticLabel:
+                        '${isMalay ? 'Tahap' : 'Level'} ${l.level} — ${isMalay ? l.ms : l.en}',
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [l.color, l.color.withValues(alpha: 0.8)],
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: l.color.withValues(alpha: 0.4),
+                            blurRadius: 14,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '${l.level}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
                               ),
                             ),
-                          )
-                          .toList(),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              '${isMalay ? 'Tahap' : 'Level'} ${l.level} · ${isMalay ? l.ms : l.en}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: topic.color.withValues(alpha: 0.5),
-              ),
             ],
           ),
         ),
@@ -617,9 +783,11 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
       rng: _rng,
       isMalay: isMalay,
     );
-    for (var attempt = 0;
-        attempt < 15 && _askedQuestions.contains(candidate.questionText);
-        attempt++) {
+    for (
+      var attempt = 0;
+      attempt < 15 && _askedQuestions.contains(candidate.questionText);
+      attempt++
+    ) {
       candidate = _Question.generate(
         op: widget.op,
         level: _level,
@@ -708,9 +876,10 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
     final color = widget.color;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
-        backgroundColor: AppTheme.moduleMath,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleMath),
         foregroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,230 +902,240 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
         ],
       ),
       body: BijakScene(
-        topColor: const Color(0xFFE9F8FF),
-        bottomColor: AppTheme.lightBlue,
+        topColor: AppTheme.nightTop,
+        bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
+          // NOTE: a plain scroll + Column (no IntrinsicHeight) is required
+          // because the answer GridView and the counting-objects scroll view
+          // are lazy viewports — IntrinsicHeight cannot measure a viewport and
+          // would throw, leaving the whole body blank.
           child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top -
-                    MediaQuery.of(context).padding.bottom -
-                    AppBar().preferredSize.height,
-              ),
-              child: IntrinsicHeight(
-                child: Column(
-                  children: [
-                    // Yellow progress bar + counter pill
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(999),
-                              child: LinearProgressIndicator(
-                                value: (_questionIndex + 1) / _totalQuestions,
-                                minHeight: 13,
-                                backgroundColor: Colors.white,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  AppTheme.sunnyYellow,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.deepBlue,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                            child: Text(
-                              '${_questionIndex + 1}/$_totalQuestions',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Answer history dots
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: Row(
-                        children: List.generate(_totalQuestions, (i) {
-                          Color dotColor;
-                          if (i < _answers.length) {
-                            dotColor = _answers[i]
-                                ? AppTheme.leafGreen
-                                : AppTheme.appleRed;
-                          } else if (i == _questionIndex) {
-                            dotColor = color;
-                          } else {
-                            dotColor = Colors.white.withValues(alpha: 0.5);
-                          }
-                          return Expanded(
-                            child: Container(
-                              height: 8,
-                              margin: const EdgeInsets.symmetric(horizontal: 2),
-                              decoration: BoxDecoration(
-                                color: dotColor,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Question card (white container)
-                    AnimatedBuilder(
-                      animation: _popAnim,
-                      builder: (_, child) =>
-                          Transform.scale(scale: _popAnim.value, child: child),
-                      child: AnimatedBuilder(
-                        animation: _shakeAnim,
-                        builder: (_, child) => Transform.translate(
-                          offset: Offset(
-                            sin(_shakeAnim.value * pi * 5) *
-                                10 *
-                                (1 - _shakeAnim.value),
-                            0,
-                          ),
-                          child: child,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 32,
-                              horizontal: 24,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(28),
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.deepBlue.withValues(alpha: 0.14),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                Text(_q.emoji, style: const TextStyle(fontSize: 46)),
-                                if (_q.visualCount != null) ...[
-                                  const SizedBox(height: 10),
-                                  _CountingObjectGrid(
-                                    emoji: _q.emoji,
-                                    count: _q.visualCount!,
-                                    color: color,
-                                  ),
-                                ],
-                                const SizedBox(height: 12),
-                                Text(
-                                  _q.questionText,
-                                  style: TextStyle(
-                                    fontSize: 38,
-                                    fontWeight: FontWeight.w900,
-                                    color: color,
-                                    height: 1.1,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                if (_q.hint != null) ...[
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    _q.hint!,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey.shade500,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                                if (_answered) ...[
-                                  const SizedBox(height: 12),
-                                  _AnswerFeedback(
-                                    correct:
-                                        _selectedOption != null &&
-                                        _q.options[_selectedOption!] == _q.answer,
-                                    isMalay: isMalay,
-                                  ),
-                                ],
-                              ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Yellow progress bar + counter pill
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: LinearProgressIndicator(
+                            value: (_questionIndex + 1) / _totalQuestions,
+                            minHeight: 13,
+                            backgroundColor: Colors.white,
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppTheme.sunnyYellow,
                             ),
                           ),
                         ),
                       ),
-                    ),
-
-                    const Spacer(),
-
-                    // Answer options grid
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 2.6,
-                        children: _q.options.asMap().entries.map((e) {
-                          final idx = e.key;
-                          final opt = e.value;
-                          final isCorrect = opt == _q.answer;
-                          Color btnColor = Colors.white;
-                          Color textColor = color;
-                          Color borderColor = color.withValues(alpha: 0.4);
-
-                          if (_answered && _selectedOption == idx) {
-                            btnColor = isCorrect
-                                ? AppTheme.leafGreen
-                                : AppTheme.appleRed;
-                            textColor = Colors.white;
-                            borderColor = btnColor;
-                          } else if (_answered && isCorrect) {
-                            btnColor = AppTheme.leafGreen.withValues(alpha: 0.15);
-                            textColor = AppTheme.leafGreen;
-                            borderColor = AppTheme.leafGreen;
-                          }
-
-                          return _AnswerOption(
-                            btnColor: btnColor,
-                            textColor: textColor,
-                            borderColor: borderColor,
-                            elevation: _answered ? 0 : 3,
-                            glowColor: color,
-                            label: '$opt',
-                            enabled: !_answered,
-                            onTap: () => _pick(idx, isCorrect),
-                          );
-                        }).toList(),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.deepBlue,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Text(
+                          '${_questionIndex + 1}/$_totalQuestions',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 24),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+
+                // Answer history dots
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Row(
+                    children: List.generate(_totalQuestions, (i) {
+                      Color dotColor;
+                      if (i < _answers.length) {
+                        dotColor = _answers[i]
+                            ? AppTheme.leafGreen
+                            : AppTheme.appleRed;
+                      } else if (i == _questionIndex) {
+                        dotColor = color;
+                      } else {
+                        dotColor = Colors.white.withValues(alpha: 0.5);
+                      }
+                      return Expanded(
+                        child: Container(
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          decoration: BoxDecoration(
+                            color: dotColor,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // ── Zara asks the question ─────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ZaraPrompt(
+                    message: isMalay
+                        ? 'Berapakah jawapannya? Kira & pilih!'
+                        : "What's the answer? Count & choose!",
+                    sub: isMalay ? "What's the answer?" : 'Kira dengan teliti',
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Question card (white container)
+                AnimatedBuilder(
+                  animation: _popAnim,
+                  builder: (_, child) =>
+                      Transform.scale(scale: _popAnim.value, child: child),
+                  child: AnimatedBuilder(
+                    animation: _shakeAnim,
+                    builder: (_, child) => Transform.translate(
+                      offset: Offset(
+                        sin(_shakeAnim.value * pi * 5) *
+                            10 *
+                            (1 - _shakeAnim.value),
+                        0,
+                      ),
+                      child: child,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 32,
+                          horizontal: 24,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.deepBlue.withValues(alpha: 0.14),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              _q.emoji,
+                              style: const TextStyle(fontSize: 46),
+                            ),
+                            if (_q.visualCount != null) ...[
+                              const SizedBox(height: 10),
+                              _CountingObjectGrid(
+                                emoji: _q.emoji,
+                                count: _q.visualCount!,
+                                color: color,
+                              ),
+                            ],
+                            const SizedBox(height: 12),
+                            Text(
+                              _q.questionText,
+                              style: TextStyle(
+                                fontSize: 38,
+                                fontWeight: FontWeight.w900,
+                                color: color,
+                                height: 1.1,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (_q.hint != null) ...[
+                              const SizedBox(height: 10),
+                              Text(
+                                _q.hint!,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade500,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                            if (_answered) ...[
+                              const SizedBox(height: 12),
+                              _AnswerFeedback(
+                                correct:
+                                    _selectedOption != null &&
+                                    _q.options[_selectedOption!] == _q.answer,
+                                isMalay: isMalay,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Answer options grid
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 2.6,
+                    children: _q.options.asMap().entries.map((e) {
+                      final idx = e.key;
+                      final opt = e.value;
+                      final isCorrect = opt == _q.answer;
+                      Color btnColor = Colors.white;
+                      Color textColor = color;
+                      Color borderColor = color.withValues(alpha: 0.4);
+
+                      if (_answered && _selectedOption == idx) {
+                        btnColor = isCorrect
+                            ? AppTheme.leafGreen
+                            : AppTheme.appleRed;
+                        textColor = Colors.white;
+                        borderColor = btnColor;
+                      } else if (_answered && isCorrect) {
+                        btnColor = AppTheme.leafGreen.withValues(alpha: 0.15);
+                        textColor = AppTheme.leafGreen;
+                        borderColor = AppTheme.leafGreen;
+                      }
+
+                      return _AnswerOption(
+                        btnColor: btnColor,
+                        textColor: textColor,
+                        borderColor: borderColor,
+                        elevation: _answered ? 0 : 3,
+                        glowColor: color,
+                        label: '$opt',
+                        enabled: !_answered,
+                        onTap: () => _pick(idx, isCorrect),
+                      );
+                    }).toList(),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+              ],
             ),
           ),
         ),
@@ -1138,7 +1317,8 @@ class _AnswerOptionState extends State<_AnswerOption>
               child: Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: Color.lerp(
+                    color:
+                        Color.lerp(
                           widget.borderColor,
                           widget.glowColor,
                           _hintGlow.value,
@@ -1249,9 +1429,10 @@ class MathResultScreen extends ConsumerWidget {
               : 'Keep Practising!');
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
-        backgroundColor: AppTheme.moduleMath,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleMath),
         foregroundColor: Colors.white,
         title: Text(
           isMalay ? 'Keputusan 🏆' : 'Results 🏆',
@@ -1260,8 +1441,8 @@ class MathResultScreen extends ConsumerWidget {
         automaticallyImplyLeading: false,
       ),
       body: BijakScene(
-        topColor: const Color(0xFFE9F8FF),
-        bottomColor: AppTheme.lightBlue,
+        topColor: AppTheme.nightTop,
+        bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
           child: Center(

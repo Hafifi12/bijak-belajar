@@ -31,18 +31,13 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
   confetti: ^0.7.0
   shared_preferences: ^2.2.0
-  flutter_staggered_animations: ^1.1.1
-  lottie: ^3.3.3
-  font_awesome_flutter: ^11.0.0
   flutter_riverpod: ^2.6.1
   flutter_tts: ^4.2.0
   speech_to_text: ^7.0.0
   path_provider: ^2.1.4
   share_plus: ^10.1.2
-  package_info_plus: ^8.1.2
 
 dev_dependencies:
   flutter_test:
@@ -66,7 +61,6 @@ flutter:
     - assets/images/
     - assets/images/body_parts/
     - assets/audio/
-    - assets/animations/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

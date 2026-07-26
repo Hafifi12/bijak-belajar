@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_language.dart';
 import '../models/train_mode.dart';
+import '../theme/app_theme.dart';
+import '../widgets/bijak_scene.dart';
 import '../utils/app_text.dart';
 import '../widgets/star_counter.dart';
 import 'home_screen.dart';
@@ -40,8 +42,32 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
 
   static final _allNumbers = List.generate(100, (i) => '${i + 1}');
   static const _allLetters = [
-    'A','B','C','D','E','F','G','H','I','J','K','L','M',
-    'N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
   ];
 
   String get _prefKey => 'train_group_${_mode.name}';
@@ -78,7 +104,9 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
 
   Future<void> _saveGroupIndex() async {
     final prefs = await SharedPreferences.getInstance();
-    final idx = _mode == TrainMode.numbers ? _numberGroupStart : _letterGroupStart;
+    final idx = _mode == TrainMode.numbers
+        ? _numberGroupStart
+        : _letterGroupStart;
     await prefs.setInt(_prefKey, idx);
   }
 
@@ -97,7 +125,11 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
         : null;
 
     return Scaffold(
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: NightBar(_mode.color),
+        foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
@@ -249,7 +281,9 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
     final progressService = ref.read(progressServiceProvider);
     final audioService = ref.read(audioServiceProvider);
 
-    setState(() { _completed = true; });
+    setState(() {
+      _completed = true;
+    });
 
     await progressService.completeChallenge(_mode.challengeMode);
     await audioService.playCelebration(enabled: progressService.soundEnabled);
@@ -264,8 +298,11 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('🎉', textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 48)),
+        title: const Text(
+          '🎉',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 48),
+        ),
         content: Text(
           isMalay ? 'Tahniah! Kamu berjaya!' : 'Great job! Round complete!',
           textAlign: TextAlign.center,
@@ -287,7 +324,8 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
                   style: FilledButton.styleFrom(
                     backgroundColor: _mode.color,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -303,7 +341,8 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
                   label: Text(isMalay ? 'Cuba Lagi' : 'Try Again'),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -314,7 +353,8 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
                   onPressed: () {
                     Navigator.of(ctx).pop();
                     Navigator.of(context).popUntil(
-                        (route) => route.settings.name == HomeScreen.routeName);
+                      (route) => route.settings.name == HomeScreen.routeName,
+                    );
                   },
                   icon: const Icon(Icons.home_rounded),
                   label: Text(isMalay ? 'Laman Utama' : 'Home'),
@@ -442,7 +482,9 @@ class _TrainTrack extends ConsumerWidget {
                       // Only the next empty slot accepts a dropped car —
                       // dropping the right one completes that step.
                       isNextSlot: index == placed.length,
-                      onCarDropped: index == placed.length ? onCarDropped : null,
+                      onCarDropped: index == placed.length
+                          ? onCarDropped
+                          : null,
                     ),
                   ],
                 ],
@@ -542,29 +584,32 @@ class _TrainChoiceCar extends ConsumerWidget {
   final bool wrong;
   final VoidCallback onTap;
 
-  Widget _card(BuildContext context, Color borderColor, {bool dimmed = false}) =>
-      Material(
-        color: wrong
-            ? const Color(0xFFFFEBEE)
-            : Colors.white.withValues(alpha: dimmed ? 0.35 : 1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: borderColor, width: 3),
+  Widget _card(
+    BuildContext context,
+    Color borderColor, {
+    bool dimmed = false,
+  }) => Material(
+    color: wrong
+        ? const Color(0xFFFFEBEE)
+        : Colors.white.withValues(alpha: dimmed ? 0.35 : 1),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: BorderSide(color: borderColor, width: 3),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: SizedBox(
+      width: 84,
+      height: 84,
+      child: Center(
+        child: Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.displaySmall?.copyWith(color: borderColor),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          width: 84,
-          height: 84,
-          child: Center(
-            child: Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.displaySmall?.copyWith(color: borderColor),
-            ),
-          ),
-        ),
-      );
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

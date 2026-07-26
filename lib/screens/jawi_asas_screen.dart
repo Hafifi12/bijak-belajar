@@ -7,6 +7,7 @@ import '../models/app_language.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
+import '../widgets/zara_prompt.dart';
 import 'jawi_trace_screen.dart';
 
 /// Jawi Asas — teaches the 28 Arabic/Jawi letters used in Bahasa Melayu Jawi
@@ -313,9 +314,10 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
     final isLast = _current == _jawis.length - 1;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
+      backgroundColor: AppTheme.nightMid,
       appBar: AppBar(
-        backgroundColor: AppTheme.moduleJawi,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const NightBar(AppTheme.moduleJawi),
         foregroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -340,7 +342,10 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                     language == AppLanguage.malay
                         ? 'Jawi Asas — حروف جاوي'
                         : 'Jawi Letters — حروف جاوي',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -365,8 +370,8 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
         ],
       ),
       body: BijakScene(
-        topColor: const Color(0xFFE9F8FF),
-        bottomColor: AppTheme.lightBlue,
+        topColor: AppTheme.nightTop,
+        bottomColor: AppTheme.nightBottom,
         showHills: false,
         child: SafeArea(
           child: Column(
@@ -412,49 +417,16 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                   ],
                 ),
               ),
-              // ── Instruction ────────────────────────────────────
+              // ── Zara asks the question ─────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.center_focus_strong_rounded,
-                          color: Colors.white,
-                          size: 19,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          language == AppLanguage.malay
-                              ? 'Lihat huruf Jawi, baca namanya, dan sebut contoh perkataan!'
-                              : 'See the Jawi letter, read its name, and say the example word!',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                child: ZaraPrompt(
+                  message: language == AppLanguage.malay
+                      ? 'Huruf Jawi apakah ini? Baca & sebut!'
+                      : 'Which Jawi letter is this? Read & say it!',
+                  sub: language == AppLanguage.malay
+                      ? 'Which Jawi letter is this?'
+                      : 'Baca nama & contoh perkataan',
                 ),
               ),
               const SizedBox(height: 8),
@@ -548,11 +520,13 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.sunnyYellow,
                                 foregroundColor: AppTheme.ink,
-                                minimumSize:
-                                    const Size.fromHeight(AppTheme.kidTarget),
+                                minimumSize: const Size.fromHeight(
+                                  AppTheme.kidTarget,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(AppTheme.radiusLg),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusLg,
+                                  ),
                                 ),
                                 side: const BorderSide(
                                   color: Colors.white,
@@ -580,7 +554,8 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                                   ),
                                   const SizedBox(width: 12),
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         item.example,

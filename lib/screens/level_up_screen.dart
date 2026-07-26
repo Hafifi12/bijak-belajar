@@ -48,7 +48,11 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
     final msg = widget.isMalay
         ? 'Tahniah! Kamu naik ke Tahap ${widget.newLevel.level}! ${widget.newLevel.titleMalay}!'
         : 'Congratulations! You reached Level ${widget.newLevel.level}! ${widget.newLevel.title}!';
-    await audio.speakLocale(msg, enabled: true, locale: widget.isMalay ? 'ms-MY' : 'en-US');
+    await audio.speakLocale(
+      msg,
+      enabled: true,
+      locale: widget.isMalay ? 'ms-MY' : 'en-US',
+    );
   }
 
   @override
@@ -102,7 +106,9 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
                     // LEVEL UP badge
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.sunnyYellow,
                         borderRadius: BorderRadius.circular(50),
@@ -120,8 +126,7 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
                     const SizedBox(height: 20),
 
                     // Big emoji
-                    Text(level.emoji,
-                        style: const TextStyle(fontSize: 80)),
+                    Text(level.emoji, style: const TextStyle(fontSize: 80)),
                     const SizedBox(height: 12),
 
                     // Level number
@@ -162,7 +167,10 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [level.color, level.color.withValues(alpha: 0.7)],
+                            colors: [
+                              level.color,
+                              level.color.withValues(alpha: 0.7),
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(color: Colors.white, width: 2.5),

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,7 +11,6 @@ import '../theme/app_theme.dart';
 import '../utils/route_observer.dart';
 import '../widgets/badge_unlock_overlay.dart';
 import '../widgets/bijak_scene.dart';
-import '../widgets/mascot_widget.dart';
 import '../widgets/pressable.dart';
 import '../widgets/xp_popup.dart';
 import 'coloring_screen.dart';
@@ -19,12 +20,15 @@ import 'jawi_asas_screen.dart';
 import 'learn_body_parts_screen.dart';
 import 'learn_letters_screen.dart';
 import 'learn_numbers_screen.dart';
-import 'learning_path_screen.dart';
 import 'level_up_screen.dart';
 import 'math_practice_screen.dart';
 import 'parent_gate_screen.dart';
 import 'progress_screen.dart';
 
+/// The child's home world — a starry **Adventure Map**. Every learning module
+/// is a themed Malaysian "zone" on a winding trail, Zara the owl floats and
+/// cheers the child on, and an XP/streak bar sits up top. Tapping a zone opens
+/// that module; the daily quests live in a pull-up card.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
   static const routeName = '/home';
@@ -34,8 +38,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
-  final _mascotKey = GlobalKey<MascotWidgetState>();
   int _lastXp = -1;
+  final _mapScroll = ScrollController();
 
   /// Cached so [dispose] and [_onProgressChanged] never touch `ref` outside the
   /// mounted lifecycle (which throws after the widget is disposed).
@@ -50,7 +54,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
       _progress = progress;
       _lastXp = progress.stars;
       _checkNotifications();
-      // Listen for XP gains and badge unlocks
       progress.addListener(_onProgressChanged);
     });
   }
@@ -67,10 +70,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
-    // Safe to remove — ProgressService outlives this widget. Uses the cached
-    // reference rather than `ref` (which is invalid during/after dispose).
     _progress?.removeListener(_onProgressChanged);
+    _mapScroll.dispose();
     super.dispose();
+  }
+
+  /// Re-tapping the "Peta" tab glides the adventure map back to the top.
+  void _scrollMapToTop() {
+    if (!_mapScroll.hasClients) return;
+    _mapScroll.animateTo(
+      0,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
@@ -86,7 +98,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     if (_lastXp >= 0 && newXp > _lastXp) {
       final gained = newXp - _lastXp;
       XpPopup.show(context, amount: gained);
-      _mascotKey.currentState?.celebrate();
     }
     _lastXp = newXp;
   }
@@ -117,11 +128,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
       if (!mounted) return;
     }
 
-    // Show any badges unlocked since the last check, one after another.
     for (final badge in progress.consumePendingBadges()) {
       if (!mounted) return;
       await BadgeUnlockOverlay.show(context, badge: badge);
     }
+  }
+
+  void _openQuests(ProgressService progress, bool isMalay) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _QuestsSheet(progress: progress, isMalay: isMalay),
+    );
   }
 
   @override
@@ -130,147 +149,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     final isMalay = progress.language == AppLanguage.malay;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightBlue,
-      bottomNavigationBar: _BottomBar(isMalay: isMalay),
+      backgroundColor: AppTheme.nightMid,
+      bottomNavigationBar: _BottomBar(
+        isMalay: isMalay,
+        onHome: _scrollMapToTop,
+      ),
       body: BijakScene(
-        topColor: const Color(0xFFBCE2FF),
-        bottomColor: AppTheme.lightBlue,
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: _HomeHeader(
-                isMalay: isMalay,
-                progress: progress,
-                mascotKey: _mascotKey,
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              _AdventureTopBar(progress: progress, isMalay: isMalay),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _mapScroll,
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+                    child: _AdventureMap(progress: progress, isMalay: isMalay),
+                  ),
+                ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // ─── DAILY QUESTS section ──────────────────────────────
-                  _SectionChip(
-                    emoji: '🎯',
-                    label: isMalay ? 'MISI HARI INI' : 'TODAY\'S QUESTS',
-                    color: AppTheme.pink,
-                  ),
-                  const SizedBox(height: 10),
-                  _DailyQuestsCard(language: progress.language, progress: progress),
-
-                  const SizedBox(height: 22),
-
-                  // ─── LEARN section ──────────────────────────────────────
-                  _SectionChip(
-                    emoji: '📖',
-                    label: isMalay ? 'BELAJAR' : 'LEARN',
-                    color: AppTheme.skyBlue,
-                  ),
-                  const SizedBox(height: 12),
-                  _ModuleGrid(
-                    children: [
-                      _ModuleTile(
-                        emoji: '🔢',
-                        symbol: '1\n2\n3',
-                        title: isMalay ? 'Nombor' : 'Numbers',
-                        sub: '1 – 100',
-                        color: AppTheme.moduleNumbers,
-                        done: progress.getModuleLessons('numbers'),
-                        total: 100,
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pushNamed(LearnNumbersScreen.routeName),
-                      ),
-                      _ModuleTile(
-                        emoji: '🔤',
-                        symbol: 'A\nB\nC',
-                        title: isMalay ? 'Huruf' : 'Letters',
-                        sub: 'A – Z',
-                        color: AppTheme.moduleLetters,
-                        done: progress.getModuleLessons('letters'),
-                        total: 26,
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pushNamed(LearnLettersScreen.routeName),
-                      ),
-                      _ModuleTile(
-                        emoji: '🌙',
-                        symbol: 'ا\nب\nت',
-                        title: isMalay ? 'Jawi' : 'Jawi',
-                        sub: isMalay ? '28 Huruf' : '28 Letters',
-                        color: AppTheme.moduleJawi,
-                        done: progress.getModuleLessons('jawi'),
-                        total: 28,
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pushNamed(JawiAsasScreen.routeName),
-                      ),
-                      _ModuleTile(
-                        emoji: '🧍',
-                        symbol: '👦',
-                        title: isMalay ? 'Anggota\nBadan' : 'Body\nParts',
-                        sub: isMalay ? '14 Bahagian' : '14 Parts',
-                        color: AppTheme.moduleBodyParts,
-                        done: progress.getModuleLessons('bodyparts'),
-                        total: 14,
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pushNamed(LearnBodyPartsScreen.routeName),
-                      ),
-                      _ModuleTile(
-                        emoji: '🧮',
-                        symbol: '+ −\n× ÷',
-                        title: isMalay ? 'Matematik' : 'Math',
-                        sub: isMalay ? 'Tambah & Tolak' : 'Add & Subtract',
-                        color: AppTheme.moduleMath,
-                        done: progress.getModuleLessons('math'),
-                        total: 50,
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pushNamed(MathPracticeScreen.routeName),
-                      ),
-                      _ModuleTile(
-                        emoji: '🎨',
-                        symbol: '🖌️',
-                        title: isMalay ? 'Mewarna' : 'Colour',
-                        sub: isMalay ? 'Lukis & Warna' : 'Draw & Paint',
-                        color: AppTheme.moduleColoring,
-                        done: progress.coloringSessions,
-                        total: 40,
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pushNamed(ColoringScreen.routeName),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // ─── GAMES section ──────────────────────────────────────
-                  _SectionChip(
-                    emoji: '🎮',
-                    label: isMalay ? 'PERMAINAN' : 'GAMES',
-                    color: AppTheme.moduleGames,
-                  ),
-                  const SizedBox(height: 12),
-                  _BigNavButton(
-                    emoji: '🎮',
-                    title: isMalay
-                        ? 'Semua Permainan'
-                        : 'All Games & Activities',
-                    sub: isMalay
-                        ? 'Memori, Teka-Teki, Tren Nombor & Huruf'
-                        : 'Memory, Puzzle, Number Train & Letter Train',
-                    color: AppTheme.moduleGames,
-                    onTap: () => Navigator.of(
-                      context,
-                    ).pushNamed(GamesHubScreen.routeName),
-                  ),
-
-                  const SizedBox(height: 8),
-                ]),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 2, 14, 12),
+                child: _DailyStrip(
+                  progress: progress,
+                  isMalay: isMalay,
+                  onTap: () => _openQuests(progress, isMalay),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -278,245 +187,466 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Header
+// Top bar — avatar + level XP + streak
 // ─────────────────────────────────────────────────────────────────────────────
-class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({
-    required this.isMalay,
-    required this.progress,
-    this.mascotKey,
-  });
-  final bool isMalay;
+class _AdventureTopBar extends StatelessWidget {
+  const _AdventureTopBar({required this.progress, required this.isMalay});
   final ProgressService progress;
-  final GlobalKey<MascotWidgetState>? mascotKey;
+  final bool isMalay;
 
   @override
   Widget build(BuildContext context) {
     final level = progress.currentLevel;
-
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-        child: Column(
-          children: [
-            // ── Top bar ──
-            Row(
-              children: [
-                const Flexible(child: BijakLogoText(compact: true)),
-                const SizedBox(width: 8),
-                _IconBtn(
-                  icon: Icons.insights_rounded,
-                  label: isMalay ? 'Kemajuan' : 'Progress',
-                  onTap: () => Navigator.of(context)
-                      .pushNamed(ProgressScreen.routeName),
-                ),
-                const SizedBox(width: 8),
-                _IconBtn(
-                  icon: Icons.settings_rounded,
-                  label: isMalay ? 'Tetapan' : 'Settings',
-                  onTap: () => Navigator.of(context)
-                      .pushNamed(ParentGateScreen.routeName),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+      child: Row(
+        children: [
+          // Hero avatar
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.coral, AppTheme.violet],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.violet.withValues(alpha: 0.45),
+                  blurRadius: 12,
                 ),
               ],
             ),
-            const SizedBox(height: 14),
-
-            // ── Welcome card ──
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.ink.withValues(alpha: 0.09),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
+            alignment: Alignment.center,
+            child: Text(level.emoji, style: const TextStyle(fontSize: 22)),
+          ),
+          const SizedBox(width: 11),
+          // Name + XP bar
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isMalay ? level.titleMalay : level.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppTheme.onNight,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
                   ),
-                ],
+                ),
+                const SizedBox(height: 5),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: level.progressFraction(progress.stars),
+                    minHeight: 7,
+                    backgroundColor: Colors.white.withValues(alpha: 0.14),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppTheme.gold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${isMalay ? 'Tahap' : 'Level'} ${level.level} · ${progress.stars} ⭐',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppTheme.onNightMuted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          _StreakChip(streak: progress.currentStreak),
+        ],
+      ),
+    );
+  }
+}
+
+class _StreakChip extends StatelessWidget {
+  const _StreakChip({required this.streak});
+  final int streak;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.coral.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: AppTheme.coral.withValues(alpha: 0.55),
+          width: 1.4,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('🔥', style: TextStyle(fontSize: 14)),
+          const SizedBox(width: 4),
+          Text(
+            '$streak',
+            style: const TextStyle(
+              color: AppTheme.onNight,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Adventure map — themed zones on a winding trail + Zara
+// ─────────────────────────────────────────────────────────────────────────────
+class _AdventureMap extends StatelessWidget {
+  const _AdventureMap({required this.progress, required this.isMalay});
+  final ProgressService progress;
+  final bool isMalay;
+
+  @override
+  Widget build(BuildContext context) {
+    final zones = <_ZoneData>[
+      _ZoneData(
+        emoji: '🔢',
+        title: isMalay ? 'Pasar\nNombor' : 'Number\nBazaar',
+        color: AppTheme.moduleNumbers,
+        route: LearnNumbersScreen.routeName,
+        done: progress.getModuleLessons('numbers'),
+        total: 100,
+        dx: 0.20,
+        dy: 0.02,
+      ),
+      _ZoneData(
+        emoji: '🔤',
+        title: isMalay ? 'Kampung\nHuruf' : 'Letter\nVillage',
+        color: AppTheme.moduleLetters,
+        route: LearnLettersScreen.routeName,
+        done: progress.getModuleLessons('letters'),
+        total: 26,
+        dx: 0.72,
+        dy: 0.10,
+      ),
+      _ZoneData(
+        emoji: '🌙',
+        title: isMalay ? 'Pantai\nJawi' : 'Jawi\nBeach',
+        color: AppTheme.moduleJawi,
+        route: JawiAsasScreen.routeName,
+        done: progress.getModuleLessons('jawi'),
+        total: 28,
+        dx: 0.30,
+        dy: 0.27,
+      ),
+      _ZoneData(
+        emoji: '🧮',
+        title: isMalay ? 'Hutan\nMatematik' : 'Math\nForest',
+        color: AppTheme.moduleMath,
+        route: MathPracticeScreen.routeName,
+        done: progress.getModuleLessons('math'),
+        total: 50,
+        dx: 0.74,
+        dy: 0.40,
+      ),
+      _ZoneData(
+        emoji: '🧍',
+        title: isMalay ? 'Pulau\nAnggota' : 'Body\nIsle',
+        color: AppTheme.moduleBodyParts,
+        route: LearnBodyPartsScreen.routeName,
+        done: progress.getModuleLessons('bodyparts'),
+        total: 14,
+        dx: 0.24,
+        dy: 0.53,
+      ),
+      _ZoneData(
+        emoji: '🎨',
+        title: isMalay ? 'Studio\nWarna' : 'Colour\nStudio',
+        color: AppTheme.moduleColoring,
+        route: ColoringScreen.routeName,
+        done: progress.coloringSessions,
+        total: 40,
+        dx: 0.66,
+        dy: 0.67,
+      ),
+      _ZoneData(
+        emoji: '🎮',
+        title: isMalay ? 'Bandar\nPermainan' : 'Game\nTown',
+        color: AppTheme.moduleGames,
+        route: GamesHubScreen.routeName,
+        done: 0,
+        total: 0,
+        dx: 0.36,
+        dy: 0.80,
+      ),
+    ];
+
+    // The "current" zone glows: the in-progress module with the most progress,
+    // otherwise the first untouched learning zone.
+    String? current;
+    final active =
+        zones
+            .where((z) => z.total > 0 && z.done > 0 && z.done < z.total)
+            .toList()
+          ..sort((a, b) => b.done.compareTo(a.done));
+    if (active.isNotEmpty) {
+      current = active.first.route;
+    } else {
+      final untouched = zones.firstWhere(
+        (z) => z.total > 0 && z.done == 0,
+        orElse: () => zones.first,
+      );
+      current = untouched.route;
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        // Tall enough for the serpentine trail + labels + Zara, with room
+        // below the last zone so its label clears the daily card.
+        final h = math.max(740.0, w * 1.95);
+        final centers = [
+          for (final z in zones) Offset(z.dx * w, z.dy * h + 34),
+        ];
+
+        return SizedBox(
+          width: w,
+          height: h,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Dashed trail behind the zones.
+              Positioned.fill(
+                child: CustomPaint(painter: _TrailPainter(centers)),
               ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      MascotWidget(key: mascotKey, size: 72),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isMalay
-                                  ? '👋 Hai, anak bijak!'
-                                  : '👋 Hi, smart learner!',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: AppTheme.ink,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            // Level display
-                            Row(
-                              children: [
-                                Text(level.emoji,
-                                    style: const TextStyle(fontSize: 14)),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    '${isMalay ? 'Tahap' : 'Level'} ${level.level} · ${isMalay ? level.titleMalay : level.title}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                      color: level.color,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            // Level XP bar
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: level.progressFraction(progress.stars),
-                                minHeight: 5,
-                                backgroundColor:
-                                    level.color.withValues(alpha: 0.15),
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    level.color),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            if (level.maxStars > 0)
-                              Text(
-                                isMalay
-                                    ? '${level.starsToNext(progress.stars)} bintang ke Tahap ${level.level + 1}'
-                                    : '${level.starsToNext(progress.stars)} stars to Level ${level.level + 1}',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  color: level.color.withValues(alpha: 0.8),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        children: [
-                          // Star pill
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color:
-                                  AppTheme.sunnyYellow.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                  color: AppTheme.sunnyYellow, width: 1.5),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('⭐',
-                                    style: TextStyle(fontSize: 14)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${progress.stars}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppTheme.ink,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          // Streak pill
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFF9F43)
-                                  .withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                  color: const Color(0xFFFF9F43), width: 1.5),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('🔥',
-                                    style: TextStyle(fontSize: 13)),
-                                const SizedBox(width: 3),
-                                Text(
-                                  '${progress.currentStreak}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppTheme.ink,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Streak-freeze tokens — visible insurance makes
-                          // the streak feel safe to invest in.
-                          if (progress.streakFreezes > 0) ...[
-                            const SizedBox(height: 6),
-                            Tooltip(
-                              message: isMalay
-                                  ? 'Token beku: lindungi streak jika terlepas sehari'
-                                  : 'Freeze tokens: protect your streak if you miss a day',
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF48DBFB)
-                                      .withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(
-                                      color: const Color(0xFF48DBFB),
-                                      width: 1.5),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text('❄️',
-                                        style: TextStyle(fontSize: 13)),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      '${progress.streakFreezes}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                        color: AppTheme.ink,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
+              // Zone nodes.
+              for (var i = 0; i < zones.length; i++)
+                Positioned(
+                  left: zones[i].dx * w - 52,
+                  top: zones[i].dy * h,
+                  child: _ZoneNode(
+                    zone: zones[i],
+                    index: i + 1,
+                    isCurrent: zones[i].route == current,
+                    onTap: () =>
+                        Navigator.of(context).pushNamed(zones[i].route),
+                  ),
+                ),
+              // Zara companion floats near the trail's tail.
+              Positioned(
+                right: 4,
+                top: 0.40 * h,
+                child: _ZaraCompanion(
+                  message: active.isNotEmpty
+                      ? (isMalay
+                            ? 'Mari sambung\npengembaraan kita!'
+                            : "Let's continue\nour adventure!")
+                      : (isMalay
+                            ? 'Jom mula\npengembaraan!'
+                            : "Let's start\nthe adventure!"),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ZoneData {
+  const _ZoneData({
+    required this.emoji,
+    required this.title,
+    required this.color,
+    required this.route,
+    required this.done,
+    required this.total,
+    required this.dx,
+    required this.dy,
+  });
+  final String emoji, title, route;
+  final Color color;
+  final int done, total;
+  final double dx, dy;
+
+  int get stars {
+    if (total <= 0 || done <= 0) return 0;
+    final f = done / total;
+    if (f >= 0.66) return 3;
+    if (f >= 0.33) return 2;
+    return 1;
+  }
+}
+
+class _ZoneNode extends StatefulWidget {
+  const _ZoneNode({
+    required this.zone,
+    required this.index,
+    required this.isCurrent,
+    required this.onTap,
+  });
+  final _ZoneData zone;
+  final int index;
+  final bool isCurrent;
+  final VoidCallback onTap;
+
+  @override
+  State<_ZoneNode> createState() => _ZoneNodeState();
+}
+
+class _ZoneNodeState extends State<_ZoneNode>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isCurrent) {
+      _pulse = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 1600),
+      )..repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final z = widget.zone;
+    final started = z.done > 0;
+    final ringColor = widget.isCurrent ? AppTheme.gold : Colors.white;
+
+    Widget bubble = Container(
+      width: 66,
+      height: 66,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [z.color, z.color.withValues(alpha: 0.72)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: BoxShape.circle,
+        border: Border.all(color: ringColor, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: z.color.withValues(alpha: 0.55),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(z.emoji, style: const TextStyle(fontSize: 28)),
+    );
+
+    if (widget.isCurrent && _pulse != null) {
+      bubble = AnimatedBuilder(
+        animation: _pulse!,
+        builder: (context, child) {
+          final t = _pulse!.value;
+          return Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.gold.withValues(alpha: 0.35 * (1 - t)),
+                  blurRadius: 10,
+                  spreadRadius: 6 * t,
+                ),
+              ],
+            ),
+            child: child,
+          );
+        },
+        child: bubble,
+      );
+    }
+
+    return Pressable(
+      onTap: widget.onTap,
+      pressedScale: 0.92,
+      semanticLabel: z.title.replaceAll('\n', ' '),
+      child: SizedBox(
+        width: 104,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.isCurrent)
+              Container(
+                margin: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.gold,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  '▶ MULA',
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.nightDeep,
+                  ),
+                ),
+              ),
+            bubble,
+            const SizedBox(height: 5),
+            Text(
+              z.title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: const TextStyle(
+                color: AppTheme.onNight,
+                fontSize: 11,
+                height: 1.1,
+                fontWeight: FontWeight.w800,
+                shadows: [
+                  Shadow(
+                    color: Colors.black54,
+                    blurRadius: 4,
+                    offset: Offset(0, 1),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 12),
-            _ContinueLearningBanner(isMalay: isMalay, progress: progress),
+            const SizedBox(height: 2),
+            if (z.total > 0)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < 3; i++)
+                    Text(
+                      i < z.stars ? '⭐' : '☆',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: i < z.stars
+                            ? null
+                            : Colors.white.withValues(alpha: 0.4),
+                      ),
+                    ),
+                ],
+              )
+            else
+              Text(
+                started ? '⭐' : '▶',
+                style: const TextStyle(fontSize: 10, color: AppTheme.gold),
+              ),
           ],
         ),
       ),
@@ -524,174 +654,296 @@ class _HomeHeader extends StatelessWidget {
   }
 }
 
-class _ContinueLearningBanner extends StatelessWidget {
-  const _ContinueLearningBanner({
-    required this.isMalay,
-    required this.progress,
-  });
-  final bool isMalay;
-  final ProgressService progress;
+/// Dashed trail connecting the zone bubbles in order.
+class _TrailPainter extends CustomPainter {
+  const _TrailPainter(this.centers);
+  final List<Offset> centers;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.22)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    for (var i = 0; i < centers.length - 1; i++) {
+      _dashedLine(canvas, centers[i], centers[i + 1], paint);
+    }
+  }
+
+  void _dashedLine(Canvas canvas, Offset a, Offset b, Paint paint) {
+    final total = (b - a).distance;
+    const dash = 9.0, gap = 8.0;
+    double d = 0;
+    while (d < total) {
+      final f1 = d / total;
+      final f2 = math.min(d + dash, total) / total;
+      canvas.drawLine(Offset.lerp(a, b, f1)!, Offset.lerp(a, b, f2)!, paint);
+      d += dash + gap;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrailPainter oldDelegate) =>
+      oldDelegate.centers != centers;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Zara the owl companion
+// ─────────────────────────────────────────────────────────────────────────────
+class _ZaraCompanion extends StatefulWidget {
+  const _ZaraCompanion({required this.message});
+  final String message;
+
+  @override
+  State<_ZaraCompanion> createState() => _ZaraCompanionState();
+}
+
+class _ZaraCompanionState extends State<_ZaraCompanion>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bob;
+
+  @override
+  void initState() {
+    super.initState();
+    _bob = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _bob.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final modules = [
-      _ContinueModule(
-        'numbers',
-        '🔢',
-        isMalay ? 'Nombor' : 'Numbers',
-        progress.getModuleLessons('numbers'),
-        100,
-        AppTheme.moduleNumbers,
-        LearnNumbersScreen.routeName,
+    return AnimatedBuilder(
+      animation: _bob,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(0, -8 + _bob.value * 16),
+        child: child,
       ),
-      _ContinueModule(
-        'letters',
-        '🔤',
-        isMalay ? 'Huruf' : 'Letters',
-        progress.getModuleLessons('letters'),
-        26,
-        AppTheme.moduleLetters,
-        LearnLettersScreen.routeName,
-      ),
-      _ContinueModule(
-        'jawi',
-        '🌙',
-        'Jawi',
-        progress.getModuleLessons('jawi'),
-        28,
-        AppTheme.moduleJawi,
-        JawiAsasScreen.routeName,
-      ),
-      _ContinueModule(
-        'bodyparts',
-        '🧍',
-        isMalay ? 'Anggota Badan' : 'Body Parts',
-        progress.getModuleLessons('bodyparts'),
-        14,
-        AppTheme.moduleBodyParts,
-        LearnBodyPartsScreen.routeName,
-      ),
-    ];
-
-    final active = modules.where((m) => m.done > 0 && m.done < m.total).toList()
-      ..sort((a, b) => b.done.compareTo(a.done));
-
-    if (active.isEmpty) return const SizedBox.shrink();
-
-    final m = active.first;
-    final pct = (m.done / m.total).clamp(0.0, 1.0);
-
-    return Pressable(
-      onTap: () => Navigator.of(context).pushNamed(m.route),
-      pressedScale: 0.97,
-      semanticLabel: isMalay
-          ? 'Teruskan belajar ${m.name}. ${m.done} daripada ${m.total} selesai.'
-          : 'Continue learning ${m.name}. ${m.done} of ${m.total} complete.',
-      child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [m.color, m.color.withValues(alpha: 0.75)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: m.color.withValues(alpha: 0.35),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            constraints: const BoxConstraints(maxWidth: 128),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(14),
+                topRight: Radius.circular(14),
+                bottomLeft: Radius.circular(14),
+                bottomRight: Radius.circular(4),
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Text(m.emoji, style: const TextStyle(fontSize: 28)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isMalay ? '▶ Teruskan Belajar' : '▶ Continue Learning',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      m.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: pct,
-                        minHeight: 6,
-                        backgroundColor: Colors.white.withValues(alpha: 0.3),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.violet.withValues(alpha: 0.4),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
                 ),
+              ],
+            ),
+            child: Text(
+              widget.message,
+              style: const TextStyle(
+                color: AppTheme.nightDeep,
+                fontSize: 11,
+                height: 1.25,
+                fontWeight: FontWeight.w800,
               ),
-              const SizedBox(width: 10),
-              Column(
-                children: [
-                  Text(
-                    '${m.done}/${m.total}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: Colors.white,
-                    size: 16,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: const RadialGradient(
+                  colors: [AppTheme.lilac, AppTheme.violet],
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.violet.withValues(alpha: 0.5),
+                    blurRadius: 18,
                   ),
                 ],
               ),
-            ],
+              alignment: Alignment.center,
+              child: const Text('🦉', style: TextStyle(fontSize: 34)),
+            ),
           ),
+        ],
       ),
     );
   }
 }
 
-class _ContinueModule {
-  const _ContinueModule(
-    this.id,
-    this.emoji,
-    this.name,
-    this.done,
-    this.total,
-    this.color,
-    this.route,
-  );
-  final String id, emoji, name, route;
-  final int done, total;
-  final Color color;
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily strip — opens the quests sheet
+// ─────────────────────────────────────────────────────────────────────────────
+class _DailyStrip extends StatelessWidget {
+  const _DailyStrip({
+    required this.progress,
+    required this.isMalay,
+    required this.onTap,
+  });
+  final ProgressService progress;
+  final bool isMalay;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final quests = todayQuests();
+    final qp = progress.questProgress;
+    final done = List.generate(quests.length, (i) {
+      final prog = i < qp.length ? qp[i] : 0;
+      return prog >= quests[i].requiredCount;
+    }).where((d) => d).length;
+
+    return Pressable(
+      onTap: onTap,
+      pressedScale: 0.98,
+      semanticLabel: isMalay ? 'Misi hari ini' : "Today's quests",
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppTheme.violet, AppTheme.lilac],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.7),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.violet.withValues(alpha: 0.5),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Text('🎯', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isMalay ? 'Misi Hari Ini' : "Today's Quests",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    isMalay
+                        ? '$done / ${quests.length} selesai · ketuk untuk lihat'
+                        : '$done / ${quests.length} done · tap to view',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.28),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.expand_less_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuestsSheet extends StatelessWidget {
+  const _QuestsSheet({required this.progress, required this.isMalay});
+  final ProgressService progress;
+  final bool isMalay;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.nightSurfaceHi, AppTheme.nightDeep],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Text('🎯', style: TextStyle(fontSize: 22)),
+                  const SizedBox(width: 8),
+                  Text(
+                    isMalay ? 'Misi Hari Ini' : "Today's Quests",
+                    style: const TextStyle(
+                      color: AppTheme.onNight,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _DailyQuestsCard(language: progress.language, progress: progress),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Daily Quests card
+// Daily Quests card (shown inside the pull-up sheet)
 // ─────────────────────────────────────────────────────────────────────────────
 class _DailyQuestsCard extends StatelessWidget {
-  const _DailyQuestsCard({
-    required this.language,
-    required this.progress,
-  });
+  const _DailyQuestsCard({required this.language, required this.progress});
   final AppLanguage language;
   final ProgressService progress;
 
@@ -717,8 +969,7 @@ class _DailyQuestsCard extends StatelessWidget {
           final q = quests[i];
           final prog = i < qProgress.length ? qProgress[i] : 0;
           final done = prog >= q.requiredCount;
-          final pct =
-              (prog / q.requiredCount).clamp(0.0, 1.0);
+          final pct = (prog / q.requiredCount).clamp(0.0, 1.0);
           final isLast = i == quests.length - 1;
 
           return Column(
@@ -727,7 +978,6 @@ class _DailyQuestsCard extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 child: Row(
                   children: [
-                    // Emoji badge
                     Container(
                       width: 46,
                       height: 46,
@@ -768,13 +1018,17 @@ class _DailyQuestsCard extends StatelessWidget {
                               ),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
                                   color: done
-                                      ? AppTheme.leafGreen
-                                          .withValues(alpha: 0.15)
-                                      : AppTheme.sunnyYellow
-                                          .withValues(alpha: 0.2),
+                                      ? AppTheme.leafGreen.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : AppTheme.sunnyYellow.withValues(
+                                          alpha: 0.2,
+                                        ),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -809,14 +1063,12 @@ class _DailyQuestsCard extends StatelessWidget {
                                     value: pct,
                                     minHeight: 6,
                                     backgroundColor: done
-                                        ? AppTheme.leafGreen
-                                            .withValues(alpha: 0.15)
-                                        : AppTheme.pink
-                                            .withValues(alpha: 0.12),
+                                        ? AppTheme.leafGreen.withValues(
+                                            alpha: 0.15,
+                                          )
+                                        : AppTheme.pink.withValues(alpha: 0.12),
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      done
-                                          ? AppTheme.leafGreen
-                                          : AppTheme.pink,
+                                      done ? AppTheme.leafGreen : AppTheme.pink,
                                     ),
                                   ),
                                 ),
@@ -857,294 +1109,23 @@ class _DailyQuestsCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Section chip
-// ─────────────────────────────────────────────────────────────────────────────
-class _SectionChip extends StatelessWidget {
-  const _SectionChip({
-    required this.emoji,
-    required this.label,
-    required this.color,
-  });
-  final String emoji;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(50),
-            border: Border.all(
-              color: color.withValues(alpha: 0.45),
-              width: 1.4,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 15)),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: color,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Module grid
-// ─────────────────────────────────────────────────────────────────────────────
-class _ModuleGrid extends StatelessWidget {
-  const _ModuleGrid({required this.children});
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1.45,
-      children: children,
-    );
-  }
-}
-
-class _ModuleTile extends StatelessWidget {
-  const _ModuleTile({
-    required this.emoji,
-    required this.symbol,
-    required this.title,
-    required this.sub,
-    required this.color,
-    required this.done,
-    required this.total,
-    required this.onTap,
-  });
-  final String emoji;
-  final String symbol;
-  final String title;
-  final String sub;
-  final Color color;
-  final int done;
-  final int total;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = total > 0 ? (done / total).clamp(0.0, 1.0) : 0.0;
-
-    return Pressable(
-      onTap: onTap,
-      semanticLabel: '$title. $done of $total complete.',
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.18),
-              blurRadius: 12,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Row(
-          children: [
-            // Colored identity rail: emoji only. (The old percent chip was
-            // parent-math, not kid feedback — the bar + count carry that.)
-            Container(
-              width: 64,
-              color: color,
-              alignment: Alignment.center,
-              child: Text(emoji, style: const TextStyle(fontSize: 34)),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 2,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.ink,
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      sub,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: color,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: pct,
-                        minHeight: 7,
-                        backgroundColor: color.withValues(alpha: 0.14),
-                        valueColor: AlwaysStoppedAnimation<Color>(color),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$done/$total',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: color.withValues(alpha: 0.85),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Big nav button
-// ─────────────────────────────────────────────────────────────────────────────
-class _BigNavButton extends StatelessWidget {
-  const _BigNavButton({
-    required this.emoji,
-    required this.title,
-    required this.sub,
-    required this.color,
-    required this.onTap,
-  });
-  final String emoji;
-  final String title;
-  final String sub;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(22),
-      elevation: 5,
-      shadowColor: color.withValues(alpha: 0.35),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [color, color.withValues(alpha: 0.78)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.white, width: 2.5),
-          ),
-          child: Row(
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 30)),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      sub,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.82),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Bottom navigation bar
+// Bottom navigation bar (dark glass)
 // ─────────────────────────────────────────────────────────────────────────────
 class _BottomBar extends ConsumerWidget {
-  const _BottomBar({required this.isMalay});
+  const _BottomBar({required this.isMalay, required this.onHome});
   final bool isMalay;
+  final VoidCallback onHome;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch only voiceEnabled — does not rebuild on XP/badge/streak changes.
     final voiceEnabled = ref.watch(voiceEnabledProvider);
     final progress = ref.read(progressServiceProvider);
     final items = [
       _NavItem(
-        icon: Icons.home_rounded,
-        label: isMalay ? 'Utama' : 'Home',
+        icon: Icons.map_rounded,
+        label: isMalay ? 'Peta' : 'Map',
         selected: true,
-        onTap: () {},
-      ),
-      _NavItem(
-        icon: Icons.route_rounded,
-        label: isMalay ? 'Sukatan' : 'Syllabus',
-        selected: false,
-        onTap: () =>
-            Navigator.of(context).pushNamed(LearningPathScreen.routeName),
+        onTap: onHome,
       ),
       _NavItem(
         icon: Icons.insights_rounded,
@@ -1153,9 +1134,7 @@ class _BottomBar extends ConsumerWidget {
         onTap: () => Navigator.of(context).pushNamed(ProgressScreen.routeName),
       ),
       _NavItem(
-        icon: voiceEnabled
-            ? Icons.volume_up_rounded
-            : Icons.volume_off_rounded,
+        icon: voiceEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
         label: isMalay ? 'Suara' : 'Voice',
         selected: voiceEnabled,
         isToggle: true,
@@ -1176,36 +1155,36 @@ class _BottomBar extends ConsumerWidget {
         margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: const LinearGradient(
+            colors: [AppTheme.nightSurfaceHi, AppTheme.nightSurface],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white, width: 2.5),
+          border: Border.all(
+            color: AppTheme.lilac.withValues(alpha: 0.28),
+            width: 1.4,
+          ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.ink.withValues(alpha: 0.15),
-              blurRadius: 18,
-              offset: const Offset(0, -4),
+              color: AppTheme.violet.withValues(alpha: 0.35),
+              blurRadius: 22,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Row(
           children: items.map((item) {
-            // Toggles (Voice) read green when on / muted when off, so a
-            // child can see at a glance whether the app will talk. Plain
-            // navigation selection keeps the yellow treatment.
             final Color tint = item.isToggle
-                ? (item.selected
-                    ? AppTheme.leafGreen
-                    : const Color(0xFF8898C8))
-                : (item.selected
-                    ? AppTheme.ink
-                    : const Color(0xFF8898C8));
+                ? (item.selected ? AppTheme.leafGreen : AppTheme.onNightFaint)
+                : (item.selected ? AppTheme.gold : AppTheme.onNightFaint);
             final Color bg = item.isToggle
                 ? (item.selected
-                    ? AppTheme.leafGreen.withValues(alpha: 0.16)
-                    : Colors.transparent)
+                      ? AppTheme.leafGreen.withValues(alpha: 0.18)
+                      : Colors.transparent)
                 : (item.selected
-                    ? AppTheme.sunnyYellow.withValues(alpha: 0.3)
-                    : Colors.transparent);
+                      ? AppTheme.gold.withValues(alpha: 0.20)
+                      : Colors.transparent);
 
             return Expanded(
               child: Semantics(
@@ -1269,42 +1248,4 @@ class _NavItem {
   final bool selected;
   final bool isToggle;
   final VoidCallback onTap;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Small helpers
-// ─────────────────────────────────────────────────────────────────────────────
-class _IconBtn extends StatelessWidget {
-  const _IconBtn({required this.icon, required this.label, required this.onTap});
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: label,
-      child: Pressable(
-        onTap: onTap,
-        semanticLabel: label,
-        minSize: AppTheme.minTarget,
-        child: Container(
-          width: AppTheme.minTarget,
-          height: AppTheme.minTarget,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.ink.withValues(alpha: 0.10),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Icon(icon, color: AppTheme.ink, size: 24),
-        ),
-      ),
-    );
-  }
 }
