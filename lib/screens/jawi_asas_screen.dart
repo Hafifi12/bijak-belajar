@@ -582,7 +582,6 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                             const SizedBox(height: 20),
                             _JawiPronounceButtons(
                               onSpeak: _speakIn,
-                              arabicLetter: item.jawi,
                               arabicName: item.name,
                               color: color,
                             ),
@@ -683,13 +682,11 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
 class _JawiPronounceButtons extends ConsumerWidget {
   const _JawiPronounceButtons({
     required this.onSpeak,
-    required this.arabicLetter,
     required this.arabicName,
     required this.color,
   });
 
   final Future<void> Function(String word, String locale) onSpeak;
-  final String arabicLetter;
   final String arabicName;
   final Color color;
 
@@ -709,7 +706,10 @@ class _JawiPronounceButtons extends ConsumerWidget {
             ),
           ),
         ),
-        _btn('🇸🇦', 'عربي', arabicLetter, 'ar-SA'),
+        // Jawi is Malay written in Arabic script. Speak the Malay letter name
+        // rather than sending a bare glyph to an Arabic voice (which is not
+        // available on every iOS device and does not teach the Jawi name).
+        _btn('JA', 'Jawi', arabicName, 'ms-MY'),
       ],
     );
   }

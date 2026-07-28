@@ -746,6 +746,10 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                             color: color,
                             objectEmoji: item.emoji,
                             isMalay: isMalay,
+                            onCount: (number) => _speakIn(
+                              _wordForLanguage(_numbers[number - 1], language),
+                              language.ttsLocale,
+                            ),
                           ),
                           const SizedBox(height: 4),
                         ],
@@ -994,12 +998,14 @@ class _CountingObjectsPanel extends ConsumerStatefulWidget {
     required this.color,
     required this.objectEmoji,
     required this.isMalay,
+    required this.onCount,
   });
 
   final int count;
   final Color color;
   final String objectEmoji;
   final bool isMalay;
+  final Future<void> Function(int number) onCount;
 
   @override
   ConsumerState<_CountingObjectsPanel> createState() =>
@@ -1126,7 +1132,10 @@ class _CountingObjectsPanelState extends ConsumerState<_CountingObjectsPanel> {
                           shape: const CircleBorder(),
                           child: InkWell(
                             customBorder: const CircleBorder(),
-                            onTap: () => setState(() => _counted = number),
+                            onTap: () {
+                              setState(() => _counted = number);
+                              widget.onCount(number);
+                            },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 150),
                               decoration: BoxDecoration(

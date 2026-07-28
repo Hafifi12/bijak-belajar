@@ -459,6 +459,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       _speechResult = '';
       _speechCorrect = null;
     });
+    final language = ref.read(progressServiceProvider).language;
     await _speech.listen(
       onResult: (result) {
         if (!mounted) return;
@@ -470,7 +471,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
         pauseFor: const Duration(seconds: 2),
         cancelOnError: true,
         partialResults: true,
-        localeId: 'en-US',
+        localeId: language.ttsLocale,
       ),
     );
   }
@@ -483,7 +484,8 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
   void _evaluateSpeech(String words) {
     if (words.isEmpty) return;
     final item = _letters[_current];
-    final target = item.english.toLowerCase();
+    final language = ref.read(progressServiceProvider).language;
+    final target = _ttsClean(_wordForLanguage(item, language)).toLowerCase();
     final letter = item.letter.toLowerCase();
     final said = words.toLowerCase().trim();
     final isCorrect = said.contains(letter) || said.contains(target);
@@ -498,13 +500,18 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       XpPopup.show(context, amount: 1);
       final audio = ref.read(audioServiceProvider);
       final ps = ref.read(progressServiceProvider);
-      final praiseMalay = ps.language == AppLanguage.malay;
+      final praise = switch (ps.language) {
+        AppLanguage.malay => 'Bagus! Kamu sebut ${item.letter} dengan betul!',
+        AppLanguage.english => 'Great job! You said ${item.letter} correctly!',
+        AppLanguage.mandarin => '太棒了！你正确地说出了 ${item.letter}！',
+        AppLanguage.tamil => 'அருமை! ${item.letter} என்பதைச் சரியாகச் சொன்னாய்!',
+        AppLanguage.indonesian =>
+          'Bagus! Kamu menyebut ${item.letter} dengan benar!',
+      };
       audio.speakLocale(
-        praiseMalay
-            ? 'Bagus! Kamu sebut ${item.letter} dengan betul!'
-            : 'Great job! You said ${item.letter} correctly!',
+        praise,
         enabled: ps.voiceEnabled,
-        locale: praiseMalay ? 'ms-MY' : 'en-US',
+        locale: ps.language.ttsLocale,
       );
     }
   }
