@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tiny_finder/app.dart';
-import 'package:tiny_finder/models/memory_item.dart';
-import 'package:tiny_finder/providers/app_state.dart';
-import 'package:tiny_finder/screens/home_screen.dart';
-import 'package:tiny_finder/screens/learn_body_parts_screen.dart';
-import 'package:tiny_finder/services/progress_service.dart';
+import 'package:bijak_belajar/app.dart';
+import 'package:bijak_belajar/models/memory_item.dart';
+import 'package:bijak_belajar/providers/app_state.dart';
+import 'package:bijak_belajar/screens/home_screen.dart';
+import 'package:bijak_belajar/screens/learn_body_parts_screen.dart';
+import 'package:bijak_belajar/services/progress_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

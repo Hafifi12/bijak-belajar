@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../utils/app_text.dart';
 import '../utils/constants.dart';
 import '../widgets/bijak_scene.dart';
+import 'privacy_policy_screen.dart';
 
 class ParentSettingsScreen extends ConsumerWidget {
   const ParentSettingsScreen({super.key});
@@ -136,6 +137,24 @@ class ParentSettingsScreen extends ConsumerWidget {
                   subtitle: Text(progress.language.nativeName),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => _selectLanguage(context, ref),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.privacy_tip_rounded),
+                  title: Text(isMalay ? 'Dasar Privasi' : 'Privacy Policy'),
+                  subtitle: Text(
+                    isMalay
+                        ? 'Cara kami melindungi data anak anda'
+                        : 'How we protect your child\'s data',
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const PrivacyPolicyScreen(),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 24),

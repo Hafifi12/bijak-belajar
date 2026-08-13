@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tiny_finder/providers/app_state.dart';
-import 'package:tiny_finder/screens/learn_numbers_screen.dart';
-import 'package:tiny_finder/services/progress_service.dart';
+import 'package:bijak_belajar/providers/app_state.dart';
+import 'package:bijak_belajar/screens/learn_numbers_screen.dart';
+import 'package:bijak_belajar/services/progress_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

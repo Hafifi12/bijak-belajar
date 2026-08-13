@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tiny_finder/models/app_language.dart';
-import 'package:tiny_finder/models/challenge.dart';
-import 'package:tiny_finder/services/progress_service.dart';
+import 'package:bijak_belajar/models/app_language.dart';
+import 'package:bijak_belajar/models/challenge.dart';
+import 'package:bijak_belajar/services/progress_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

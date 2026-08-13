@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tiny_finder/providers/app_state.dart';
-import 'package:tiny_finder/screens/math_practice_screen.dart';
-import 'package:tiny_finder/services/progress_service.dart';
+import 'package:bijak_belajar/providers/app_state.dart';
+import 'package:bijak_belajar/screens/math_practice_screen.dart';
+import 'package:bijak_belajar/services/progress_service.dart';
 
 /// Regression test for the blank MathQuizScreen body.
 ///

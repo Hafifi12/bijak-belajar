@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:tiny_finder/app.dart' show TinyFinderApp;
-import 'package:tiny_finder/screens/home_screen.dart' show HomeScreen;
+import 'package:bijak_belajar/app.dart' show TinyFinderApp;
+import 'package:bijak_belajar/screens/home_screen.dart' show HomeScreen;
 
 /// App-wide [RouteObserver] shared by [TinyFinderApp] (navigator observer)
 /// and any screen that needs [RouteAware] callbacks (e.g. [HomeScreen]).
