@@ -1,11 +1,11 @@
 {
-    "name": "tiny_finder",
-    "short_name": "tiny_finder",
+    "name": "Bijak Belajar",
+    "short_name": "Bijak Belajar",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#1B1638",
+    "theme_color": "#1B1638",
+    "description": "Fun learning app for Malaysian kids aged 3–7 in 5 languages.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -11,8 +11,12 @@ import '../widgets/bijak_scene.dart';
 import 'parent_settings_screen.dart';
 
 class ParentGateScreen extends ConsumerStatefulWidget {
-  const ParentGateScreen({super.key});
+  const ParentGateScreen({super.key, this.forSharing = false});
   static const routeName = '/parent-gate';
+
+  /// When true the gate guards sharing a picture outside the app: it pops
+  /// `true` on success instead of opening Parent Settings.
+  final bool forSharing;
 
   @override
   ConsumerState<ParentGateScreen> createState() => _ParentGateScreenState();
@@ -45,9 +49,11 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
 
   void _generateChallenge() {
     final rng = Random();
-    _a = rng.nextInt(9) + 2;
-    _b = rng.nextInt(9) + 2;
-    _answer = _a + _b;
+    // Times tables are taught around Year 2 (age 8), beyond this app's
+    // 3–7 audience, so a 3–9 × 3–9 product keeps the gate for grown-ups.
+    _a = rng.nextInt(7) + 3;
+    _b = rng.nextInt(7) + 3;
+    _answer = _a * _b;
   }
 
   @override
@@ -62,9 +68,13 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
         ref.read(progressServiceProvider).language == AppLanguage.malay;
     if (_ctrl.text.trim() == '$_answer') {
       HapticFeedback.lightImpact();
-      Navigator.of(
-        context,
-      ).pushReplacementNamed(ParentSettingsScreen.routeName);
+      if (widget.forSharing) {
+        Navigator.of(context).pop(true);
+      } else {
+        Navigator.of(
+          context,
+        ).pushReplacementNamed(ParentSettingsScreen.routeName);
+      }
     } else {
       HapticFeedback.heavyImpact();
       setState(
@@ -137,9 +147,13 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      isMalay
-                          ? 'Selesaikan jumlah untuk buka tetapan'
-                          : 'Solve the sum to unlock settings',
+                      widget.forSharing
+                          ? (isMalay
+                                ? 'Jawab soalan matematik untuk berkongsi gambar'
+                                : 'Answer the maths question to share the picture')
+                          : (isMalay
+                                ? 'Jawab soalan matematik untuk buka tetapan'
+                                : 'Answer the maths question to unlock settings'),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.75),
                         fontSize: 14,
@@ -183,7 +197,7 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                               child: Column(
                                 children: [
                                   Text(
-                                    '$_a + $_b = ?',
+                                    '$_a × $_b = ?',
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       fontSize: 44,
@@ -278,7 +292,11 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                                   size: 22,
                                 ),
                                 label: Text(
-                                  isMalay ? 'Buka Tetapan' : 'Unlock Settings',
+                                  widget.forSharing
+                                      ? (isMalay ? 'Teruskan' : 'Continue')
+                                      : (isMalay
+                                            ? 'Buka Tetapan'
+                                            : 'Unlock Settings'),
                                 ),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppTheme.deepBlue,
@@ -307,9 +325,13 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                     Padding(
                       padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
                       child: Text(
-                        isMalay
-                            ? 'Semakan matematik mudah ini memastikan tetapan selamat daripada si kecil 🧒'
-                            : 'This simple maths check keeps settings safe from little fingers 🧒',
+                        widget.forSharing
+                            ? (isMalay
+                                  ? 'Semakan matematik mudah ini memastikan orang dewasa yang memilih untuk berkongsi 🧒'
+                                  : 'This simple maths check makes sure a grown-up chooses to share 🧒')
+                            : (isMalay
+                                  ? 'Semakan matematik mudah ini memastikan tetapan selamat daripada si kecil 🧒'
+                                  : 'This simple maths check keeps settings safe from little fingers 🧒'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.6),

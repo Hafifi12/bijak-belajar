@@ -48,7 +48,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Bijak Belajar uses the microphone so your child can practise saying letters aloud.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Bijak Belajar uses speech recognition to check your child's letter pronunciation. Audio is processed on this device only.</string>
+	<string>Bijak Belajar uses speech recognition to check your child's letter pronunciation. Apple's speech service turns the speech into text; the app itself never records or keeps any audio.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

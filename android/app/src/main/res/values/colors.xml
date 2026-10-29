@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#6C5CE7</color>
+    <!-- Night-sky backdrop shared by the native launch window and the Flutter
+         splash (AppTheme.nightTop), so launching never flashes white. -->
+    <color name="night_sky">#1B1638</color>
 </resources>

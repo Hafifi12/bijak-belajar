@@ -684,6 +684,170 @@ const _uiText = <String, Map<AppLanguage, String>>{
     AppLanguage.tamil: 'அமைப்புகள்',
     AppLanguage.indonesian: 'Pengaturan',
   },
+  // ── Splash + trust badges (factual claims only — they must match the
+  // privacy policy and the Play Data safety form) ───────────────────────────
+  'splashTagline': {
+    AppLanguage.english: 'Fun learning in 5 languages!',
+    AppLanguage.malay: 'Belajar seronok dalam 5 bahasa!',
+    AppLanguage.mandarin: '用5种语言快乐学习！',
+    AppLanguage.tamil: '5 மொழிகளில் மகிழ்ச்சியான கற்றல்!',
+    AppLanguage.indonesian: 'Belajar seru dalam 5 bahasa!',
+  },
+  'letsLearn': {
+    AppLanguage.english: "Let's Learn!",
+    AppLanguage.malay: 'Jom Belajar!',
+    AppLanguage.mandarin: '一起学习吧！',
+    AppLanguage.tamil: 'கற்போம் வாருங்கள்!',
+    AppLanguage.indonesian: 'Ayo Belajar!',
+  },
+  'splashFooter': {
+    AppLanguage.english: 'For Malaysian children aged 3–7',
+    AppLanguage.malay: 'Untuk kanak-kanak Malaysia 3–7 tahun',
+    AppLanguage.mandarin: '专为3–7岁的马来西亚儿童设计',
+    AppLanguage.tamil: '3–7 வயது மலேசியக் குழந்தைகளுக்காக',
+    AppLanguage.indonesian: 'Untuk anak-anak Malaysia usia 3–7 tahun',
+  },
+  'zaraTheOwl': {
+    AppLanguage.english: 'Zara the owl',
+    AppLanguage.malay: 'Zara si burung hantu',
+    AppLanguage.mandarin: '猫头鹰 Zara',
+    AppLanguage.tamil: 'ஆந்தை சாரா',
+    AppLanguage.indonesian: 'Zara si burung hantu',
+  },
+  'safetyTitle': {
+    AppLanguage.english: 'Privacy & safety',
+    AppLanguage.malay: 'Privasi & keselamatan',
+    AppLanguage.mandarin: '隐私与安全',
+    AppLanguage.tamil: 'தனியுரிமை & பாதுகாப்பு',
+    AppLanguage.indonesian: 'Privasi & keamanan',
+  },
+  'badgeOffline': {
+    AppLanguage.english: 'Works offline',
+    AppLanguage.malay: 'Tanpa internet',
+    AppLanguage.mandarin: '离线可用',
+    AppLanguage.tamil: 'இணையம் இன்றி இயங்கும்',
+    AppLanguage.indonesian: 'Tanpa internet',
+  },
+  'badgeNoAds': {
+    AppLanguage.english: 'No ads',
+    AppLanguage.malay: 'Tiada iklan',
+    AppLanguage.mandarin: '无广告',
+    AppLanguage.tamil: 'விளம்பரம் இல்லை',
+    AppLanguage.indonesian: 'Tanpa iklan',
+  },
+  'badgeNoLogin': {
+    AppLanguage.english: 'No login',
+    AppLanguage.malay: 'Tanpa log masuk',
+    AppLanguage.mandarin: '无需登录',
+    AppLanguage.tamil: 'உள்நுழைவு தேவையில்லை',
+    AppLanguage.indonesian: 'Tanpa login',
+  },
+  'badgeNoData': {
+    AppLanguage.english: 'No data collected',
+    AppLanguage.malay: 'Tiada data dikumpul',
+    AppLanguage.mandarin: '不收集任何数据',
+    AppLanguage.tamil: 'தரவு சேகரிக்கப்படுவதில்லை',
+    AppLanguage.indonesian: 'Tanpa pengumpulan data',
+  },
+  // ── Parent settings ───────────────────────────────────────────────────────
+  'soundEffectsSubtitle': {
+    AppLanguage.english: 'Play challenge and reward sounds',
+    AppLanguage.malay: 'Mainkan bunyi cabaran dan ganjaran',
+    AppLanguage.mandarin: '播放挑战和奖励音效',
+    AppLanguage.tamil: 'சவால் மற்றும் பரிசு ஒலிகளை இயக்கு',
+    AppLanguage.indonesian: 'Putar suara tantangan dan hadiah',
+  },
+  'resetTitle': {
+    AppLanguage.english: 'Reset progress?',
+    AppLanguage.malay: 'Set semula kemajuan?',
+    AppLanguage.mandarin: '重置学习进度？',
+    AppLanguage.tamil: 'முன்னேற்றத்தை மீட்டமைக்கவா?',
+    AppLanguage.indonesian: 'Atur ulang kemajuan?',
+  },
+  'resetBody': {
+    AppLanguage.english:
+        "This clears stars, badges, and completed lessons. It can't be undone.",
+    AppLanguage.malay:
+        'Ini akan memadam bintang, lencana dan pelajaran yang selesai. Tindakan ini tidak boleh dibatalkan.',
+    AppLanguage.mandarin: '这将清除星星、徽章和已完成的课程，且无法撤销。',
+    AppLanguage.tamil:
+        'இது நட்சத்திரங்கள், பதக்கங்கள் மற்றும் முடித்த பாடங்களை அழிக்கும். இதைத் திரும்பப் பெற முடியாது.',
+    AppLanguage.indonesian:
+        'Ini akan menghapus bintang, lencana, dan pelajaran yang selesai. Tindakan ini tidak dapat dibatalkan.',
+  },
+  'cancel': {
+    AppLanguage.english: 'Cancel',
+    AppLanguage.malay: 'Batal',
+    AppLanguage.mandarin: '取消',
+    AppLanguage.tamil: 'ரத்து செய்',
+    AppLanguage.indonesian: 'Batal',
+  },
+  'reset': {
+    AppLanguage.english: 'Reset',
+    AppLanguage.malay: 'Set Semula',
+    AppLanguage.mandarin: '重置',
+    AppLanguage.tamil: 'மீட்டமை',
+    AppLanguage.indonesian: 'Atur Ulang',
+  },
+  // ── Microphone explanation shown to the grown-up before the system prompt
+  // (Play User Data policy). Must stay consistent with the privacy policy.
+  'micTitle': {
+    AppLanguage.english: 'Practise speaking with Zara 🎤',
+    AppLanguage.malay: 'Latih sebutan bersama Zara 🎤',
+    AppLanguage.mandarin: '和 Zara 一起练习发音 🎤',
+    AppLanguage.tamil: 'சாராவுடன் உச்சரிப்புப் பயிற்சி 🎤',
+    AppLanguage.indonesian: 'Latihan berbicara bersama Zara 🎤',
+  },
+  'micBody': {
+    AppLanguage.english:
+        'To check pronunciation, Bijak Belajar needs the microphone. Your '
+        "phone's speech service (such as Google or Apple) turns your child's "
+        'voice into text — on the device or online, depending on your phone. '
+        'Bijak Belajar itself never records, keeps or shares any audio.',
+    AppLanguage.malay:
+        'Untuk menyemak sebutan, Bijak Belajar memerlukan mikrofon. '
+        'Perkhidmatan pertuturan telefon anda (seperti Google atau Apple) '
+        'menukar suara anak anda kepada teks — pada peranti atau dalam talian, '
+        'bergantung pada telefon anda. Bijak Belajar sendiri tidak pernah '
+        'merakam, menyimpan atau berkongsi sebarang audio.',
+    AppLanguage.mandarin:
+        '为了检查发音，Bijak Belajar 需要使用麦克风。您手机的语音服务（例如 Google 或 '
+        'Apple）会将孩子的声音转换为文字——根据手机不同，可能在设备上或在线完成。'
+        'Bijak Belajar 本身从不录制、保存或分享任何音频。',
+    AppLanguage.tamil:
+        'உச்சரிப்பைச் சரிபார்க்க Bijak Belajar-க்கு மைக்ரோஃபோன் தேவை. உங்கள் '
+        'தொலைபேசியின் பேச்சுச் சேவை (Google அல்லது Apple போன்றவை) குழந்தையின் '
+        'குரலை உரையாக மாற்றுகிறது — தொலைபேசியைப் பொறுத்து சாதனத்திலோ இணையத்திலோ. '
+        'Bijak Belajar எந்த ஒலியையும் பதிவு செய்வதோ, சேமிப்பதோ, பகிர்வதோ இல்லை.',
+    AppLanguage.indonesian:
+        'Untuk memeriksa pelafalan, Bijak Belajar memerlukan mikrofon. Layanan '
+        'ucapan ponsel Anda (seperti Google atau Apple) mengubah suara anak '
+        'menjadi teks — di perangkat atau secara online, tergantung ponsel Anda. '
+        'Bijak Belajar sendiri tidak pernah merekam, menyimpan, atau membagikan '
+        'audio apa pun.',
+  },
+  'notNow': {
+    AppLanguage.english: 'Not now',
+    AppLanguage.malay: 'Bukan sekarang',
+    AppLanguage.mandarin: '暂不',
+    AppLanguage.tamil: 'இப்போது வேண்டாம்',
+    AppLanguage.indonesian: 'Nanti saja',
+  },
+  'continueLabel': {
+    AppLanguage.english: 'Continue',
+    AppLanguage.malay: 'Teruskan',
+    AppLanguage.mandarin: '继续',
+    AppLanguage.tamil: 'தொடரவும்',
+    AppLanguage.indonesian: 'Lanjutkan',
+  },
+  // ── Games ─────────────────────────────────────────────────────────────────
+  'newRound': {
+    AppLanguage.english: 'New Round',
+    AppLanguage.malay: 'Pusingan Baharu',
+    AppLanguage.mandarin: '新一轮',
+    AppLanguage.tamil: 'புதிய சுற்று',
+    AppLanguage.indonesian: 'Ronde Baru',
+  },
 };
 
 const _promptTemplates = <String, Map<AppLanguage, String>>{
@@ -1329,6 +1493,14 @@ const _numberWords = <String, Map<AppLanguage, String>>{
 };
 
 const _labels = <String, Map<AppLanguage, String>>{
+  // Memory game bonus card (shown on the card face and spoken aloud).
+  'bonus_star': {
+    AppLanguage.english: 'Bonus Star',
+    AppLanguage.malay: 'Bintang Bonus',
+    AppLanguage.indonesian: 'Bintang Bonus',
+    AppLanguage.mandarin: '奖励星星',
+    AppLanguage.tamil: 'போனஸ் நட்சத்திரம்',
+  },
   // ── Previously untranslated explorer objects: these fell back to English
   // inside Malay sentences ("cari Apple!") and were mispronounced by the
   // ms-MY voice. Every object the explorer can ask for MUST have a full set.

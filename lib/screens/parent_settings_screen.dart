@@ -49,7 +49,9 @@ class ParentSettingsScreen extends ConsumerWidget {
                       value: progress.soundEnabled,
                       onChanged: progress.setSoundEnabled,
                       title: Text(AppText.ui('sound', language)),
-                      subtitle: const Text('Play challenge and reward sounds'),
+                      subtitle: Text(
+                        AppText.ui('soundEffectsSubtitle', language),
+                      ),
                       secondary: const Icon(Icons.volume_up_rounded),
                     ),
                     const Divider(height: 1),
@@ -71,29 +73,29 @@ class ParentSettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Child-Safe App',
+                        AppText.ui('safetyTitle', language),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 12),
-                      const Wrap(
+                      Wrap(
                         spacing: 8,
                         runSpacing: 8,
                         children: [
                           _SafetyBadge(
                             icon: Icons.wifi_off_rounded,
-                            label: '100% Offline',
+                            label: AppText.ui('badgeOffline', language),
                           ),
                           _SafetyBadge(
                             icon: Icons.block_rounded,
-                            label: 'No Ads',
+                            label: AppText.ui('badgeNoAds', language),
                           ),
                           _SafetyBadge(
                             icon: Icons.lock_rounded,
-                            label: 'No Login',
+                            label: AppText.ui('badgeNoLogin', language),
                           ),
                           _SafetyBadge(
                             icon: Icons.shield_rounded,
-                            label: 'Child-Safe',
+                            label: AppText.ui('badgeNoData', language),
                           ),
                         ],
                       ),
@@ -167,19 +169,20 @@ class ParentSettingsScreen extends ConsumerWidget {
 
   Future<void> _confirmReset(BuildContext context, WidgetRef ref) async {
     final progress = ref.read(progressServiceProvider);
+    final language = progress.language;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Reset progress?'),
-        content: const Text('This clears stars, badges, and completed counts.'),
+        title: Text(AppText.ui('resetTitle', language)),
+        content: Text(AppText.ui('resetBody', language)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppText.ui('cancel', language)),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Reset'),
+            child: Text(AppText.ui('reset', language)),
           ),
         ],
       ),
@@ -531,12 +534,14 @@ class _SafetyBadge extends ConsumerWidget {
         children: [
           Icon(icon, size: 18, color: AppTheme.leafGreen),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppTheme.ink,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: AppTheme.ink,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],

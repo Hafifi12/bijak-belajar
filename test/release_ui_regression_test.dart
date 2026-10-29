@@ -53,7 +53,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [progressServiceProvider.overrideWith((ref) => progress)],
-          child: TinyFinderApp(initialRoute: route),
+          child: BijakBelajarApp(initialRoute: route),
         ),
       );
       await tester.pump(const Duration(milliseconds: 500));
@@ -62,7 +62,18 @@ void main() {
   });
 
   testWidgets('unknown routes show a recoverable page', (tester) async {
-    await tester.pumpWidget(const TinyFinderApp(initialRoute: '/missing'));
+    // The route stack for '/missing' includes the splash at '/', which reads
+    // the child's language from Riverpod — as in the real app (main.dart).
+    SharedPreferences.setMockInitialValues({'language': 'en'});
+    final progress = ProgressService();
+    await progress.load();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [progressServiceProvider.overrideWith((ref) => progress)],
+        child: const BijakBelajarApp(initialRoute: '/missing'),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('Page not found'), findsOneWidget);
@@ -84,7 +95,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [progressServiceProvider.overrideWith((ref) => progress)],
-        child: const TinyFinderApp(initialRoute: HomeScreen.routeName),
+        child: const BijakBelajarApp(initialRoute: HomeScreen.routeName),
       ),
     );
     await tester.pump(const Duration(milliseconds: 800));

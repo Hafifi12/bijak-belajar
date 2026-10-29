@@ -86,14 +86,16 @@ class _ZaraPromptState extends State<ZaraPrompt>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.10),
+              // Near-opaque so the scene's moon and stars never show through
+              // (and fight with) the prompt text.
+              color: AppTheme.nightSurfaceHi.withValues(alpha: 0.94),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(16),
                 bottomLeft: Radius.circular(16),
                 bottomRight: Radius.circular(16),
               ),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+              border: Border.all(color: AppTheme.lilac.withValues(alpha: 0.35)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,8 +114,8 @@ class _ZaraPromptState extends State<ZaraPrompt>
                   const SizedBox(height: 2),
                   Text(
                     widget.sub!,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
+                    style: const TextStyle(
+                      color: AppTheme.onNightMuted,
                       fontSize: 11,
                       height: 1.25,
                       fontStyle: FontStyle.italic,

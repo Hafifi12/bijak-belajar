@@ -59,8 +59,8 @@ class PrivacyPolicyScreen extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         isMalay
-                            ? 'Berkuat kuasa 10 Ogos 2026 · ANF Studio'
-                            : 'Effective 10 August 2026 · ANF Studio',
+                            ? 'Berkuat kuasa 29 Oktober 2026 · ANF Studio'
+                            : 'Effective 29 October 2026 · ANF Studio',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF9090A8),
@@ -110,18 +110,29 @@ const List<(String, String)> _sectionsEn = [
   ),
   (
     'Microphone & voice',
-    'Some activities let your child say a letter, number, or word aloud so the '
-        'app can give friendly pronunciation feedback. This uses the microphone '
-        'and your device\'s built-in speech recognition. Your child\'s voice is '
-        'never recorded, saved, or sent anywhere — it is turned into text on '
-        'your device only. You can decline the microphone permission and still '
-        'use the rest of the app.',
+    'When your child taps the speak button, the app uses the microphone so it '
+        'can give friendly pronunciation feedback. A grown-up sees a short '
+        'explanation before the first request. Your device\'s built-in speech '
+        'service (such as Google or Apple) turns the speech into text — on the '
+        'device or online, depending on your device and its settings, under '
+        'that provider\'s privacy terms. Bijak Belajar itself never records, '
+        'keeps, or receives the audio. You can decline the microphone '
+        'permission and still use the rest of the app.',
   ),
   (
-    'Where data is stored',
-    'Learning settings and progress (language, sound, stars, level) are saved '
-        'only on this device using local storage, and are removed when the app '
-        'is uninstalled.',
+    'Where data is stored & how to delete it',
+    'Learning settings and progress (language, sound, stars, level) and any '
+        'colouring pictures your child saves stay only in the app\'s private '
+        'storage on this device. Delete progress with Parent Settings → Reset '
+        'Progress, delete a picture from the colouring gallery, or uninstall '
+        'the app to remove everything. We never receive this data, so we hold '
+        'no copy.',
+  ),
+  (
+    'Keeping data safe',
+    'The app never sends this data anywhere, so it stays protected by your '
+        'device\'s app sandboxing and screen lock. On Android the app opts out '
+        'of cloud backup.',
   ),
   (
     'No ads, no tracking',
@@ -131,12 +142,14 @@ const List<(String, String)> _sectionsEn = [
   (
     'Internet',
     'The app makes no network requests and does not include the Android '
-        'Internet permission — all content is bundled and works offline.',
+        'Internet permission — all content is bundled and works offline. Your '
+        'device\'s speech and text-to-speech services are separate and may use '
+        'the internet according to your device\'s settings.',
   ),
   (
     'Sharing a picture',
-    'In the colouring activity, a child (with a parent\'s help) can choose to '
-        'share a picture they coloured through the device\'s own share menu. '
+    'A child can ask to share a picture they coloured. A grown-up answers a '
+        'simple maths question first, then the device\'s own share menu opens. '
         'The app does not upload or keep a copy.',
   ),
   (
@@ -167,18 +180,29 @@ const List<(String, String)> _sectionsMs = [
   ),
   (
     'Mikrofon & suara',
-    'Sesetengah aktiviti membenarkan anak anda menyebut huruf, nombor, atau '
-        'perkataan supaya aplikasi boleh memberi maklum balas sebutan. Ini '
-        'menggunakan mikrofon dan pengecaman pertuturan terbina dalam peranti '
-        'anda. Suara anak anda tidak pernah dirakam, disimpan, atau dihantar ke '
-        'mana-mana — ia ditukar menjadi teks pada peranti anda sahaja. Anda '
-        'boleh menolak kebenaran mikrofon dan masih menggunakan aplikasi ini.',
+    'Apabila anak anda menekan butang sebut, aplikasi menggunakan mikrofon '
+        'untuk memberi maklum balas sebutan. Orang dewasa melihat penerangan '
+        'ringkas sebelum permintaan pertama. Perkhidmatan pertuturan terbina '
+        'dalam peranti anda (seperti Google atau Apple) menukar sebutan kepada '
+        'teks — pada peranti atau dalam talian, bergantung pada peranti dan '
+        'tetapannya, tertakluk kepada terma privasi penyedia tersebut. Bijak '
+        'Belajar sendiri tidak pernah merakam, menyimpan, atau menerima audio. '
+        'Anda boleh menolak kebenaran mikrofon dan masih menggunakan aplikasi ini.',
   ),
   (
-    'Di mana data disimpan',
-    'Tetapan dan kemajuan pembelajaran (bahasa, bunyi, bintang, tahap) '
-        'disimpan hanya pada peranti ini menggunakan storan setempat, dan '
-        'dipadam apabila aplikasi dinyahpasang.',
+    'Di mana data disimpan & cara memadamnya',
+    'Tetapan dan kemajuan pembelajaran (bahasa, bunyi, bintang, tahap) serta '
+        'gambar mewarna yang disimpan oleh anak anda kekal hanya dalam storan '
+        'peribadi aplikasi pada peranti ini. Padam kemajuan melalui Tetapan Ibu '
+        'Bapa → Set Semula Kemajuan, padam gambar daripada galeri mewarna, atau '
+        'nyahpasang aplikasi untuk memadam semuanya. Kami tidak pernah menerima '
+        'data ini, jadi kami tidak menyimpan sebarang salinan.',
+  ),
+  (
+    'Keselamatan data',
+    'Aplikasi tidak pernah menghantar data ini ke mana-mana, jadi ia kekal '
+        'dilindungi oleh pengasingan aplikasi dan kunci skrin peranti anda. '
+        'Pada Android, aplikasi tidak menyertai sandaran awan.',
   ),
   (
     'Tiada iklan, tiada penjejakan',
@@ -189,13 +213,15 @@ const List<(String, String)> _sectionsMs = [
     'Internet',
     'Aplikasi tidak membuat permintaan rangkaian dan tidak menyertakan '
         'kebenaran Internet Android — semua kandungan disertakan dan berfungsi '
-        'di luar talian.',
+        'di luar talian. Perkhidmatan pertuturan dan teks-ke-pertuturan peranti '
+        'anda adalah berasingan dan mungkin menggunakan internet mengikut '
+        'tetapan peranti anda.',
   ),
   (
     'Berkongsi gambar',
-    'Dalam aktiviti mewarna, kanak-kanak (dengan bantuan ibu bapa) boleh '
-        'memilih untuk berkongsi gambar yang diwarnakan melalui menu kongsi '
-        'peranti. Aplikasi tidak memuat naik atau menyimpan salinan.',
+    'Kanak-kanak boleh meminta untuk berkongsi gambar yang diwarnakan. Orang '
+        'dewasa menjawab soalan matematik mudah terlebih dahulu, kemudian menu '
+        'kongsi peranti dibuka. Aplikasi tidak memuat naik atau menyimpan salinan.',
   ),
   (
     'Privasi kanak-kanak',
