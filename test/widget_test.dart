@@ -46,7 +46,7 @@ void main() {
         overrides: [
           progressServiceProvider.overrideWith((ref) => progressService),
         ],
-        child: const TinyFinderApp(initialRoute: HomeScreen.routeName),
+        child: const BijakBelajarApp(initialRoute: HomeScreen.routeName),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));

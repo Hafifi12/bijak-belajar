@@ -1,18 +1,22 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/app_language.dart';
+import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_text.dart';
 import 'home_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
   static const routeName = '/';
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _entryCtrl;
   late AnimationController _floatCtrl;
@@ -126,9 +130,10 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final language = ref.watch(progressServiceProvider).language;
     return Scaffold(
       body: Semantics(
-        label: 'Bijak Belajar splash screen. Tap to enter the app.',
+        label: 'Bijak Belajar',
         child: AnimatedBuilder(
           animation: Listenable.merge([
             _entryCtrl,
@@ -180,17 +185,24 @@ class _SplashScreenState extends State<SplashScreen>
                                   SizedBox(height: size.height * 0.05),
                                   _BijakLogo(),
                                   const SizedBox(height: 8),
-                                  _TaglinePill(),
+                                  _TaglinePill(
+                                    text: AppText.ui('splashTagline', language),
+                                  ),
                                   const Spacer(),
                                   Transform.translate(
                                     offset: Offset(0, _float.value),
                                     child: Transform.scale(
                                       scale: _mascotScale.value,
-                                      child: const _BookMascot(),
+                                      child: _ZaraMascot(
+                                        semanticLabel: AppText.ui(
+                                          'zaraTheOwl',
+                                          language,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 20),
-                                  _TrustBadgeRow(),
+                                  _TrustBadgeRow(language: language),
                                   const Spacer(),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -199,6 +211,7 @@ class _SplashScreenState extends State<SplashScreen>
                                     child: Transform.scale(
                                       scale: _pulse.value,
                                       child: _LetsLearnButton(
+                                        label: AppText.ui('letsLearn', language),
                                         onTap: _goToHome,
                                         countdown: _countdown,
                                       ),
@@ -206,7 +219,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   ),
                                   const SizedBox(height: 14),
                                   Text(
-                                    'Bijak Belajar • Untuk kanak-kanak Malaysia 3–7 tahun',
+                                    'Bijak Belajar • ${AppText.ui('splashFooter', language)}',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: Colors.white.withValues(
@@ -321,6 +334,9 @@ class _BijakLogo extends StatelessWidget {
 }
 
 class _TaglinePill extends StatelessWidget {
+  const _TaglinePill({required this.text});
+  final String text;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -338,8 +354,8 @@ class _TaglinePill extends StatelessWidget {
           ),
         ],
       ),
-      child: const Text(
-        '🌟  Pembelajaran seru 5 bahasa!  🌟',
+      child: Text(
+        '🌟  $text  🌟',
         textAlign: TextAlign.center,
         style: TextStyle(
           color: AppTheme.ink,
@@ -351,97 +367,73 @@ class _TaglinePill extends StatelessWidget {
   }
 }
 
-class _BookMascot extends StatelessWidget {
-  const _BookMascot();
+/// Zara the owl — the same tutor the child meets on the map and in every
+/// lesson, so the very first screen already introduces the companion.
+class _ZaraMascot extends StatelessWidget {
+  const _ZaraMascot({required this.semanticLabel});
+  final String semanticLabel;
+
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Bijak Belajar book mascot',
+      label: semanticLabel,
+      image: true,
       child: SizedBox(
-        width: 190,
-        height: 190,
+        width: 200,
+        height: 200,
         child: Stack(
           alignment: Alignment.center,
           children: [
+            // Soft aurora halo behind the owl.
             Container(
-              width: 140,
-              height: 150,
+              width: 200,
+              height: 200,
               decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.lilac.withValues(alpha: 0.45),
+                    AppTheme.violet.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              width: 148,
+              height: 148,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFFD21E), Color(0xFFFFC107)],
+                  colors: [AppTheme.lilac, AppTheme.violet],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: Colors.white, width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 20,
+                    color: AppTheme.violet.withValues(alpha: 0.6),
+                    blurRadius: 28,
                     offset: const Offset(0, 10),
                   ),
                 ],
               ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned(
-                    left: 22,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 10,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE6A800),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [_Eye(), SizedBox(width: 18), _Eye()],
-                      ),
-                      const SizedBox(height: 12),
-                      CustomPaint(
-                        size: const Size(48, 20),
-                        painter: _SmilePainter(),
-                      ),
-                    ],
-                  ),
-                  const Positioned(
-                    top: 10,
-                    right: 12,
-                    child: Text('⭐', style: TextStyle(fontSize: 18)),
-                  ),
-                  const Positioned(
-                    bottom: 12,
-                    right: 14,
-                    child: Text('✨', style: TextStyle(fontSize: 14)),
-                  ),
-                ],
-              ),
+              alignment: Alignment.center,
+              child: const Text('🦉', style: TextStyle(fontSize: 82)),
             ),
             const Positioned(
-              top: 8,
-              child: Text('🎓', style: TextStyle(fontSize: 42)),
+              top: 18,
+              right: 24,
+              child: Text('⭐', style: TextStyle(fontSize: 24)),
             ),
-            Positioned(
-              bottom: 18,
-              left: 14,
-              child: Transform.rotate(
-                angle: -0.4,
-                child: const Text('✋', style: TextStyle(fontSize: 26)),
-              ),
+            const Positioned(
+              top: 30,
+              left: 22,
+              child: Text('📚', style: TextStyle(fontSize: 22)),
             ),
-            Positioned(
-              bottom: 18,
-              right: 14,
-              child: Transform.rotate(
-                angle: 0.4,
-                child: const Text('✋', style: TextStyle(fontSize: 26)),
-              ),
+            const Positioned(
+              bottom: 22,
+              left: 22,
+              child: Text('✨', style: TextStyle(fontSize: 20)),
             ),
           ],
         ),
@@ -450,82 +442,40 @@ class _BookMascot extends StatelessWidget {
   }
 }
 
-class _Eye extends StatelessWidget {
-  const _Eye();
+/// Only factual claims: every badge here must stay true to the privacy
+/// policy and the Play Data safety form.
+class _TrustBadgeRow extends StatelessWidget {
+  const _TrustBadgeRow({required this.language});
+  final AppLanguage language;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 18,
-      height: 20,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1A237E),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Container(
-          width: 6,
-          height: 6,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-          ),
+    final badges = [
+      ('📶', AppText.ui('badgeOffline', language)),
+      ('🚫', AppText.ui('badgeNoAds', language)),
+      ('🔒', AppText.ui('badgeNoLogin', language)),
+      ('🛡️', AppText.ui('badgeNoData', language)),
+    ];
+    return Semantics(
+      label: badges.map((b) => b.$2).join(', '),
+      child: ExcludeSemantics(
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            for (final (icon, label) in badges) _Badge(icon: icon, label: label),
+          ],
         ),
       ),
     );
   }
 }
 
-class _SmilePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF1A237E)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5
-      ..strokeCap = StrokeCap.round;
-    canvas.drawArc(
-      Rect.fromLTWH(4, 0, size.width - 8, size.height + 4),
-      0.2,
-      math.pi - 0.4,
-      false,
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
-}
-
-class _TrustBadgeRow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: '100% Offline, Child-Safe, No Login, No Ads, Teacher-Approved',
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 8,
-        runSpacing: 6,
-        children: const [
-          _Badge(icon: '📶', label: '100% Offline', color: AppTheme.leafGreen),
-          _Badge(icon: '🛡️', label: 'Child-Safe', color: AppTheme.skyBlue),
-          _Badge(icon: '🔒', label: 'No Login', color: AppTheme.purple),
-          _Badge(icon: '🚫', label: 'No Ads', color: AppTheme.appleRed),
-          _Badge(
-            icon: '🏫',
-            label: 'Teacher-Approved',
-            color: AppTheme.turquoise,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _Badge extends StatelessWidget {
-  const _Badge({required this.icon, required this.label, required this.color});
+  const _Badge({required this.icon, required this.label});
   final String icon;
   final String label;
-  final Color color;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -543,12 +493,16 @@ class _Badge extends StatelessWidget {
         children: [
           Text(icon, style: const TextStyle(fontSize: 13)),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
+          // Flexible lets long Tamil/Indonesian labels wrap inside the pill
+          // instead of overflowing narrow phones.
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
@@ -558,7 +512,12 @@ class _Badge extends StatelessWidget {
 }
 
 class _LetsLearnButton extends StatelessWidget {
-  const _LetsLearnButton({required this.onTap, this.countdown = 0});
+  const _LetsLearnButton({
+    required this.label,
+    required this.onTap,
+    this.countdown = 0,
+  });
+  final String label;
   final VoidCallback onTap;
   final int countdown;
 
@@ -566,7 +525,7 @@ class _LetsLearnButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Let\'s Learn button. Auto-continues in $countdown seconds.',
+      label: label,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
@@ -594,20 +553,27 @@ class _LetsLearnButton extends StatelessWidget {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Text('🚀', style: TextStyle(fontSize: 28)),
-                  SizedBox(width: 12),
-                  Text(
-                    'Jom Belajar!',
-                    style: TextStyle(
-                      color: AppTheme.ink,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
+                children: [
+                  const Text('🚀', style: TextStyle(fontSize: 28)),
+                  const SizedBox(width: 12),
+                  // Flexible + scaleDown: Tamil/Mandarin labels differ in
+                  // width, and the countdown chip shares this row.
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        style: const TextStyle(
+                          color: AppTheme.ink,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
                   ),
-                  SizedBox(width: 12),
-                  Text('🎉', style: TextStyle(fontSize: 28)),
+                  const SizedBox(width: 12),
+                  const Text('🎉', style: TextStyle(fontSize: 28)),
                 ],
               ),
               if (countdown > 0)

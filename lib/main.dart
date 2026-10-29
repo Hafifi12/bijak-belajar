@@ -34,7 +34,7 @@ Future<void> main() async {
         // can depend on it without a second async load.
         progressServiceProvider.overrideWith((ref) => progressService),
       ],
-      child: const TinyFinderApp(),
+      child: const BijakBelajarApp(),
     ),
   );
 }
@@ -57,7 +57,11 @@ class _LoadErrorApp extends StatelessWidget {
               children: [
                 Icon(Icons.error_outline_rounded, color: Colors.red, size: 64),
                 SizedBox(height: 20),
+                // The language setting lives in the store that just failed to
+                // load, so show both of the app's main languages.
                 Text(
+                  'Tidak dapat memuatkan kemajuan anda.\n'
+                  'Sila mulakan semula aplikasi.\n\n'
                   'Could not load your progress.\nPlease restart the app.',
                   textAlign: TextAlign.center,
                   style: TextStyle(

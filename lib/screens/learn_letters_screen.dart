@@ -5,6 +5,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../models/app_language.dart';
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_text.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/star_counter.dart';
 import '../widgets/xp_popup.dart';
@@ -29,6 +30,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
   // ── Speech recognition ───────────────────────────────────────
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _speechAvailable = false;
+  // False until the child first taps "speak" — opening the lesson must never
+  // trigger the system microphone prompt on its own.
+  bool _speechChecked = false;
   bool _isListening = false;
   String _speechResult = '';
   bool? _speechCorrect;
@@ -331,10 +335,10 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
     _bounceAnim = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
     );
-    _initSpeech();
   }
 
   Future<void> _initSpeech() async {
+    _speechChecked = true;
     _speechAvailable = await _speech.initialize(
       onError: (_) {
         if (mounted) setState(() => _isListening = false);
@@ -451,6 +455,46 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
   }
 
   // ── Speech recognition ───────────────────────────────────────
+
+  /// Requests the microphone only when the child taps "speak", after telling
+  /// the grown-up why (Play User Data policy). Skips the explanation when the
+  /// permission was already granted.
+  Future<void> _onSpeakTapped() async {
+    if (_isListening) {
+      await _stopListening();
+      return;
+    }
+    if (!_speechChecked) {
+      if (!await _speech.hasPermission) {
+        final proceed = await _explainMicrophone();
+        if (proceed != true || !mounted) return;
+      }
+      await _initSpeech();
+      if (!_speechAvailable) return;
+    }
+    await _startListening();
+  }
+
+  Future<bool?> _explainMicrophone() {
+    final language = ref.read(progressServiceProvider).language;
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(AppText.ui('micTitle', language)),
+        content: Text(AppText.ui('micBody', language)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(AppText.ui('notNow', language)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(AppText.ui('continueLabel', language)),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _startListening() async {
     if (!_speechAvailable || _isListening) return;
@@ -754,11 +798,12 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                 const SizedBox(height: 14),
 
                                 // ── 🎤 Speech recognition input ─────────
-                                if (_speechAvailable) ...[
+                                // Shown until speech is known to be
+                                // unavailable (permission denied or no
+                                // recognizer on the device).
+                                if (_speechAvailable || !_speechChecked) ...[
                                   GestureDetector(
-                                    onTap: _isListening
-                                        ? _stopListening
-                                        : _startListening,
+                                    onTap: _onSpeakTapped,
                                     child: AnimatedContainer(
                                       duration: const Duration(
                                         milliseconds: 220,

@@ -21,8 +21,8 @@ import 'screens/splash_screen.dart';
 import 'screens/train_sort_screen.dart';
 import 'theme/app_theme.dart';
 
-class TinyFinderApp extends StatelessWidget {
-  const TinyFinderApp({super.key, this.initialRoute = SplashScreen.routeName});
+class BijakBelajarApp extends StatelessWidget {
+  const BijakBelajarApp({super.key, this.initialRoute = SplashScreen.routeName});
 
   final String initialRoute;
 

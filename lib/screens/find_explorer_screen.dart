@@ -322,7 +322,7 @@ class _FindExplorerScreenState extends ConsumerState<FindExplorerScreen>
                     OutlinedButton.icon(
                       onPressed: _nextRound,
                       icon: const Text('🔄', style: TextStyle(fontSize: 18)),
-                      label: const Text('New Round'),
+                      label: Text(AppText.ui('newRound', language)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white60, width: 2),

@@ -10,6 +10,7 @@ import '../services/artwork_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bijak_scene.dart';
 import '../widgets/pressable.dart';
+import 'parent_gate_screen.dart';
 
 /// Gallery of the child's saved coloring artwork.
 ///
@@ -218,6 +219,14 @@ class _ArtworkFullscreen extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () async {
+              // Sharing leaves the app, so a grown-up confirms it first
+              // (Google Play Families policy).
+              final allowed = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(
+                  builder: (_) => const ParentGateScreen(forSharing: true),
+                ),
+              );
+              if (allowed != true) return;
               try {
                 await Share.shareXFiles(
                   [XFile(file.path)],

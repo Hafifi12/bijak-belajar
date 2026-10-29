@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Letters module: speech practice (speech_to_text). On-device only. -->
+    <!-- Letters module: speech practice (speech_to_text). Requested only when
+         the child taps "speak", after a grown-up explanation; the app itself
+         never records or stores audio (the system recognizer does the work). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="Bijak Belajar"
@@ -24,6 +26,14 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Targeting API 36, Android 16 ignores orientation locks on large
+                 screens (smallest width >= 600dp). Every screen is designed
+                 portrait-first, so keep tablets in portrait for now. Temporary:
+                 Android ignores this property once the app targets API 37, so
+                 landscape layouts are needed before then. -->
+            <property
+                android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+                android:value="true" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -49,6 +59,12 @@
              required by speech_to_text for the Letters speaking practice. -->
         <intent>
             <action android:name="android.speech.RecognitionService"/>
+        </intent>
+        <!-- Package visibility for the device's text-to-speech engine. Android
+             12+ brokers the TTS connection itself, but Android 11 devices bind
+             directly and cannot see the engine without this (flutter_tts). -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
         </intent>
     </queries>
 </manifest>

@@ -239,8 +239,8 @@ class _ColoringHeader extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                _TeacherTag(
-                  label: isMalay ? '✅ Disahkan Guru' : '✅ Teacher Approved',
+                _FeatureTag(
+                  label: isMalay ? '🎨 Latihan kreativiti' : '🎨 Creative practice',
                 ),
               ],
             ),
@@ -251,8 +251,8 @@ class _ColoringHeader extends ConsumerWidget {
   }
 }
 
-class _TeacherTag extends ConsumerWidget {
-  const _TeacherTag({required this.label});
+class _FeatureTag extends ConsumerWidget {
+  const _FeatureTag({required this.label});
   final String label;
 
   @override
