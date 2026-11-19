@@ -51,7 +51,7 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.tap(find.text('Next'));
+    await tester.tap(find.text('下一步'));
     await tester.pump(const Duration(milliseconds: 500));
     calls.clear();
 
@@ -62,7 +62,7 @@ void main() {
         )
         .first;
     await tester.scrollUntilVisible(
-      find.text('Tap objects to count'),
+      find.text('点击物品来计数'),
       500,
       scrollable: scroller,
     );

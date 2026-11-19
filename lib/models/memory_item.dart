@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'challenge.dart';
+import 'app_language.dart';
 
 enum MemoryCategory { animals, shapes, colors, jawi }
 
@@ -53,21 +54,21 @@ extension MemoryStageDetails on MemoryStage {
     }
   }
 
-  String label({required bool isMalay}) {
+  String label({required AppLanguage language}) {
     switch (this) {
       case MemoryStage.easy:
-        return isMalay ? 'Mudah' : 'Easy';
+        return language.copy(ms: 'Mudah', en: 'Easy', zh: '简单', ta: 'எளிது');
       case MemoryStage.normal:
-        return isMalay ? 'Biasa' : 'Normal';
+        return language.copy(ms: 'Biasa', en: 'Normal', zh: '普通', ta: 'சாதாரணம்');
       case MemoryStage.medium:
-        return isMalay ? 'Sederhana' : 'Medium';
+        return language.copy(ms: 'Sederhana', en: 'Medium', zh: '中等', ta: 'நடுத்தரம்');
       case MemoryStage.high:
-        return isMalay ? 'Tinggi' : 'High';
+        return language.copy(ms: 'Tinggi', en: 'High', zh: '高', ta: 'அதிகம்');
     }
   }
 
-  String boardLabel({required bool isMalay}) {
-    return '${gridSize}x$gridSize ${label(isMalay: isMalay)}';
+  String boardLabel({required AppLanguage language}) {
+    return '${gridSize}x$gridSize ${label(language: language)}';
   }
 }
 

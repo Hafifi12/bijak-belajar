@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import '../models/app_language.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_state.dart';
@@ -77,7 +78,6 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
     final badge = args?.badge;
     final progress = ref.watch(progressServiceProvider);
     final language = progress.language;
-    final isMalay = language.name == 'malay';
     final level = progress.currentLevel;
     final modeLabel = args?.modeLabel ?? 'Bijak Belajar';
 
@@ -168,10 +168,8 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                         ),
                         child: Text(
                           badge != null
-                              ? (isMalay ? '🎉 LENCANA BARU!' : '🎉 NEW BADGE!')
-                              : (isMalay
-                                    ? '🎉 PELAJARAN SELESAI!'
-                                    : '🎉 LESSON COMPLETE!'),
+                              ? (language.copy(ms: '🎉 LENCANA BARU!', en: '🎉 NEW BADGE!', zh: '🎉 新徽章！', ta: '🎉 புதிய பேட்ஜ்!'))
+                              : (language.copy(ms: '🎉 PELAJARAN SELESAI!', en: '🎉 LESSON COMPLETE!', zh: '🎉 课程完成！', ta: '🎉 பாடம் முடிந்தது!')),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -214,12 +212,8 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                           children: [
                             Text(
                               badge != null
-                                  ? (isMalay
-                                        ? 'Wah! Kamu buka lencana baru! 🌟'
-                                        : 'Wow! You unlocked a new badge! 🌟')
-                                  : (isMalay
-                                        ? 'Hebat sekali! Kamu selesai $modeLabel!'
-                                        : 'Amazing! You finished $modeLabel!'),
+                                  ? (language.copy(ms: 'Wah! Kamu buka lencana baru! 🌟', en: 'Wow! You unlocked a new badge! 🌟', zh: '哇！你解锁了一枚新徽章！🌟', ta: 'வாவ்! நீ ஒரு புதிய பேட்ஜைப் பெற்றாய்! 🌟'))
+                                  : (language.copy(ms: 'Hebat sekali! Kamu selesai $modeLabel!', en: 'Amazing! You finished $modeLabel!', zh: '太棒了！你完成了 $modeLabel！', ta: 'அற்புதம்! நீ $modeLabel-ஐ முடித்தாய்!')),
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -230,7 +224,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              _encouragement(progress.stars, isMalay),
+                              _encouragement(progress.stars, language),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.6),
@@ -255,7 +249,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                       child: _RewardChip(
                         icon: '⭐',
                         value: '${progress.stars}',
-                        label: isMalay ? 'Bintang' : 'Stars',
+                        label: language.copy(ms: 'Bintang', en: 'Stars', zh: '星星', ta: 'நட்சத்திரங்கள்'),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -263,7 +257,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                       child: _RewardChip(
                         icon: '🔥',
                         value: '${progress.currentStreak}',
-                        label: isMalay ? 'Streak' : 'Streak',
+                        label: language.copy(ms: 'Streak', en: 'Streak', zh: '连续', ta: 'தொடர்ச்சி'),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -271,7 +265,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                       child: _RewardChip(
                         icon: level.emoji,
                         value: '${level.level}',
-                        label: isMalay ? 'Tahap' : 'Level',
+                        label: language.copy(ms: 'Tahap', en: 'Level', zh: '级别', ta: 'நிலை'),
                       ),
                     ),
                   ],
@@ -281,12 +275,12 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
 
                 // ── Level "story" track ──
                 _LevelTrack(
-                  isMalay: isMalay,
+                  language: language,
                   fraction: frac.toDouble(),
                   starsToNext: toNext,
                   nextLevel: level.level + 1,
                   maxed: maxed,
-                  levelTitle: isMalay ? level.titleMalay : level.title,
+                  levelTitle: language.usesMalayCopy ? level.titleMalay : level.title,
                 ),
 
                 const SizedBox(height: 22),
@@ -317,9 +311,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                         const Text('🚀', style: TextStyle(fontSize: 22)),
                         const SizedBox(width: 10),
                         Text(
-                          isMalay
-                              ? 'Teruskan Pengembaraan!'
-                              : 'Continue the Adventure!',
+                          language.copy(ms: 'Teruskan Pengembaraan!', en: 'Continue the Adventure!', zh: '继续冒险！', ta: 'சாகசத்தைத் தொடர்!'),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 17,
@@ -349,7 +341,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                         const Text('🗺️', style: TextStyle(fontSize: 17)),
                         const SizedBox(width: 8),
                         Text(
-                          isMalay ? 'Kembali ke Peta' : 'Back to Map',
+                          language.copy(ms: 'Kembali ke Peta', en: 'Back to Map', zh: '返回地图', ta: 'வரைபடத்திற்குத் திரும்பு'),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 14,
@@ -388,25 +380,17 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
     );
   }
 
-  String _encouragement(int stars, bool isMalay) {
+  String _encouragement(int stars, AppLanguage language) {
     if (stars < 5) {
-      return isMalay
-          ? 'Permulaan yang hebat — teruskan!'
-          : 'A great start — keep going!';
+      return language.copy(ms: 'Permulaan yang hebat — teruskan!', en: 'A great start — keep going!', zh: '很好的开始——继续加油！', ta: 'சிறந்த தொடக்கம் — தொடர்ந்து செல்!');
     }
     if (stars < 20) {
-      return isMalay
-          ? 'Kamu semakin bijak setiap hari!'
-          : "You're getting smarter every day!";
+      return language.copy(ms: 'Kamu semakin bijak setiap hari!', en: "You're getting smarter every day!", zh: '你每天都在变得更聪明！', ta: 'நீ ஒவ்வொரு நாளும் புத்திசாலியாகிறாய்!');
     }
     if (stars < 50) {
-      return isMalay
-          ? 'Pelajar yang cemerlang!'
-          : "You're an excellent learner!";
+      return language.copy(ms: 'Pelajar yang cemerlang!', en: "You're an excellent learner!", zh: '你是一位优秀的学习者！', ta: 'நீ ஒரு சிறந்த கற்றவன்!');
     }
-    return isMalay
-        ? 'Kamu bintang belajar sejati!'
-        : "You're a true learning star!";
+    return language.copy(ms: 'Kamu bintang belajar sejati!', en: "You're a true learning star!", zh: '你是真正的学习之星！', ta: 'நீ உண்மையான கற்றல் நட்சத்திரம்!');
   }
 
   List<Widget> _buildBgStars() {
@@ -496,14 +480,14 @@ class _RewardChip extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 class _LevelTrack extends StatelessWidget {
   const _LevelTrack({
-    required this.isMalay,
+    required this.language,
     required this.fraction,
     required this.starsToNext,
     required this.nextLevel,
     required this.maxed,
     required this.levelTitle,
   });
-  final bool isMalay;
+  final AppLanguage language;
   final double fraction;
   final int starsToNext;
   final int nextLevel;
@@ -528,7 +512,7 @@ class _LevelTrack extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isMalay ? 'KEMAJUAN — $levelTitle' : 'PROGRESS — $levelTitle',
+            language.copy(ms: 'KEMAJUAN — $levelTitle', en: 'PROGRESS — $levelTitle', zh: '进度 — $levelTitle', ta: 'முன்னேற்றம் — $levelTitle'),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.5),
               fontSize: 10,
@@ -561,12 +545,8 @@ class _LevelTrack extends StatelessWidget {
           Center(
             child: Text(
               maxed
-                  ? (isMalay
-                        ? '👑 Kamu di tahap tertinggi!'
-                        : '👑 You reached the top level!')
-                  : (isMalay
-                        ? 'Lagi $starsToNext bintang untuk Tahap $nextLevel!'
-                        : '$starsToNext more stars to reach Level $nextLevel!'),
+                  ? (language.copy(ms: '👑 Kamu di tahap tertinggi!', en: '👑 You reached the top level!', zh: '👑 你已到达最高级别！', ta: '👑 நீ உச்ச நிலையை அடைந்துவிட்டாய்!'))
+                  : (language.copy(ms: 'Lagi $starsToNext bintang untuk Tahap $nextLevel!', en: '$starsToNext more stars to reach Level $nextLevel!', zh: '再获得 $starsToNext 颗星星即可升到 $nextLevel 级！', ta: 'நிலை $nextLevel-ஐ அடைய இன்னும் $starsToNext நட்சத்திரங்கள்!')),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppTheme.lilac,

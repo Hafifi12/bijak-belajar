@@ -322,7 +322,7 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: language == AppLanguage.malay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         title: Row(
@@ -339,9 +339,7 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    language == AppLanguage.malay
-                        ? 'Jawi Asas — حروف جاوي'
-                        : 'Jawi Letters — حروف جاوي',
+                    language.copy(ms: 'Jawi Asas — حروف جاوي', en: 'Jawi Letters — حروف جاوي', zh: '爪夷文字母 — حروف جاوي', ta: 'ஜாவி எழுத்துகள் — حروف جاوي'),
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 15,
@@ -421,12 +419,8 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: ZaraPrompt(
-                  message: language == AppLanguage.malay
-                      ? 'Huruf Jawi apakah ini? Baca & sebut!'
-                      : 'Which Jawi letter is this? Read & say it!',
-                  sub: language == AppLanguage.malay
-                      ? 'Which Jawi letter is this?'
-                      : 'Baca nama & contoh perkataan',
+                  message: language.copy(ms: 'Huruf Jawi apakah ini? Baca & sebut!', en: 'Which Jawi letter is this? Read & say it!', zh: '这是哪个爪夷文字母？读一读，说出来！', ta: 'இது எந்த ஜாவி எழுத்து? படித்துச் சொல்!'),
+                  sub: language.copy(ms: 'Baca nama & contoh perkataan', en: 'Which Jawi letter is this?', zh: '这是哪个爪夷文字母？', ta: 'இது எந்த ஜாவி எழுத்து?'),
                 ),
               ),
               const SizedBox(height: 8),
@@ -509,9 +503,7 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                                 style: TextStyle(fontSize: 20),
                               ),
                               label: Text(
-                                language == AppLanguage.malay
-                                    ? 'Jejak Huruf Ini! +⭐'
-                                    : 'Trace This Letter! +⭐',
+                                language.copy(ms: 'Jejak Huruf Ini! +⭐', en: 'Trace This Letter! +⭐', zh: '描写这个字母！+⭐', ta: 'இந்த எழுத்தை வரை! +⭐'),
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w900,
@@ -605,7 +597,7 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                         onPressed: isFirst ? null : _prev,
                         icon: const Icon(Icons.arrow_back_ios_rounded),
                         label: Text(
-                          language == AppLanguage.malay ? 'Sebelum' : 'Back',
+                          language.copy(ms: 'Sebelum', en: 'Back', zh: '返回', ta: 'பின்செல்'),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -613,6 +605,8 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.deepBlue,
+                          disabledBackgroundColor: AppTheme.deepBlue.withValues(alpha: 0.4),
+                          disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -631,7 +625,7 @@ class _JawiAsasScreenState extends ConsumerState<JawiAsasScreen>
                       child: ElevatedButton.icon(
                         onPressed: isLast ? null : _next,
                         label: Text(
-                          language == AppLanguage.malay ? 'Seterusnya' : 'Next',
+                          language.copy(ms: 'Seterusnya', en: 'Next', zh: '下一步', ta: 'அடுத்தது'),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

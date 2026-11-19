@@ -4,6 +4,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../models/app_language.dart';
 import '../providers/app_state.dart';
+import '../services/on_device_speech.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_text.dart';
 import '../widgets/bijak_scene.dart';
@@ -29,10 +30,11 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
 
   // ── Speech recognition ───────────────────────────────────────
   final stt.SpeechToText _speech = stt.SpeechToText();
+  // null while checking; false when this phone can't recognise speech offline.
+  bool? _onDeviceSpeech;
+  // The microphone is only requested after the child taps "speak".
   bool _speechAvailable = false;
-  // False until the child first taps "speak" — opening the lesson must never
-  // trigger the system microphone prompt on its own.
-  bool _speechChecked = false;
+  bool _speechError = false;
   bool _isListening = false;
   String _speechResult = '';
   bool? _speechCorrect;
@@ -43,19 +45,19 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'A',
       emoji: '🐔',
       malay: 'Ayam',
-      english: 'Ant',
-      mandarin: '苹果 (Píngguǒ)',
-      tamil: 'அம்மா (Ammā)',
-      indonesian: 'Apel',
+      english: 'Chicken',
+      mandarin: '鸡 (jī)',
+      tamil: 'கோழி (Kōḻi)',
+      indonesian: 'Ayam',
       phonicsMalay: 'A seperti Ayam',
     ),
     _LetterItem(
       letter: 'B',
       emoji: '📚',
       malay: 'Buku',
-      english: 'Ball',
-      mandarin: '杯子 (Bēizi)',
-      tamil: 'பந்து (Pandu)',
+      english: 'Book',
+      mandarin: '书 (shū)',
+      tamil: 'புத்தகம் (Puttakam)',
       indonesian: 'Buku',
       phonicsMalay: 'B seperti Buku',
     ),
@@ -64,8 +66,8 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       emoji: '☕',
       malay: 'Cawan',
       english: 'Cup',
-      mandarin: '车 (Chē)',
-      tamil: 'சந்திரன் (Candiran)',
+      mandarin: '杯子 (bēizi)',
+      tamil: 'கோப்பை (Kōppai)',
       indonesian: 'Cangkir',
       phonicsMalay: 'C seperti Cawan',
     ),
@@ -73,9 +75,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'D',
       emoji: '🍈',
       malay: 'Durian',
-      english: 'Duck',
-      mandarin: '大象 (Dàxiàng)',
-      tamil: 'தேன் (Tēṉ)',
+      english: 'Durian',
+      mandarin: '榴莲 (liúlián)',
+      tamil: 'துரியான் (Turiyān)',
       indonesian: 'Durian',
       phonicsMalay: 'D seperti Durian',
     ),
@@ -83,9 +85,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'E',
       emoji: '🦊',
       malay: 'Ekor',
-      english: 'Egg',
-      mandarin: '鹅 (É)',
-      tamil: 'எலி (Eli)',
+      english: 'Tail',
+      mandarin: '尾巴 (wěiba)',
+      tamil: 'வால் (Vāl)',
       indonesian: 'Ekor',
       phonicsMalay: 'E seperti Ekor',
     ),
@@ -93,9 +95,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'F',
       emoji: '🌅',
       malay: 'Fajar',
-      english: 'Fish',
-      mandarin: '风 (Fēng)',
-      tamil: 'பூ (Pū)',
+      english: 'Dawn',
+      mandarin: '黎明 (límíng)',
+      tamil: 'விடியல் (Viṭiyal)',
       indonesian: 'Fajar',
       phonicsMalay: 'F seperti Fajar',
     ),
@@ -103,9 +105,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'G',
       emoji: '🐘',
       malay: 'Gajah',
-      english: 'Goat',
-      mandarin: '狗 (Gǒu)',
-      tamil: 'கடல் (Kaṭal)',
+      english: 'Elephant',
+      mandarin: '大象 (dàxiàng)',
+      tamil: 'யானை (Yāṉai)',
       indonesian: 'Gajah',
       phonicsMalay: 'G seperti Gajah',
     ),
@@ -113,9 +115,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'H',
       emoji: '🐯',
       malay: 'Harimau',
-      english: 'Hat',
-      mandarin: '花 (Huā)',
-      tamil: 'புல் (Pul)',
+      english: 'Tiger',
+      mandarin: '老虎 (lǎohǔ)',
+      tamil: 'புலி (Puli)',
       indonesian: 'Harimau',
       phonicsMalay: 'H seperti Harimau',
     ),
@@ -123,9 +125,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'I',
       emoji: '🐟',
       malay: 'Ikan',
-      english: 'Ice',
-      mandarin: '鱼 (Yú)',
-      tamil: 'இலை (Ilai)',
+      english: 'Fish',
+      mandarin: '鱼 (yú)',
+      tamil: 'மீன் (Mīṉ)',
       indonesian: 'Ikan',
       phonicsMalay: 'I seperti Ikan',
     ),
@@ -133,9 +135,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'J',
       emoji: '🌉',
       malay: 'Jambatan',
-      english: 'Juice',
-      mandarin: '橘子 (Júzi)',
-      tamil: 'ஜன்னல் (Jannal)',
+      english: 'Bridge',
+      mandarin: '桥 (qiáo)',
+      tamil: 'பாலம் (Pālam)',
       indonesian: 'Jembatan',
       phonicsMalay: 'J seperti Jambatan',
     ),
@@ -143,9 +145,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'K',
       emoji: '🐱',
       malay: 'Kucing',
-      english: 'Kite',
-      mandarin: '快 (Kuài)',
-      tamil: 'கிளி (Kiḷi)',
+      english: 'Cat',
+      mandarin: '猫 (māo)',
+      tamil: 'பூனை (Pūṉai)',
       indonesian: 'Kucing',
       phonicsMalay: 'K seperti Kucing',
     ),
@@ -153,9 +155,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'L',
       emoji: '🐄',
       malay: 'Lembu',
-      english: 'Lion',
-      mandarin: '老虎 (Lǎohǔ)',
-      tamil: 'லாம்பு (Lāmpu)',
+      english: 'Cow',
+      mandarin: '牛 (niú)',
+      tamil: 'மாடு (Māṭu)',
       indonesian: 'Lembu',
       phonicsMalay: 'L seperti Lembu',
     ),
@@ -163,9 +165,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'M',
       emoji: '🐒',
       malay: 'Monyet',
-      english: 'Moon',
-      mandarin: '猫 (Māo)',
-      tamil: 'மரம் (Maram)',
+      english: 'Monkey',
+      mandarin: '猴子 (hóuzi)',
+      tamil: 'குரங்கு (Kuraṅku)',
       indonesian: 'Monyet',
       phonicsMalay: 'M seperti Monyet',
     ),
@@ -173,9 +175,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'N',
       emoji: '🍍',
       malay: 'Nanas',
-      english: 'Nose',
-      mandarin: '鸟 (Niǎo)',
-      tamil: 'நாய் (Nāy)',
+      english: 'Pineapple',
+      mandarin: '菠萝 (bōluo)',
+      tamil: 'அன்னாசி (Aṉṉāci)',
       indonesian: 'Nanas',
       phonicsMalay: 'N seperti Nanas',
     ),
@@ -183,39 +185,39 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'O',
       emoji: '🍊',
       malay: 'Oren',
-      english: 'Owl',
-      mandarin: '苹果 (Chéng)',
-      tamil: 'ஒட்டகம் (Oṭṭakam)',
-      indonesian: 'Oren',
+      english: 'Orange',
+      mandarin: '橙子 (chéngzi)',
+      tamil: 'ஆரஞ்சு (Ārañcu)',
+      indonesian: 'Jeruk',
       phonicsMalay: 'O seperti Oren',
     ),
     _LetterItem(
       letter: 'P',
       emoji: '🍌',
       malay: 'Pisang',
-      english: 'Pen',
-      mandarin: '苹 (Píng)',
-      tamil: 'பழம் (Paḻam)',
+      english: 'Banana',
+      mandarin: '香蕉 (xiāngjiāo)',
+      tamil: 'வாழைப்பழம் (Vāḻaippaḻam)',
       indonesian: 'Pisang',
       phonicsMalay: 'P seperti Pisang',
     ),
     _LetterItem(
       letter: 'Q',
       emoji: '👑',
-      malay: 'Queen',
+      malay: 'Ratu',
       english: 'Queen',
-      mandarin: '球 (Qiú)',
-      tamil: 'குரல் (Kural)',
+      mandarin: '女王 (nǚwáng)',
+      tamil: 'ராணி (Rāṇi)',
       indonesian: 'Ratu',
-      phonicsMalay: 'Q seperti Queen',
+      phonicsMalay: 'Q seperti Ratu',
     ),
     _LetterItem(
       letter: 'R',
       emoji: '🦋',
       malay: 'Rama-rama',
-      english: 'Rain',
-      mandarin: '人 (Rén)',
-      tamil: 'ரயில் (Rayil)',
+      english: 'Butterfly',
+      mandarin: '蝴蝶 (húdié)',
+      tamil: 'பட்டாம்பூச்சி (Paṭṭāmpūcci)',
       indonesian: 'Rama-rama',
       phonicsMalay: 'R seperti Rama-rama',
     ),
@@ -223,9 +225,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'S',
       emoji: '🦁',
       malay: 'Singa',
-      english: 'Sun',
-      mandarin: '蛇 (Shé)',
-      tamil: 'சூரியன் (Cūriyaṉ)',
+      english: 'Lion',
+      mandarin: '狮子 (shīzi)',
+      tamil: 'சிங்கம் (Ciṅkam)',
       indonesian: 'Singa',
       phonicsMalay: 'S seperti Singa',
     ),
@@ -233,9 +235,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'T',
       emoji: '🐭',
       malay: 'Tikus',
-      english: 'Tree',
-      mandarin: '兔 (Tù)',
-      tamil: 'தண்ணீர் (Taṇṇīr)',
+      english: 'Mouse',
+      mandarin: '老鼠 (lǎoshǔ)',
+      tamil: 'எலி (Eli)',
       indonesian: 'Tikus',
       phonicsMalay: 'T seperti Tikus',
     ),
@@ -243,9 +245,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'U',
       emoji: '🦐',
       malay: 'Udang',
-      english: 'Umbrella',
-      mandarin: '鱼 (Yú)',
-      tamil: 'உணவு (Uṇavu)',
+      english: 'Shrimp',
+      mandarin: '虾 (xiā)',
+      tamil: 'இறால் (Iṟāl)',
       indonesian: 'Udang',
       phonicsMalay: 'U seperti Udang',
     ),
@@ -253,19 +255,19 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       letter: 'V',
       emoji: '🎻',
       malay: 'Violin',
-      english: 'Van',
-      mandarin: '花瓶 (Huāpíng)',
-      tamil: 'வானம் (Vāṉam)',
-      indonesian: 'Violin',
+      english: 'Violin',
+      mandarin: '小提琴 (xiǎotíqín)',
+      tamil: 'வயலின் (Vayalin)',
+      indonesian: 'Biola',
       phonicsMalay: 'V seperti Violin',
     ),
     _LetterItem(
       letter: 'W',
       emoji: '🍉',
       malay: 'Tembikai',
-      english: 'Water',
-      mandarin: '乌龟 (Wūguī)',
-      tamil: 'வீடு (Vīṭu)',
+      english: 'Watermelon',
+      mandarin: '西瓜 (xīguā)',
+      tamil: 'தர்பூசணி (Tarpūcaṇi)',
       indonesian: 'Semangka',
       phonicsMalay: 'W seperti Tembikai',
     ),
@@ -274,18 +276,18 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       emoji: '🩻',
       malay: 'X-ray',
       english: 'X-ray',
-      mandarin: 'X光 (X-guāng)',
+      mandarin: 'X光 (X guāng)',
       tamil: 'எக்ஸ்ரே (Eksrē)',
-      indonesian: 'X-ray',
+      indonesian: 'Sinar-X',
       phonicsMalay: 'X seperti X-ray',
     ),
     _LetterItem(
       letter: 'Y',
-      emoji: '🪁',
+      emoji: '🪀',
       malay: 'Yoyo',
-      english: 'Yak',
-      mandarin: '鱼 (Yú)',
-      tamil: 'யானை (Yāṉai)',
+      english: 'Yo-yo',
+      mandarin: '悠悠球 (yōuyōuqiú)',
+      tamil: 'யோயோ (Yōyō)',
       indonesian: 'Yoyo',
       phonicsMalay: 'Y seperti Yoyo',
     ),
@@ -294,8 +296,8 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       emoji: '🦓',
       malay: 'Zebra',
       english: 'Zebra',
-      mandarin: '动物园 (Dòngwùyuán)',
-      tamil: 'ஜீப் (Jīp)',
+      mandarin: '斑马 (bānmǎ)',
+      tamil: 'வரிக்குதிரை (Varikkutirai)',
       indonesian: 'Zebra',
       phonicsMalay: 'Z seperti Zebra',
     ),
@@ -335,13 +337,19 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
     _bounceAnim = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
     );
+    OnDeviceSpeech.isAvailable().then((available) {
+      if (mounted) setState(() => _onDeviceSpeech = available);
+    });
   }
 
   Future<void> _initSpeech() async {
-    _speechChecked = true;
     _speechAvailable = await _speech.initialize(
       onError: (_) {
-        if (mounted) setState(() => _isListening = false);
+        if (!mounted) return;
+        setState(() {
+          _isListening = false;
+          _speechError = true;
+        });
       },
       onStatus: (status) {
         if (status == 'done' || status == 'notListening') {
@@ -464,13 +472,16 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       await _stopListening();
       return;
     }
-    if (!_speechChecked) {
+    if (!_speechAvailable) {
       if (!await _speech.hasPermission) {
         final proceed = await _explainMicrophone();
         if (proceed != true || !mounted) return;
       }
       await _initSpeech();
-      if (!_speechAvailable) return;
+      if (!_speechAvailable) {
+        if (mounted) setState(() => _speechError = true);
+        return;
+      }
     }
     await _startListening();
   }
@@ -481,7 +492,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(AppText.ui('micTitle', language)),
-        content: Text(AppText.ui('micBody', language)),
+        content: Text(AppText.ui('micBodyOnDevice', language)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -500,6 +511,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
     if (!_speechAvailable || _isListening) return;
     setState(() {
       _isListening = true;
+      _speechError = false;
       _speechResult = '';
       _speechCorrect = null;
     });
@@ -515,6 +527,9 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
         pauseFor: const Duration(seconds: 2),
         cancelOnError: true,
         partialResults: true,
+        // Offline only: the plugin would otherwise fall back to the online
+        // recogniser, and a child's voice must never leave the phone.
+        onDevice: true,
         localeId: language.ttsLocale,
       ),
     );
@@ -565,7 +580,6 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
     final language = ref.watch(progressServiceProvider).language;
     final item = _letters[_current];
     final color = _color;
-    final isMalay = language == AppLanguage.malay;
     final isFirst = _current == 0;
     final isLast = _current == _letters.length - 1;
 
@@ -578,7 +592,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         title: Row(
@@ -595,7 +609,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    isMalay ? 'Belajar Huruf A–Z' : 'Learn Letters A–Z',
+                    language.copy(ms: 'Belajar Huruf A–Z', en: 'Learn Letters A–Z', zh: '学习字母 A–Z', ta: 'எழுத்துகள் A–Z கற்போம்'),
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 16,
@@ -685,12 +699,8 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: ZaraPrompt(
-                        message: isMalay
-                            ? 'Huruf apakah ini? Dengar & sebut kuat-kuat!'
-                            : 'What letter is this? Listen & say it aloud!',
-                        sub: isMalay
-                            ? 'What letter is this?'
-                            : 'Dengar & sebut huruf ini',
+                        message: language.copy(ms: 'Huruf apakah ini? Dengar & sebut kuat-kuat!', en: 'What letter is this? Listen & say it aloud!', zh: '这是什么字母？听一听，大声念出来！', ta: 'இது என்ன எழுத்து? கேட்டு உரக்கச் சொல்!'),
+                        sub: language.copy(ms: 'Dengar & sebut huruf ini', en: 'What letter is this?', zh: '这是什么字母？', ta: 'இது என்ன எழுத்து?'),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -798,11 +808,29 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                 const SizedBox(height: 14),
 
                                 // ── 🎤 Speech recognition input ─────────
-                                // Shown until speech is known to be
-                                // unavailable (permission denied or no
-                                // recognizer on the device).
-                                if (_speechAvailable || !_speechChecked) ...[
+                                // Offered only when this phone can recognise speech
+                                // offline. Otherwise a short note says why.
+                                if (_onDeviceSpeech == false) ...[
+                                  Container(
+                                    key: const Key('speech-unavailable'),
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF1EEFF),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                    child: Text(
+                                      AppText.ui('speechUnavailable', language),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: AppTheme.ink,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ] else if (_onDeviceSpeech == true) ...[
                                   GestureDetector(
+                                    key: const Key('speak-button'),
                                     onTap: _onSpeakTapped,
                                     child: AnimatedContainer(
                                       duration: const Duration(
@@ -852,12 +880,8 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                           const SizedBox(width: 10),
                                           Text(
                                             _isListening
-                                                ? (isMalay
-                                                      ? 'Saya dengar...'
-                                                      : 'Listening...')
-                                                : (isMalay
-                                                      ? '🎤 Sebut huruf ${item.letter}!'
-                                                      : '🎤 Say letter ${item.letter}!'),
+                                                ? (language.copy(ms: 'Saya dengar...', en: 'Listening...', zh: '正在听...', ta: 'கேட்கிறது...'))
+                                                : (language.copy(ms: '🎤 Sebut huruf ${item.letter}!', en: '🎤 Say letter ${item.letter}!', zh: '🎤 请念字母 ${item.letter}！', ta: '🎤 எழுத்து ${item.letter}-ஐ சொல்!')),
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 15,
@@ -868,6 +892,18 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                       ),
                                     ),
                                   ),
+                                  if (_speechError) ...[
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      AppText.ui('speechError', language),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: AppTheme.ink,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
                                   if (_speechResult.isNotEmpty) ...[
                                     const SizedBox(height: 10),
                                     Container(
@@ -927,9 +963,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                     if (_speechCorrect == true) ...[
                                       const SizedBox(height: 6),
                                       Text(
-                                        isMalay
-                                            ? '⭐ +1 Bintang! Bagus sekali!'
-                                            : '⭐ +1 Star! Great job!',
+                                        language.copy(ms: '⭐ +1 Bintang! Bagus sekali!', en: '⭐ +1 Star! Great job!', zh: '⭐ +1 星！做得好！', ta: '⭐ +1 நட்சத்திரம்! சிறப்பு!'),
                                         style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w800,
@@ -944,7 +978,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                                 _LetterWordTable(item: item, color: color),
                                 const SizedBox(height: 14),
                                 _PronounceButtons(
-                                  isMalay: isMalay,
+                                  language: language,
                                   onSpeak: _speakIn,
                                   malay: '${item.letter}, ${item.malay}',
                                   english: '${item.letter}, ${item.english}',
@@ -977,7 +1011,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                               onPressed: isFirst ? null : _prev,
                               icon: const Icon(Icons.arrow_back_ios_rounded),
                               label: Text(
-                                isMalay ? 'Sebelum' : 'Back',
+                                language.copy(ms: 'Sebelum', en: 'Back', zh: '返回', ta: 'பின்செல்'),
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -985,6 +1019,8 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.deepBlue,
+                                disabledBackgroundColor: AppTheme.deepBlue.withValues(alpha: 0.4),
+                                disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
                                 foregroundColor: Colors.white,
                                 minimumSize: const Size.fromHeight(
                                   AppTheme.kidTarget,
@@ -1005,7 +1041,7 @@ class _LearnLettersScreenState extends ConsumerState<LearnLettersScreen>
                             child: ElevatedButton.icon(
                               onPressed: isLast ? null : _next,
                               label: Text(
-                                isMalay ? 'Seterusnya' : 'Next',
+                                language.copy(ms: 'Seterusnya', en: 'Next', zh: '下一步', ta: 'அடுத்தது'),
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -1154,7 +1190,7 @@ class _LetterWordTable extends StatelessWidget {
 // ── Shared 5-language pronounce buttons ──────────────────────────────────────
 class _PronounceButtons extends StatelessWidget {
   const _PronounceButtons({
-    required this.isMalay,
+    required this.language,
     required this.onSpeak,
     required this.malay,
     required this.english,
@@ -1171,7 +1207,7 @@ class _PronounceButtons extends StatelessWidget {
   final String indonesian;
   final String tamil;
   final Color color;
-  final bool isMalay;
+  final AppLanguage language;
 
   // Language tags only — no country flags (Malaysian community languages).
   static const _langs = [
@@ -1207,7 +1243,7 @@ class _PronounceButtons extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            isMalay ? '🔊 Sebut dalam:' : '🔊 Say it in:',
+            language.copy(ms: '🔊 Sebut dalam:', en: '🔊 Say it in:', zh: '🔊 用以下语言念：', ta: '🔊 இந்த மொழிகளில் சொல்:'),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,

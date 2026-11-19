@@ -260,7 +260,6 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
   @override
   Widget build(BuildContext context) {
     final language = ref.watch(progressServiceProvider).language;
-    final isMalay = language == AppLanguage.malay;
     final puzzle = _puzzles[_puzzleIndex];
     const color = AppTheme.skyBlue;
 
@@ -273,24 +272,24 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isMalay ? 'Teka-Teki Gambar 🧩' : 'Picture Puzzle 🧩',
+              language.copy(ms: 'Teka-Teki Gambar 🧩', en: 'Picture Puzzle 🧩', zh: '图片拼图 🧩', ta: 'படப் புதிர் 🧩'),
               style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
             ),
             Text(
-              '${isMalay ? 'Puzzle' : 'Puzzle'} ${_puzzleIndex + 1}/${_puzzles.length}  •  ${isMalay ? 'Langkah' : 'Moves'}: $_moves',
+              '${language.copy(ms: 'Puzzle', en: 'Puzzle', zh: '拼图', ta: 'புதிர்')} ${_puzzleIndex + 1}/${_puzzles.length}  •  ${language.copy(ms: 'Langkah', en: 'Moves', zh: '步数', ta: 'நகர்வுகள்')}: $_moves',
               style: const TextStyle(fontSize: 11, color: Colors.white70),
             ),
           ],
         ),
         actions: [
           IconButton(
-            tooltip: isMalay ? 'Puzzle baru' : 'New puzzle',
+            tooltip: language.copy(ms: 'Puzzle baru', en: 'New puzzle', zh: '新拼图', ta: 'புதிய புதிர்'),
             onPressed: _nextPuzzle,
             icon: const Icon(Icons.shuffle_rounded),
           ),
@@ -388,9 +387,7 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          isMalay
-                              ? 'Susun kepingan gambar ini!'
-                              : 'Arrange the picture pieces!',
+                          language.copy(ms: 'Susun kepingan gambar ini!', en: 'Arrange the picture pieces!', zh: '把图片碎片排好！', ta: 'படத் துண்டுகளை ஒழுங்குபடுத்து!'),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -401,8 +398,8 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
                       const SizedBox(width: 8),
                       // Difficulty chips
                       for (final t in [
-                        (3, isMalay ? 'Mudah' : 'Easy'),
-                        (4, isMalay ? 'Susah' : 'Hard'),
+                        (3, language.copy(ms: 'Mudah', en: 'Easy', zh: '简单', ta: 'எளிது')),
+                        (4, language.copy(ms: 'Susah', en: 'Hard', zh: '困难', ta: 'கடினம்')),
                       ]) ...[
                         GestureDetector(
                           onTap: () => _changeDifficulty(t.$1),
@@ -461,7 +458,7 @@ class _PuzzleScreenState extends ConsumerState<PuzzleScreen> {
                             ? _SolvedOverlay(
                                 puzzle: puzzle,
                                 moves: _moves,
-                                isMalay: isMalay,
+                                language: language,
                                 color: color,
                                 onNext: _nextPuzzle,
                                 onRetry: () => setState(_initPuzzle),
@@ -617,7 +614,7 @@ class _SolvedOverlay extends ConsumerWidget {
   const _SolvedOverlay({
     required this.puzzle,
     required this.moves,
-    required this.isMalay,
+    required this.language,
     required this.color,
     required this.onNext,
     required this.onRetry,
@@ -625,7 +622,7 @@ class _SolvedOverlay extends ConsumerWidget {
 
   final _Puzzle puzzle;
   final int moves;
-  final bool isMalay;
+  final AppLanguage language;
   final Color color;
   final VoidCallback onNext;
   final VoidCallback onRetry;
@@ -654,7 +651,7 @@ class _SolvedOverlay extends ConsumerWidget {
           Text(puzzle.emoji, style: const TextStyle(fontSize: 88)),
           const SizedBox(height: 10),
           Text(
-            '🎉 ${isMalay ? "Berjaya!" : "Solved!"}',
+            '🎉 ${language.copy(ms: "Berjaya!", en: "Solved!", zh: "完成！", ta: "தீர்த்துவிட்டாய்!")}',
             style: const TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w900,
@@ -663,7 +660,7 @@ class _SolvedOverlay extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            isMalay ? puzzle.answerBM : puzzle.answer,
+            language.usesMalayCopy ? puzzle.answerBM : puzzle.answer,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -671,7 +668,7 @@ class _SolvedOverlay extends ConsumerWidget {
             ),
           ),
           Text(
-            '${isMalay ? "Langkah" : "Moves"}: $moves',
+            '${language.copy(ms: "Langkah", en: "Moves", zh: "步数", ta: "நகர்வுகள்")}: $moves',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 18),
@@ -684,7 +681,7 @@ class _SolvedOverlay extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: onNext,
                     icon: const Icon(Icons.arrow_forward_rounded),
-                    label: Text(isMalay ? 'Puzzle Seterusnya' : 'Next Puzzle'),
+                    label: Text(language.copy(ms: 'Puzzle Seterusnya', en: 'Next Puzzle', zh: '下一个拼图', ta: 'அடுத்த புதிர்')),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.skyBlue,
                       foregroundColor: Colors.white,
@@ -701,7 +698,7 @@ class _SolvedOverlay extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.replay_rounded),
-                    label: Text(isMalay ? 'Cuba Lagi' : 'Try Again'),
+                    label: Text(language.copy(ms: 'Cuba Lagi', en: 'Try Again', zh: '再试一次', ta: 'மீண்டும் முயற்சி')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.skyBlue,
                       side: const BorderSide(color: AppTheme.skyBlue, width: 2),

@@ -115,25 +115,6 @@ class _ScenePainter extends CustomPainter {
             ),
     );
 
-    // ── Moon with halo ──
-    final moonCenter = Offset(size.width * 0.80, 92);
-    canvas.drawCircle(
-      moonCenter,
-      54,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            AppTheme.gold.withValues(alpha: 0.30),
-            AppTheme.gold.withValues(alpha: 0.0),
-          ],
-        ).createShader(Rect.fromCircle(center: moonCenter, radius: 54)),
-    );
-    canvas.drawCircle(moonCenter, 24, Paint()..color = const Color(0xFFFFF3CF));
-    canvas.drawCircle(
-      moonCenter.translate(9, -4),
-      22,
-      Paint()..color = AppTheme.nightTop,
-    );
 
     // ── Star field (twinkles + round stars) ──
     for (var i = 0; i < 34; i++) {

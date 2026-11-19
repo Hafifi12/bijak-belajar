@@ -14,7 +14,7 @@ class BadgeCard extends StatefulWidget {
 
 class _BadgeCardState extends State<BadgeCard>
     with TickerProviderStateMixin {
-  // Press feedback — mirrors the scale pattern used by BigModeButton so the
+  // Press feedback — mirrors the scale pattern used by the other pressable buttons so the
   // whole app shares one consistent "tactile" feel.
   late final AnimationController _pressCtrl;
   late final Animation<double> _pressScale;

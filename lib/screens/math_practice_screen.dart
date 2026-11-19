@@ -106,7 +106,6 @@ class MathPracticeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final language = ref.watch(progressServiceProvider).language;
-    final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
       backgroundColor: AppTheme.nightMid,
@@ -114,7 +113,7 @@ class MathPracticeScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         title: Row(
@@ -127,7 +126,7 @@ class MathPracticeScreen extends ConsumerWidget {
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                isMalay ? 'Latihan Matematik' : 'Maths Practice',
+                language.copy(ms: 'Latihan Matematik', en: 'Maths Practice', zh: '数学练习', ta: 'கணிதப் பயிற்சி'),
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 17,
@@ -159,19 +158,15 @@ class MathPracticeScreen extends ConsumerWidget {
                 children: [
                   // Zara welcomes the child to the Math Forest.
                   ZaraPrompt(
-                    message: isMalay
-                        ? 'Selamat datang ke Hutan Matematik!'
-                        : 'Welcome to the Math Forest!',
-                    sub: isMalay
-                        ? 'Ketuk stesen di jejak untuk berlatih.'
-                        : 'Tap a station on the trail to practise.',
+                    message: language.copy(ms: 'Selamat datang ke Hutan Matematik!', en: 'Welcome to the Math Forest!', zh: '欢迎来到数学森林！', ta: 'கணித காட்டுக்கு வரவேற்கிறோம்!'),
+                    sub: language.copy(ms: 'Ketuk stesen di jejak untuk berlatih.', en: 'Tap a station on the trail to practise.', zh: '点击小径上的站点开始练习。', ta: 'பயிற்சி செய்ய வழியில் உள்ள ஒரு நிலையத்தைத் தட்டு.'),
                   ),
                   const SizedBox(height: 12),
                   // Daily 5 — the module's daily comeback hook.
-                  _Daily5Card(isMalay: isMalay),
+                  _Daily5Card(language: language),
                   const SizedBox(height: 4),
                   // Interactive trail of math-topic stations.
-                  _MathForestMap(topics: _topics, isMalay: isMalay),
+                  _MathForestMap(topics: _topics, language: language),
                 ],
               ),
             ),
@@ -184,8 +179,8 @@ class MathPracticeScreen extends ConsumerWidget {
 
 // ── Daily 5 card ───────────────────────────────────────────────────────────────
 class _Daily5Card extends ConsumerWidget {
-  const _Daily5Card({required this.isMalay});
-  final bool isMalay;
+  const _Daily5Card({required this.language});
+  final AppLanguage language;
 
   /// Today's operation — rotates daily (same seed idea as the quest pool) so
   /// the Daily 5 feels fresh without any new content.
@@ -212,7 +207,7 @@ class _Daily5Card extends ConsumerWidget {
         ),
       ),
       pressedScale: 0.97,
-      semanticLabel: isMalay
+      semanticLabel: language.usesMalayCopy
           ? 'Lima soalan harian. ${done ? 'Selesai hari ini.' : 'Bonus lima bintang.'}'
           : 'Daily five questions. ${done ? 'Done today.' : 'Five star bonus.'}',
       child: Container(
@@ -249,7 +244,7 @@ class _Daily5Card extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isMalay ? 'Misi 5 Soalan Harian' : 'Daily 5 Challenge',
+                    language.copy(ms: 'Misi 5 Soalan Harian', en: 'Daily 5 Challenge', zh: '每日 5 题挑战', ta: 'தினசரி 5 சவால்'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
@@ -259,12 +254,8 @@ class _Daily5Card extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     done
-                        ? (isMalay
-                              ? 'Selesai hari ini! Datang lagi esok ⭐'
-                              : 'Done today! Come back tomorrow ⭐')
-                        : (isMalay
-                              ? '5 soalan pantas • Bonus +5 ⭐'
-                              : '5 quick questions • +5 ⭐ bonus'),
+                        ? (language.copy(ms: 'Selesai hari ini! Datang lagi esok ⭐', en: 'Done today! Come back tomorrow ⭐', zh: '今天已完成！明天再来 ⭐', ta: 'இன்று முடிந்தது! நாளை மீண்டும் வா ⭐'))
+                        : (language.copy(ms: '5 soalan pantas • Bonus +5 ⭐', en: '5 quick questions • +5 ⭐ bonus', zh: '5 道快速题 • 奖励 +5 ⭐', ta: '5 விரைவுக் கேள்விகள் • +5 ⭐ போனஸ்')),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -288,10 +279,10 @@ class _Daily5Card extends ConsumerWidget {
 
 // ── Math Forest map (interactive topic trail) ───────────────────────────────
 class _MathForestMap extends StatelessWidget {
-  const _MathForestMap({required this.topics, required this.isMalay});
+  const _MathForestMap({required this.topics, required this.language});
 
   final List<_MathTopic> topics;
-  final bool isMalay;
+  final AppLanguage language;
 
   // Serpentine station positions (fractions of the map's width/height).
   static const _pos = <Offset>[
@@ -358,7 +349,7 @@ class _MathForestMap extends StatelessWidget {
                 Positioned(
                   left: _pos[i].dx * w - 54,
                   top: _pos[i].dy * h,
-                  child: _TopicNode(topic: topics[i], isMalay: isMalay),
+                  child: _TopicNode(topic: topics[i], language: language),
                 ),
             ],
           ),
@@ -369,16 +360,16 @@ class _MathForestMap extends StatelessWidget {
 }
 
 class _TopicNode extends StatelessWidget {
-  const _TopicNode({required this.topic, required this.isMalay});
+  const _TopicNode({required this.topic, required this.language});
 
   final _MathTopic topic;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context) {
-    final label = isMalay ? topic.labelMs : topic.labelEn;
+    final label = language.usesMalayCopy ? topic.labelMs : topic.labelEn;
     return Pressable(
-      onTap: () => _showTopicLevels(context, topic, isMalay),
+      onTap: () => _showTopicLevels(context, topic, language),
       pressedScale: 0.92,
       semanticLabel: label,
       child: SizedBox(
@@ -484,19 +475,19 @@ class _MathTrailPainter extends CustomPainter {
 }
 
 /// Bottom sheet to pick a difficulty level (Tahap 1–3) for a topic.
-void _showTopicLevels(BuildContext context, _MathTopic topic, bool isMalay) {
+void _showTopicLevels(BuildContext context, _MathTopic topic, AppLanguage language) {
   showModalBottomSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
-    builder: (_) => _LevelSheet(topic: topic, isMalay: isMalay),
+    builder: (_) => _LevelSheet(topic: topic, language: language),
   );
 }
 
 class _LevelSheet extends StatelessWidget {
-  const _LevelSheet({required this.topic, required this.isMalay});
+  const _LevelSheet({required this.topic, required this.language});
 
   final _MathTopic topic;
-  final bool isMalay;
+  final AppLanguage language;
 
   static const _levels = [
     (level: 1, color: Color(0xFF1DD1A1), ms: 'Mudah', en: 'Easy'),
@@ -548,7 +539,7 @@ class _LevelSheet extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isMalay ? topic.labelMs : topic.labelEn,
+                          language.usesMalayCopy ? topic.labelMs : topic.labelEn,
                           style: const TextStyle(
                             color: AppTheme.onNight,
                             fontSize: 18,
@@ -557,7 +548,7 @@ class _LevelSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          isMalay ? topic.subtitleMs : topic.subtitleEn,
+                          language.usesMalayCopy ? topic.subtitleMs : topic.subtitleEn,
                           style: const TextStyle(
                             color: AppTheme.onNightMuted,
                             fontSize: 12,
@@ -573,7 +564,7 @@ class _LevelSheet extends StatelessWidget {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  isMalay ? 'PILIH TAHAP' : 'PICK A LEVEL',
+                  language.copy(ms: 'PILIH TAHAP', en: 'PICK A LEVEL', zh: '选择一个级别', ta: 'ஒரு நிலையைத் தேர்ந்தெடு'),
                   style: const TextStyle(
                     color: AppTheme.onNightFaint,
                     fontSize: 11,
@@ -601,7 +592,7 @@ class _LevelSheet extends StatelessWidget {
                     },
                     pressedScale: 0.98,
                     semanticLabel:
-                        '${isMalay ? 'Tahap' : 'Level'} ${l.level} — ${isMalay ? l.ms : l.en}',
+                        '${language.copy(ms: 'Tahap', en: 'Level', zh: '级别', ta: 'நிலை')} ${l.level} — ${language.usesMalayCopy ? l.ms : l.en}',
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -643,7 +634,7 @@ class _LevelSheet extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              '${isMalay ? 'Tahap' : 'Level'} ${l.level} · ${isMalay ? l.ms : l.en}',
+                              '${language.copy(ms: 'Tahap', en: 'Level', zh: '级别', ta: 'நிலை')} ${l.level} · ${language.usesMalayCopy ? l.ms : l.en}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -772,8 +763,7 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
   final Set<String> _askedQuestions = {};
 
   void _generateQuestion() {
-    final isMalay =
-        ref.read(progressServiceProvider).language == AppLanguage.malay;
+    final language = ref.read(progressServiceProvider).language;
     // Re-roll duplicates. Bounded attempts: easy levels have small pools
     // (e.g. counting 1–10), so after 15 tries we accept a repeat rather
     // than loop forever.
@@ -781,7 +771,7 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
       op: widget.op,
       level: _level,
       rng: _rng,
-      isMalay: isMalay,
+      language: language,
     );
     for (
       var attempt = 0;
@@ -792,7 +782,7 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
         op: widget.op,
         level: _level,
         rng: _rng,
-        isMalay: isMalay,
+        language: language,
       );
     }
     _askedQuestions.add(candidate.questionText);
@@ -841,7 +831,7 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
         'math',
         _opLabel(
           widget.op,
-          progress.language == AppLanguage.malay,
+          progress.language,
           widget.level,
         ),
       );
@@ -872,7 +862,6 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
   @override
   Widget build(BuildContext context) {
     final language = ref.watch(progressServiceProvider).language;
-    final isMalay = language == AppLanguage.malay;
     final color = widget.color;
 
     return Scaffold(
@@ -885,11 +874,11 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _opLabel(widget.op, isMalay, widget.level),
+              _opLabel(widget.op, language, widget.level),
               style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
             ),
             Text(
-              '${isMalay ? 'Soalan' : 'Question'} ${_questionIndex + 1} / $_totalQuestions  •  $_score ⭐',
+              '${language.copy(ms: 'Soalan', en: 'Question', zh: '题目', ta: 'கேள்வி')} ${_questionIndex + 1} / $_totalQuestions  •  $_score ⭐',
               style: const TextStyle(fontSize: 11, color: Colors.white70),
             ),
           ],
@@ -991,10 +980,8 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: ZaraPrompt(
-                    message: isMalay
-                        ? 'Berapakah jawapannya? Kira & pilih!'
-                        : "What's the answer? Count & choose!",
-                    sub: isMalay ? "What's the answer?" : 'Kira dengan teliti',
+                    message: language.copy(ms: 'Berapakah jawapannya? Kira & pilih!', en: "What's the answer? Count & choose!", zh: '答案是什么？数一数，然后选择！', ta: 'விடை என்ன? எண்ணி தேர்ந்தெடு!'),
+                    sub: language.copy(ms: 'Kira dengan teliti', en: "What's the answer?", zh: '答案是什么？', ta: 'விடை என்ன?'),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -1078,7 +1065,7 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
                                 correct:
                                     _selectedOption != null &&
                                     _q.options[_selectedOption!] == _q.answer,
-                                isMalay: isMalay,
+                                language: language,
                               ),
                             ],
                           ],
@@ -1143,27 +1130,27 @@ class _MathQuizScreenState extends ConsumerState<MathQuizScreen>
     );
   }
 
-  String _opLabel(MathOp op, bool isMalay, int level) {
-    final levelStr = isMalay ? 'Tahap $level' : 'Level $level';
+  String _opLabel(MathOp op, AppLanguage language, int level) {
+    final levelStr = language.copy(ms: 'Tahap $level', en: 'Level $level', zh: '级别 $level', ta: 'நிலை $level');
     switch (op) {
       case MathOp.count:
-        return '${isMalay ? 'Kira Objek' : 'Counting'} — $levelStr';
+        return '${language.copy(ms: 'Kira Objek', en: 'Counting', zh: '计数', ta: 'எண்ணுதல்')} — $levelStr';
       case MathOp.add:
-        return '${isMalay ? 'Tambah' : 'Addition'} — $levelStr';
+        return '${language.copy(ms: 'Tambah', en: 'Addition', zh: '加法', ta: 'கூட்டல்')} — $levelStr';
       case MathOp.subtract:
-        return '${isMalay ? 'Tolak' : 'Subtraction'} — $levelStr';
+        return '${language.copy(ms: 'Tolak', en: 'Subtraction', zh: '减法', ta: 'கழித்தல்')} — $levelStr';
       case MathOp.multiply:
-        return '${isMalay ? 'Darab' : 'Multiply'} — $levelStr';
+        return '${language.copy(ms: 'Darab', en: 'Multiply', zh: '乘法', ta: 'பெருக்கல்')} — $levelStr';
       case MathOp.divide:
-        return '${isMalay ? 'Bahagi' : 'Divide'} — $levelStr';
+        return '${language.copy(ms: 'Bahagi', en: 'Divide', zh: '除法', ta: 'வகுத்தல்')} — $levelStr';
       case MathOp.compare:
-        return '${isMalay ? 'Besar atau Kecil' : 'Bigger or Smaller'} — $levelStr';
+        return '${language.copy(ms: 'Besar atau Kecil', en: 'Bigger or Smaller', zh: '大还是小', ta: 'பெரியதா சிறியதா')} — $levelStr';
       case MathOp.missing:
-        return '${isMalay ? 'Nombor Hilang' : 'Missing Number'} — $levelStr';
+        return '${language.copy(ms: 'Nombor Hilang', en: 'Missing Number', zh: '缺失的数字', ta: 'விடுபட்ட எண்')} — $levelStr';
       case MathOp.bond:
-        return '${isMalay ? 'Pasangan Nombor' : 'Number Bonds'} — $levelStr';
+        return '${language.copy(ms: 'Pasangan Nombor', en: 'Number Bonds', zh: '数字组合', ta: 'எண் இணைகள்')} — $levelStr';
       case MathOp.mixed:
-        return '${isMalay ? 'Campur Semua' : 'Mixed'} — $levelStr';
+        return '${language.copy(ms: 'Campur Semua', en: 'Mixed', zh: '综合', ta: 'கலவை')} — $levelStr';
     }
   }
 }
@@ -1348,16 +1335,16 @@ class _AnswerOptionState extends State<_AnswerOption>
 }
 
 class _AnswerFeedback extends ConsumerWidget {
-  const _AnswerFeedback({required this.correct, required this.isMalay});
+  const _AnswerFeedback({required this.correct, required this.language});
 
   final bool correct;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = correct
-        ? (isMalay ? 'Hebat! Jawapan betul!' : 'Great job! Correct!')
-        : (isMalay ? 'Hampir betul! Cuba lagi.' : 'Almost there! Try again.');
+        ? (language.copy(ms: 'Hebat! Jawapan betul!', en: 'Great job! Correct!', zh: '太棒了！答对了！', ta: 'சிறப்பு! சரி!'))
+        : (language.copy(ms: 'Hampir betul! Cuba lagi.', en: 'Almost there! Try again.', zh: '快到了！再试一次。', ta: 'கிட்டத்தட்ட! மீண்டும் முயற்சி செய்.'));
     final feedbackColor = correct ? AppTheme.leafGreen : AppTheme.appleRed;
 
     return AnimatedContainer(
@@ -1403,7 +1390,6 @@ class MathResultScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final language = ref.watch(progressServiceProvider).language;
-    final isMalay = language == AppLanguage.malay;
     final pct = score / total;
     final emoji = pct == 1.0
         ? '🏆'
@@ -1412,7 +1398,7 @@ class MathResultScreen extends ConsumerWidget {
         : pct >= 0.5
         ? '👍'
         : '💪';
-    final msg = isMalay
+    final msg = language.usesMalayCopy
         ? (pct == 1.0
               ? 'Sempurna! Kamu Terbaik!'
               : pct >= 0.8
@@ -1435,7 +1421,7 @@ class MathResultScreen extends ConsumerWidget {
         flexibleSpace: const NightBar(AppTheme.moduleMath),
         foregroundColor: Colors.white,
         title: Text(
-          isMalay ? 'Keputusan 🏆' : 'Results 🏆',
+          language.copy(ms: 'Keputusan 🏆', en: 'Results 🏆', zh: '结果 🏆', ta: 'முடிவுகள் 🏆'),
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         automaticallyImplyLeading: false,
@@ -1491,7 +1477,7 @@ class MathResultScreen extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          isMalay ? 'Betul' : 'Correct',
+                          language.copy(ms: 'Betul', en: 'Correct', zh: '正确', ta: 'சரி'),
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.white70,
@@ -1564,7 +1550,7 @@ class MathResultScreen extends ConsumerWidget {
                               ),
                           icon: const Icon(Icons.refresh_rounded),
                           label: Text(
-                            isMalay ? 'Cuba Lagi' : 'Try Again',
+                            language.copy(ms: 'Cuba Lagi', en: 'Try Again', zh: '再试一次', ta: 'மீண்டும் முயற்சி'),
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           style: ElevatedButton.styleFrom(
@@ -1588,7 +1574,7 @@ class MathResultScreen extends ConsumerWidget {
                           ),
                           icon: const Icon(Icons.home_rounded),
                           label: Text(
-                            isMalay ? 'Menu' : 'Menu',
+                            language.copy(ms: 'Menu', en: 'Menu', zh: '菜单', ta: 'பட்டியல்'),
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           style: ElevatedButton.styleFrom(
@@ -1675,7 +1661,7 @@ class _Question {
     required MathOp op,
     required int level,
     required Random rng,
-    required bool isMalay,
+    required AppLanguage language,
   }) {
     const mixedOps = [
       MathOp.count,
@@ -1701,8 +1687,8 @@ class _Question {
       case MathOp.count:
         final maxCount = [8, 12, 20][level - 1];
         answer = rng.nextInt(maxCount) + 1;
-        q = isMalay ? 'Ada berapa?' : 'How many?';
-        hint = isMalay ? 'Kira satu demi satu.' : 'Count them one by one.';
+        q = language.copy(ms: 'Ada berapa?', en: 'How many?', zh: '有几个？', ta: 'எத்தனை?');
+        hint = language.copy(ms: 'Kira satu demi satu.', en: 'Count them one by one.', zh: '一个一个地数。', ta: 'ஒவ்வொன்றாக எண்ணு.');
         visualCount = answer;
       case MathOp.add:
         final maxSum = [10, 20, 50][level - 1];
@@ -1730,7 +1716,7 @@ class _Question {
         answer = a * b;
         q = '$a  ×  $b  =  ?';
         hint = level == 1
-            ? (isMalay ? '$a + $a + ... ($b kali)' : '$a + $a + ... ($b times)')
+            ? (language.copy(ms: '$a + $a + ... ($b kali)', en: '$a + $a + ... ($b times)', zh: '$a + $a + ...（$b 次）', ta: '$a + $a + ... ($b முறை)'))
             : '';
       case MathOp.divide:
         final maxT = [5, 5, 12][level - 1];
@@ -1739,9 +1725,7 @@ class _Question {
         a = b * answer;
         q = '$a  ÷  $b  =  ?';
         hint = level == 1
-            ? (isMalay
-                  ? 'Berapa kumpulan $b dalam $a?'
-                  : 'How many groups of $b are in $a?')
+            ? (language.copy(ms: 'Berapa kumpulan $b dalam $a?', en: 'How many groups of $b are in $a?', zh: '$a 里面有几组 $b？', ta: '$a-இல் $b-இன் எத்தனை குழுக்கள் உள்ளன?'))
             : '';
       case MathOp.compare:
         final range = [10, 20, 50][level - 1];
@@ -1751,10 +1735,10 @@ class _Question {
         } while (b == a);
         final askBigger = rng.nextBool();
         answer = askBigger ? max(a, b) : min(a, b);
-        q = isMalay
+        q = language.usesMalayCopy
             ? 'Pilih nombor yang ${askBigger ? 'lebih besar' : 'lebih kecil'}:\n$a atau $b'
             : 'Pick the ${askBigger ? 'bigger' : 'smaller'} number:\n$a or $b';
-        hint = isMalay ? 'Bandingkan dua nombor.' : 'Compare the two numbers.';
+        hint = language.copy(ms: 'Bandingkan dua nombor.', en: 'Compare the two numbers.', zh: '比较这两个数字。', ta: 'இரண்டு எண்களையும் ஒப்பிடு.');
         seededOptions
           ..add(a)
           ..add(b);
@@ -1775,17 +1759,13 @@ class _Question {
             .entries
             .map((entry) => entry.key == missingIndex ? '?' : '${entry.value}')
             .join(',  ');
-        hint = isMalay
-            ? 'Cari nombor dalam susunan.'
-            : 'Find the number in the pattern.';
+        hint = language.copy(ms: 'Cari nombor dalam susunan.', en: 'Find the number in the pattern.', zh: '找出规律中的数字。', ta: 'வடிவத்தில் உள்ள எண்ணைக் கண்டுபிடி.');
       case MathOp.bond:
         final target = [5, 10, 20][level - 1];
         a = rng.nextInt(target - 1) + 1;
         answer = target - a;
         q = '$a  +  ?  =  $target';
-        hint = isMalay
-            ? 'Nombor apa yang melengkapkan $target?'
-            : 'What number makes $target?';
+        hint = language.copy(ms: 'Nombor apa yang melengkapkan $target?', en: 'What number makes $target?', zh: '什么数字能凑成 $target？', ta: '$target ஆக்க எந்த எண் வேண்டும்?');
       case MathOp.mixed:
         // Should not reach here
         a = 1;

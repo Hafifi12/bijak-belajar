@@ -1,12 +1,31 @@
 package com.anfstudio.bijakbelajar
 
+import android.os.Build
+import android.speech.SpeechRecognizer
 import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
 
-// Plain Flutter template activity.
-//
-// The previous version hosted a "tiny_finder/tts" MethodChannel with its own
-// TextToSpeech engine and ToneGenerator effects. The Dart side migrated to
-// the flutter_tts plugin long ago, so none of that code was reachable — and
-// it was the source of every unresolved-reference error when the IDE's
-// project model went stale. Mirrors the same cleanup done in iOS AppDelegate.
-class MainActivity : FlutterActivity()
+class MainActivity : FlutterActivity() {
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        // Speaking practice must never send a child's voice to a server. The
+        // speech plugin falls back to the online recogniser when the offline
+        // one is missing, so Dart asks here first whether the offline one exists.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SPEECH_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                if (call.method == "onDeviceAvailable") {
+                    result.success(
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                            SpeechRecognizer.isOnDeviceRecognitionAvailable(this),
+                    )
+                } else {
+                    result.notImplemented()
+                }
+            }
+    }
+
+    private companion object {
+        const val SPEECH_CHANNEL = "bijak_belajar/speech"
+    }
+}

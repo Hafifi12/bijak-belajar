@@ -47,25 +47,22 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
     if (_rewarded || !_traceSubstantial) return;
     setState(() => _rewarded = true);
     final ps = ref.read(progressServiceProvider);
-    final isMalay = ps.language == AppLanguage.malay;
+    final language = ps.language;
     await ps.addStars(1);
     if (!mounted) return;
     XpPopup.show(context, amount: 1);
     await ref
         .read(audioServiceProvider)
         .speakLocale(
-          isMalay
-              ? 'Cantik! Kamu jejak huruf ${widget.letterName}!'
-              : 'Beautiful! You traced ${widget.letterName}!',
+          language.copy(ms: 'Cantik! Kamu jejak huruf ${widget.letterName}!', en: 'Beautiful! You traced ${widget.letterName}!', zh: '太棒了！你描出了 ${widget.letterName}！', ta: 'அருமை! நீ ${widget.letterName}-ஐ வரைந்தாய்!'),
           enabled: ps.voiceEnabled,
-          locale: isMalay ? 'ms-MY' : 'en-US',
+          locale: language.ttsLocale,
         );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isMalay =
-        ref.watch(progressServiceProvider).language == AppLanguage.malay;
+    final language = ref.watch(progressServiceProvider).language;
     final color = widget.color;
 
     return Scaffold(
@@ -77,19 +74,17 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Text(
-          isMalay
-              ? '✍️ Jejak: ${widget.letterName}'
-              : '✍️ Trace: ${widget.letterName}',
+          language.copy(ms: '✍️ Jejak: ${widget.letterName}', en: '✍️ Trace: ${widget.letterName}', zh: '✍️ 描写：${widget.letterName}', ta: '✍️ வரை: ${widget.letterName}'),
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         actions: [
           IconButton(
             onPressed: _clear,
             icon: const Icon(Icons.replay_rounded),
-            tooltip: isMalay ? 'Padam & cuba lagi' : 'Clear & retry',
+            tooltip: language.copy(ms: 'Padam & cuba lagi', en: 'Clear & retry', zh: '清除并重试', ta: 'அழித்துவிட்டு மீண்டும்'),
           ),
         ],
       ),
@@ -99,9 +94,7 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Text(
-                isMalay
-                    ? 'Jejak huruf kelabu dengan jari kamu!'
-                    : 'Trace the grey letter with your finger!',
+                language.copy(ms: 'Jejak huruf kelabu dengan jari kamu!', en: 'Trace the grey letter with your finger!', zh: '用手指描出灰色的字母！', ta: 'சாம்பல் நிற எழுத்தை உன் விரலால் வரை!'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 15,
@@ -162,7 +155,7 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
                           Align(
                             alignment: const Alignment(0, 0.8),
                             child: Text(
-                              isMalay ? '👆 Mula di sini!' : '👆 Start here!',
+                              language.copy(ms: '👆 Mula di sini!', en: '👆 Start here!', zh: '👆 从这里开始！', ta: '👆 இங்கே தொடங்கு!'),
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w800,
@@ -186,8 +179,8 @@ class _JawiTraceScreenState extends ConsumerState<JawiTraceScreen> {
                 ),
                 label: Text(
                   _rewarded
-                      ? (isMalay ? 'Hebat!' : 'Amazing!')
-                      : (isMalay ? 'Siap!' : 'Done!'),
+                      ? (language.copy(ms: 'Hebat!', en: 'Amazing!', zh: '太棒了！', ta: 'அற்புதம்!'))
+                      : (language.copy(ms: 'Siap!', en: 'Done!', zh: '完成！', ta: 'முடிந்தது!')),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,

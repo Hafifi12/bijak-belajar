@@ -47,7 +47,6 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   Widget build(BuildContext context) {
     final progress = ref.watch(progressServiceProvider);
     final language = progress.language;
-    final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
       backgroundColor: AppTheme.nightMid,
@@ -58,10 +57,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Text(
-          isMalay ? '🏆 Kemajuan Saya' : '🏆 My Progress',
+          language.copy(ms: '🏆 Kemajuan Saya', en: '🏆 My Progress', zh: '🏆 我的进度', ta: '🏆 என் முன்னேற்றம்'),
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         elevation: 0,
@@ -71,7 +70,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: _StarHeroBanner(progress: progress, isMalay: isMalay),
+              child: _StarHeroBanner(progress: progress, language: language),
             ),
             SliverToBoxAdapter(
               child: Padding(
@@ -106,9 +105,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
 // ── Star Hero Banner ──────────────────────────────────────────────────────────
 class _StarHeroBanner extends ConsumerStatefulWidget {
-  const _StarHeroBanner({required this.progress, required this.isMalay});
+  const _StarHeroBanner({required this.progress, required this.language});
   final ProgressService progress;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   ConsumerState<_StarHeroBanner> createState() => _StarHeroBannerState();
@@ -133,37 +132,27 @@ class _StarHeroBannerState extends ConsumerState<_StarHeroBanner>
     super.dispose();
   }
 
-  String _motivationalMessage(int stars, int done, bool isMalay) {
+  String _motivationalMessage(int stars, int done, AppLanguage language) {
     if (done == 0) {
-      return isMalay
-          ? 'Mulakan perjalanan belajar kamu hari ini! 🚀'
-          : 'Start your learning journey today! 🚀';
+      return language.copy(ms: 'Mulakan perjalanan belajar kamu hari ini! 🚀', en: 'Start your learning journey today! 🚀', zh: '今天就开始你的学习之旅吧！🚀', ta: 'இன்றே உன் கற்றல் பயணத்தைத் தொடங்கு! 🚀');
     }
     if (stars < 10) {
-      return isMalay
-          ? 'Bagus! Teruskan untuk dapat lebih bintang! 🌟'
-          : 'Good start! Keep learning for more stars! 🌟';
+      return language.copy(ms: 'Bagus! Teruskan untuk dapat lebih bintang! 🌟', en: 'Good start! Keep learning for more stars! 🌟', zh: '好的开始！继续学习，获得更多星星！🌟', ta: 'நல்ல தொடக்கம்! மேலும் நட்சத்திரங்களுக்கு தொடர்ந்து கற்று! 🌟');
     }
     if (stars < 30) {
-      return isMalay
-          ? 'Hebat! Kamu dalam perjalanan yang betul! 🎉'
-          : 'Great job! You\'re on the right track! 🎉';
+      return language.copy(ms: 'Hebat! Kamu dalam perjalanan yang betul! 🎉', en: 'Great job! You\'re on the right track! 🎉', zh: '干得好！你走在正确的道路上！🎉', ta: 'சிறப்பு! நீ சரியான பாதையில் இருக்கிறாய்! 🎉');
     }
     if (stars < 60) {
-      return isMalay
-          ? 'Luar biasa! Kamu pelajar yang handal! ⭐'
-          : 'Amazing! You\'re a super learner! ⭐';
+      return language.copy(ms: 'Luar biasa! Kamu pelajar yang handal! ⭐', en: 'Amazing! You\'re a super learner! ⭐', zh: '太棒了！你是超级学习者！⭐', ta: 'அற்புதம்! நீ ஒரு சிறந்த கற்றவன்! ⭐');
     }
-    return isMalay
-        ? 'WOW! Kamu seorang bintang belajar sejati! 🏆🌟'
-        : 'WOW! You\'re a true learning star! 🏆🌟';
+    return language.copy(ms: 'WOW! Kamu seorang bintang belajar sejati! 🏆🌟', en: 'WOW! You\'re a true learning star! 🏆🌟', zh: '哇！你是真正的学习之星！🏆🌟', ta: 'வாவ்! நீ உண்மையான கற்றல் நட்சத்திரம்! 🏆🌟');
   }
 
   @override
   Widget build(BuildContext context) {
     final stars = widget.progress.stars;
     final done = widget.progress.completedChallenges;
-    final isMalay = widget.isMalay;
+    final language = widget.language;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -210,9 +199,7 @@ class _StarHeroBannerState extends ConsumerState<_StarHeroBanner>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isMalay
-                                  ? 'Bilik Trofi Kamu!'
-                                  : 'Your Trophy Room!',
+                              language.copy(ms: 'Bilik Trofi Kamu!', en: 'Your Trophy Room!', zh: '你的奖杯室！', ta: 'உன் கோப்பை அறை!'),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
@@ -220,9 +207,7 @@ class _StarHeroBannerState extends ConsumerState<_StarHeroBanner>
                               ),
                             ),
                             Text(
-                              isMalay
-                                  ? 'Teruskan belajar & kumpul bintang! ⭐'
-                                  : 'Keep learning & collect stars! ⭐',
+                              language.copy(ms: 'Teruskan belajar & kumpul bintang! ⭐', en: 'Keep learning & collect stars! ⭐', zh: '继续学习，收集星星！⭐', ta: 'தொடர்ந்து கற்று நட்சத்திரங்களைச் சேகரி! ⭐'),
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.82),
                                 fontSize: 12,
@@ -240,7 +225,7 @@ class _StarHeroBannerState extends ConsumerState<_StarHeroBanner>
                       Expanded(
                         child: _HeroBubble(
                           value: '$stars',
-                          label: isMalay ? 'Bintang' : 'Stars',
+                          label: language.copy(ms: 'Bintang', en: 'Stars', zh: '星星', ta: 'நட்சத்திரங்கள்'),
                           icon: '⭐',
                           color: AppTheme.sunnyYellow,
                         ),
@@ -249,7 +234,7 @@ class _StarHeroBannerState extends ConsumerState<_StarHeroBanner>
                       Expanded(
                         child: _HeroBubble(
                           value: '$done',
-                          label: isMalay ? 'Selesai' : 'Completed',
+                          label: language.copy(ms: 'Selesai', en: 'Completed', zh: '已完成', ta: 'முடிந்தவை'),
                           icon: '✅',
                           color: AppTheme.leafGreen,
                         ),
@@ -258,7 +243,7 @@ class _StarHeroBannerState extends ConsumerState<_StarHeroBanner>
                       Expanded(
                         child: _HeroBubble(
                           value: '${widget.progress.coloringSessions}',
-                          label: isMalay ? 'Mewarna' : 'Coloured',
+                          label: language.copy(ms: 'Mewarna', en: 'Coloured', zh: '已涂色', ta: 'வண்ணம் தீட்டப்பட்டது'),
                           icon: '🎨',
                           color: const Color(0xFFFF9F43),
                         ),
@@ -281,7 +266,7 @@ class _StarHeroBannerState extends ConsumerState<_StarHeroBanner>
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            _motivationalMessage(stars, done, isMalay),
+                            _motivationalMessage(stars, done, language),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 13,

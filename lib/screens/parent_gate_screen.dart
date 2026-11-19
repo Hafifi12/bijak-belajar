@@ -64,8 +64,7 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
   }
 
   void _check() {
-    final isMalay =
-        ref.read(progressServiceProvider).language == AppLanguage.malay;
+    final language = ref.read(progressServiceProvider).language;
     if (_ctrl.text.trim() == '$_answer') {
       HapticFeedback.lightImpact();
       if (widget.forSharing) {
@@ -78,9 +77,7 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
     } else {
       HapticFeedback.heavyImpact();
       setState(
-        () => _error = isMalay
-            ? 'Kurang tepat — cuba lagi! 🤔'
-            : 'Not quite — try again! 🤔',
+        () => _error = language.copy(ms: 'Kurang tepat — cuba lagi! 🤔', en: 'Not quite — try again! 🤔', zh: '不太对——再试一次！🤔', ta: 'சரியில்லை — மீண்டும் முயற்சி செய்! 🤔'),
       );
       _ctrl.clear();
       _shakeCtrl.forward(from: 0);
@@ -90,8 +87,7 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isMalay =
-        ref.watch(progressServiceProvider).language == AppLanguage.malay;
+    final language = ref.watch(progressServiceProvider).language;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -101,10 +97,10 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Text(
-          isMalay ? 'Untuk Orang Dewasa' : 'Grown-Ups Only',
+          language.copy(ms: 'Untuk Orang Dewasa', en: 'Grown-Ups Only', zh: '仅限成人', ta: 'பெரியவர்களுக்கு மட்டும்'),
           style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
@@ -135,9 +131,7 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                     const _ShieldBadge(),
                     const SizedBox(height: 12),
                     Text(
-                      isMalay
-                          ? 'Akses Ibu Bapa & Guru'
-                          : 'Parent & Teacher Access',
+                      language.copy(ms: 'Akses Ibu Bapa & Guru', en: 'Parent & Teacher Access', zh: '家长与老师入口', ta: 'பெற்றோர் & ஆசிரியர் அணுகல்'),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 26,
@@ -148,12 +142,8 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                     const SizedBox(height: 6),
                     Text(
                       widget.forSharing
-                          ? (isMalay
-                                ? 'Jawab soalan matematik untuk berkongsi gambar'
-                                : 'Answer the maths question to share the picture')
-                          : (isMalay
-                                ? 'Jawab soalan matematik untuk buka tetapan'
-                                : 'Answer the maths question to unlock settings'),
+                          ? (language.copy(ms: 'Jawab soalan matematik untuk berkongsi gambar', en: 'Answer the maths question to share the picture', zh: '回答数学题即可分享图片', ta: 'படத்தைப் பகிர கணிதக் கேள்விக்கு விடையளி'))
+                          : (language.copy(ms: 'Jawab soalan matematik untuk buka tetapan', en: 'Answer the maths question to unlock settings', zh: '回答数学题即可打开设置', ta: 'அமைப்புகளைத் திறக்க கணிதக் கேள்விக்கு விடையளி')),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.75),
                         fontSize: 14,
@@ -208,9 +198,7 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    isMalay
-                                        ? 'Berapakah jawapannya?'
-                                        : 'What is the answer?',
+                                    language.copy(ms: 'Berapakah jawapannya?', en: 'What is the answer?', zh: '答案是什么？', ta: 'விடை என்ன?'),
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
@@ -293,10 +281,8 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                                 ),
                                 label: Text(
                                   widget.forSharing
-                                      ? (isMalay ? 'Teruskan' : 'Continue')
-                                      : (isMalay
-                                            ? 'Buka Tetapan'
-                                            : 'Unlock Settings'),
+                                      ? (language.copy(ms: 'Teruskan', en: 'Continue', zh: '继续', ta: 'தொடர்'))
+                                      : (language.copy(ms: 'Buka Tetapan', en: 'Unlock Settings', zh: '打开设置', ta: 'அமைப்புகளைத் திற')),
                                 ),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppTheme.deepBlue,
@@ -326,12 +312,8 @@ class _ParentGateScreenState extends ConsumerState<ParentGateScreen>
                       padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
                       child: Text(
                         widget.forSharing
-                            ? (isMalay
-                                  ? 'Semakan matematik mudah ini memastikan orang dewasa yang memilih untuk berkongsi 🧒'
-                                  : 'This simple maths check makes sure a grown-up chooses to share 🧒')
-                            : (isMalay
-                                  ? 'Semakan matematik mudah ini memastikan tetapan selamat daripada si kecil 🧒'
-                                  : 'This simple maths check keeps settings safe from little fingers 🧒'),
+                            ? (language.copy(ms: 'Semakan matematik mudah ini memastikan orang dewasa yang memilih untuk berkongsi 🧒', en: 'This simple maths check makes sure a grown-up chooses to share 🧒', zh: '这个简单的数学题确保是成人选择分享 🧒', ta: 'இந்த எளிய கணிதச் சோதனை பெரியவர் தேர்ந்தெடுத்துப் பகிர்வதை உறுதி செய்கிறது 🧒'))
+                            : (language.copy(ms: 'Semakan matematik mudah ini memastikan tetapan selamat daripada si kecil 🧒', en: 'This simple maths check keeps settings safe from little fingers 🧒', zh: '这个简单的数学题可防止小手误改设置 🧒', ta: 'இந்த எளிய கணிதச் சோதனை சிறு விரல்களிடமிருந்து அமைப்புகளைப் பாதுகாக்கிறது 🧒')),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.6),

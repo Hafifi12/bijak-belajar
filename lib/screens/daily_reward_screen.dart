@@ -50,7 +50,7 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
 
   @override
   Widget build(BuildContext context) {
-    final isMalay = widget.progress.language == AppLanguage.malay;
+    final language = widget.progress.language;
     final streak = widget.progress.currentStreak;
     final stars = widget.progress.dailyRewardStars;
     final level = widget.progress.currentLevel;
@@ -117,7 +117,7 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
 
                     // Title
                     Text(
-                      isMalay ? 'Hadiah Harian! 🎉' : 'Daily Gift! 🎉',
+                      language.copy(ms: 'Hadiah Harian! 🎉', en: 'Daily Gift! 🎉', zh: '每日礼物！🎉', ta: 'தினசரிப் பரிசு! 🎉'),
                       style: const TextStyle(
                         color: AppTheme.sunnyYellow,
                         fontSize: 26,
@@ -143,9 +143,7 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              isMalay
-                                  ? '$streak hari berturut-turut!'
-                                  : '$streak day streak!',
+                              language.copy(ms: '$streak hari berturut-turut!', en: '$streak day streak!', zh: '连续 $streak 天！', ta: '$streak நாள் தொடர்ச்சி!'),
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -194,7 +192,7 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                           const SizedBox(width: 10),
                           Flexible(
                             child: Text(
-                              isMalay ? 'Bintang' : 'Stars',
+                              language.copy(ms: 'Bintang', en: 'Stars', zh: '星星', ta: 'நட்சத்திரங்கள்'),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -212,9 +210,7 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
-                          isMalay
-                              ? '🎯 Bonus streak $streak hari!'
-                              : '🎯 $streak-day streak bonus!',
+                          language.copy(ms: '🎯 Bonus streak $streak hari!', en: '🎯 $streak-day streak bonus!', zh: '🎯 连续 $streak 天奖励！', ta: '🎯 $streak நாள் தொடர் போனஸ்!'),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 13,
@@ -228,9 +224,7 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
-                          isMalay
-                              ? '❄️ Streak kamu diselamatkan! Token beku digunakan.'
-                              : '❄️ Your streak was saved! A freeze token was used.',
+                          language.copy(ms: '❄️ Streak kamu diselamatkan! Token beku digunakan.', en: '❄️ Your streak was saved! A freeze token was used.', zh: '❄️ 你的连续记录已保住！已使用一个冻结令牌。', ta: '❄️ உன் தொடர்ச்சி காப்பாற்றப்பட்டது! ஒரு உறைவு டோக்கன் பயன்படுத்தப்பட்டது.'),
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Color(0xFFBDE6FF),
@@ -245,9 +239,12 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
-                          isMalay
-                              ? '❄️ ${widget.progress.streakFreezes} token beku — melindungi streak kamu jika terlepas sehari'
-                              : '❄️ ${widget.progress.streakFreezes} freeze token${widget.progress.streakFreezes > 1 ? 's' : ''} — protects your streak if you miss a day',
+                          language.copy(
+                            ms: '❄️ ${widget.progress.streakFreezes} token beku — melindungi streak kamu jika terlepas sehari',
+                            en: '❄️ ${widget.progress.streakFreezes} freeze token${widget.progress.streakFreezes > 1 ? 's' : ''} — protects your streak if you miss a day',
+                            zh: '❄️ ${widget.progress.streakFreezes} 个冻结令牌 — 错过一天时保护你的连续记录',
+                            ta: '❄️ ${widget.progress.streakFreezes} உறைவு டோக்கன் — ஒரு நாள் தவறினாலும் உன் தொடர்ச்சி பாதுகாக்கப்படும்',
+                          ),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.8),
@@ -259,9 +256,7 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
 
                     // Tomorrow's reward — make the escalating table work for us
                     Text(
-                      isMalay
-                          ? '⏰ Datang esok untuk +${widget.progress.tomorrowRewardStars} ⭐!'
-                          : '⏰ Come back tomorrow for +${widget.progress.tomorrowRewardStars} ⭐!',
+                      language.copy(ms: '⏰ Datang esok untuk +${widget.progress.tomorrowRewardStars} ⭐!', en: '⏰ Come back tomorrow for +${widget.progress.tomorrowRewardStars} ⭐!', zh: '⏰ 明天再来可得 +${widget.progress.tomorrowRewardStars} ⭐！', ta: '⏰ நாளை வா, +${widget.progress.tomorrowRewardStars} ⭐ கிடைக்கும்!'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: AppTheme.sunnyYellow,
@@ -308,10 +303,8 @@ class _DailyRewardDialogState extends State<DailyRewardDialog>
                         child: Center(
                           child: Text(
                             _collected
-                                ? (isMalay ? '✅ Dikumpul!' : '✅ Collected!')
-                                : (isMalay
-                                      ? '🎁 Kumpul Hadiah!'
-                                      : '🎁 Collect Gift!'),
+                                ? (language.copy(ms: '✅ Dikumpul!', en: '✅ Collected!', zh: '✅ 已领取！', ta: '✅ பெறப்பட்டது!'))
+                                : (language.copy(ms: '🎁 Kumpul Hadiah!', en: '🎁 Collect Gift!', zh: '🎁 领取礼物！', ta: '🎁 பரிசைப் பெறு!')),
                             style: const TextStyle(
                               color: AppTheme.ink,
                               fontSize: 20,

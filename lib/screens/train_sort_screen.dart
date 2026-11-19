@@ -133,12 +133,12 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: language == AppLanguage.malay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Text(AppText.trainTitle(_mode, language)),
         actions: [
           IconButton(
-            tooltip: language == AppLanguage.malay ? 'Main semula' : 'New game',
+            tooltip: language.copy(ms: 'Main semula', en: 'New game', zh: '重新开始', ta: 'புதிய விளையாட்டு'),
             onPressed: _startRound,
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -291,7 +291,6 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
     if (!mounted) return;
 
     final language = progressService.language;
-    final isMalay = language == AppLanguage.malay;
 
     await showDialog<void>(
       context: context,
@@ -304,7 +303,7 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
           style: TextStyle(fontSize: 48),
         ),
         content: Text(
-          isMalay ? 'Tahniah! Kamu berjaya!' : 'Great job! Round complete!',
+          language.copy(ms: 'Tahniah! Kamu berjaya!', en: 'Great job! Round complete!', zh: '干得好！本轮完成！', ta: 'சிறப்பு! சுற்று முடிந்தது!'),
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
@@ -320,7 +319,7 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
                     _startRound(advance: true); // next group
                   },
                   icon: const Icon(Icons.arrow_forward_rounded),
-                  label: Text(isMalay ? 'Seterusnya' : 'Next'),
+                  label: Text(language.copy(ms: 'Seterusnya', en: 'Next', zh: '下一步', ta: 'அடுத்தது')),
                   style: FilledButton.styleFrom(
                     backgroundColor: _mode.color,
                     shape: RoundedRectangleBorder(
@@ -338,7 +337,7 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
                     _startRound(advance: false); // retry same group
                   },
                   icon: const Icon(Icons.replay_rounded),
-                  label: Text(isMalay ? 'Cuba Lagi' : 'Try Again'),
+                  label: Text(language.copy(ms: 'Cuba Lagi', en: 'Try Again', zh: '再试一次', ta: 'மீண்டும் முயற்சி')),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -357,7 +356,7 @@ class _TrainSortScreenState extends ConsumerState<TrainSortScreen>
                     );
                   },
                   icon: const Icon(Icons.home_rounded),
-                  label: Text(isMalay ? 'Laman Utama' : 'Home'),
+                  label: Text(language.copy(ms: 'Laman Utama', en: 'Home', zh: '首页', ta: 'முகப்பு')),
                 ),
               ),
             ],

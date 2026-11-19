@@ -115,7 +115,7 @@ class ColoringScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(progressServiceProvider);
-    final isMalay = progress.language == AppLanguage.malay;
+    final language = progress.language;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8E7),
@@ -125,7 +125,7 @@ class ColoringScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         title: Row(
@@ -137,7 +137,7 @@ class ColoringScreen extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              isMalay ? 'Jom Mewarna!' : "Let's Colour!",
+              language.copy(ms: 'Jom Mewarna!', en: "Let's Colour!", zh: '开始涂色！', ta: 'வண்ணம் தீட்டுவோம்!'),
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
           ],
@@ -145,7 +145,7 @@ class ColoringScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.photo_library_rounded),
-            tooltip: isMalay ? 'Galeri Seni Saya' : 'My Art Gallery',
+            tooltip: language.copy(ms: 'Galeri Seni Saya', en: 'My Art Gallery', zh: '我的画廊', ta: 'என் ஓவியக் காட்சியகம்'),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const ColoringGalleryScreen()),
             ),
@@ -154,7 +154,7 @@ class ColoringScreen extends ConsumerWidget {
       ),
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: _ColoringHeader(isMalay: isMalay)),
+          SliverToBoxAdapter(child: _ColoringHeader(language: language)),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
             sliver: SliverGrid(
@@ -168,7 +168,7 @@ class ColoringScreen extends ConsumerWidget {
                 final cat = _categories[i];
                 return _CategoryCard(
                   category: cat,
-                  isMalay: isMalay,
+                  language: language,
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -188,8 +188,8 @@ class ColoringScreen extends ConsumerWidget {
 
 // ── Header ─────────────────────────────────────────────────────────────────────
 class _ColoringHeader extends ConsumerWidget {
-  const _ColoringHeader({required this.isMalay});
-  final bool isMalay;
+  const _ColoringHeader({required this.language});
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -220,7 +220,7 @@ class _ColoringHeader extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isMalay ? 'Aktiviti Mewarna' : 'Colouring Activity',
+                  language.copy(ms: 'Aktiviti Mewarna', en: 'Colouring Activity', zh: '涂色活动', ta: 'வண்ணம் தீட்டும் செயல்பாடு'),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -229,9 +229,7 @@ class _ColoringHeader extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  isMalay
-                      ? 'Lukis & warnakan gambar kegemaran kamu!'
-                      : 'Draw & colour your favourite pictures!',
+                  language.copy(ms: 'Lukis & warnakan gambar kegemaran kamu!', en: 'Draw & colour your favourite pictures!', zh: '画出并涂上你喜欢的图画！', ta: 'உனக்குப் பிடித்த படங்களை வரைந்து வண்ணம் தீட்டு!'),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13,
@@ -240,7 +238,7 @@ class _ColoringHeader extends ConsumerWidget {
                 ),
                 const SizedBox(height: 6),
                 _FeatureTag(
-                  label: isMalay ? '🎨 Latihan kreativiti' : '🎨 Creative practice',
+                  label: language.copy(ms: '🎨 Latihan kreativiti', en: '🎨 Creative practice', zh: '🎨 创意练习', ta: '🎨 படைப்பாற்றல் பயிற்சி'),
                 ),
               ],
             ),
@@ -279,11 +277,11 @@ class _FeatureTag extends ConsumerWidget {
 class _CategoryCard extends ConsumerWidget {
   const _CategoryCard({
     required this.category,
-    required this.isMalay,
+    required this.language,
     required this.onTap,
   });
   final _ColoringCategory category;
-  final bool isMalay;
+  final AppLanguage language;
   final VoidCallback onTap;
 
   @override
@@ -317,7 +315,7 @@ class _CategoryCard extends ConsumerWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                isMalay ? category.labelMs : category.labelEn,
+                language.usesMalayCopy ? category.labelMs : category.labelEn,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -327,7 +325,7 @@ class _CategoryCard extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${category.subjects.length} ${isMalay ? 'gambar' : 'pictures'}',
+                '${category.subjects.length} ${language.copy(ms: 'gambar', en: 'pictures', zh: '图画', ta: 'படங்கள்')}',
                 style: const TextStyle(
                   fontSize: 11,
                   color: Color(0xFF9090A8),
@@ -352,7 +350,6 @@ class _SubjectPickerScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final language = ref.watch(progressServiceProvider).language;
-    final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8E7),
@@ -360,7 +357,7 @@ class _SubjectPickerScreen extends ConsumerWidget {
         backgroundColor: category.color,
         foregroundColor: Colors.white,
         title: Text(
-          isMalay ? category.labelMs : category.labelEn,
+          language.usesMalayCopy ? category.labelMs : category.labelEn,
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
@@ -378,7 +375,7 @@ class _SubjectPickerScreen extends ConsumerWidget {
           return _SubjectCard(
             subject: sub,
             color: category.color,
-            isMalay: isMalay,
+            language: language,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -398,12 +395,12 @@ class _SubjectCard extends ConsumerWidget {
   const _SubjectCard({
     required this.subject,
     required this.color,
-    required this.isMalay,
+    required this.language,
     required this.onTap,
   });
   final _Subject subject;
   final Color color;
-  final bool isMalay;
+  final AppLanguage language;
   final VoidCallback onTap;
 
   @override
@@ -422,7 +419,7 @@ class _SubjectCard extends ConsumerWidget {
             Text(subject.emoji, style: const TextStyle(fontSize: 52)),
             const SizedBox(height: 8),
             Text(
-              isMalay ? subject.labelMs : subject.labelEn,
+              language.usesMalayCopy ? subject.labelMs : subject.labelEn,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -438,7 +435,7 @@ class _SubjectCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                isMalay ? 'Warna sekarang!' : 'Colour now!',
+                language.copy(ms: 'Warna sekarang!', en: 'Colour now!', zh: '马上涂色！', ta: 'இப்போதே வண்ணம் தீட்டு!'),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -691,7 +688,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
 
   void _celebrate() async {
     final ps = ref.read(progressServiceProvider);
-    final isMalay = ps.language == AppLanguage.malay;
+    final language = ps.language;
     await _saveArtwork();
     await ps.incrementColoringSessions();
     await ps.addStars(1);
@@ -702,18 +699,16 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
     ref
         .read(audioServiceProvider)
         .speakLocale(
-          isMalay
-              ? 'Cantik! Lukisan kamu sudah disimpan!'
-              : 'Beautiful! Your drawing is saved!',
+          language.copy(ms: 'Cantik! Lukisan kamu sudah disimpan!', en: 'Beautiful! Your drawing is saved!', zh: '太棒了！你的作品已保存！', ta: 'அருமை! உன் ஓவியம் சேமிக்கப்பட்டது!'),
           enabled: ps.voiceEnabled,
-          locale: isMalay ? 'ms-MY' : 'en-US',
+          locale: language.ttsLocale,
         );
     showDialog(
       context: context,
       builder: (_) => _CelebrationDialog(
-        isMalay: isMalay,
+        language: language,
         subjectEmoji: widget.subject.emoji,
-        label: isMalay ? widget.subject.labelMs : widget.subject.labelEn,
+        label: language.usesMalayCopy ? widget.subject.labelMs : widget.subject.labelEn,
       ),
     );
   }
@@ -721,7 +716,6 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
   @override
   Widget build(BuildContext context) {
     final language = ref.watch(progressServiceProvider).language;
-    final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFFBF0),
@@ -729,13 +723,13 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
         backgroundColor: widget.color,
         foregroundColor: Colors.white,
         title: Text(
-          '${widget.subject.emoji} ${isMalay ? widget.subject.labelMs : widget.subject.labelEn}',
+          '${widget.subject.emoji} ${language.usesMalayCopy ? widget.subject.labelMs : widget.subject.labelEn}',
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline_rounded),
-            tooltip: isMalay ? 'Padam Semua' : 'Clear All',
+            tooltip: language.copy(ms: 'Padam Semua', en: 'Clear All', zh: '全部清除', ta: 'அனைத்தையும் அழி'),
             onPressed: _clear,
           ),
         ],
@@ -795,9 +789,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                               Align(
                                 alignment: const Alignment(0, 0.65),
                                 child: Text(
-                                  isMalay
-                                      ? '👆 Lukis di sini!'
-                                      : '👆 Draw here!',
+                                  language.copy(ms: '👆 Lukis di sini!', en: '👆 Draw here!', zh: '👆 在这里画！', ta: '👆 இங்கே வரை!'),
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,
@@ -876,7 +868,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                 // Undo — the most-wanted button in a kids drawing app.
                 _ToolButton(
                   icon: Icons.undo_rounded,
-                  label: isMalay ? 'Buat Asal' : 'Undo',
+                  label: language.copy(ms: 'Buat Asal', en: 'Undo', zh: '撤销', ta: 'செயல்தவிர்'),
                   color: widget.color,
                   onTap: _undo,
                 ),
@@ -887,7 +879,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                     children: [
                       _ToolTab(
                         emoji: '🖌️',
-                        label: isMalay ? 'Berus' : 'Brush',
+                        label: language.copy(ms: 'Berus', en: 'Brush', zh: '画笔', ta: 'தூரிகை'),
                         selected: _tool == _CanvasTool.brush,
                         color: widget.color,
                         onTap: () => setState(() => _tool = _CanvasTool.brush),
@@ -895,7 +887,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                       const SizedBox(width: 6),
                       _ToolTab(
                         emoji: '🧽',
-                        label: isMalay ? 'Pemadam' : 'Eraser',
+                        label: language.copy(ms: 'Pemadam', en: 'Eraser', zh: '橡皮擦', ta: 'அழிப்பான்'),
                         selected: _tool == _CanvasTool.eraser,
                         color: widget.color,
                         onTap: () => setState(() => _tool = _CanvasTool.eraser),
@@ -903,7 +895,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                       const SizedBox(width: 6),
                       _ToolTab(
                         emoji: '✨',
-                        label: isMalay ? 'Pelekat' : 'Stickers',
+                        label: language.copy(ms: 'Pelekat', en: 'Stickers', zh: '贴纸', ta: 'ஒட்டுவில்லைகள்'),
                         selected: _tool == _CanvasTool.stamp,
                         color: widget.color,
                         onTap: () => setState(() => _tool = _CanvasTool.stamp),
@@ -923,7 +915,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
               child: Row(
                 children: [
                   Text(
-                    isMalay ? 'Saiz' : 'Size',
+                    language.copy(ms: 'Saiz', en: 'Size', zh: '大小', ta: 'அளவு'),
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.inkFaint,
@@ -1076,7 +1068,7 @@ class _ColoringCanvasScreenState extends ConsumerState<ColoringCanvasScreen>
                 onPressed: _celebrate,
                 icon: const Text('⭐', style: TextStyle(fontSize: 22)),
                 label: Text(
-                  isMalay ? 'Siap! Simpan Lukisan!' : 'Done! Save My Art!',
+                  language.copy(ms: 'Siap! Simpan Lukisan!', en: 'Done! Save My Art!', zh: '完成！保存我的作品！', ta: 'முடிந்தது! என் ஓவியத்தைச் சேமி!'),
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
@@ -1296,11 +1288,11 @@ class _ToolButton extends ConsumerWidget {
 // ── Celebration dialog ─────────────────────────────────────────────────────────
 class _CelebrationDialog extends ConsumerWidget {
   const _CelebrationDialog({
-    required this.isMalay,
+    required this.language,
     required this.subjectEmoji,
     required this.label,
   });
-  final bool isMalay;
+  final AppLanguage language;
   final String subjectEmoji;
   final String label;
 
@@ -1316,7 +1308,7 @@ class _CelebrationDialog extends ConsumerWidget {
             const Text('🌟', style: TextStyle(fontSize: 60)),
             const SizedBox(height: 10),
             Text(
-              isMalay ? 'Tahniah! Bagus sekali!' : 'Great job! Well done!',
+              language.copy(ms: 'Tahniah! Bagus sekali!', en: 'Great job! Well done!', zh: '干得好！做得太棒了！', ta: 'சிறப்பு! மிக நன்று!'),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 22,
@@ -1326,9 +1318,7 @@ class _CelebrationDialog extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              isMalay
-                  ? 'Kamu dah mewarnakan $subjectEmoji $label dengan cantik!'
-                  : 'You coloured $subjectEmoji $label beautifully!',
+              language.copy(ms: 'Kamu dah mewarnakan $subjectEmoji $label dengan cantik!', en: 'You coloured $subjectEmoji $label beautifully!', zh: '你把 $subjectEmoji $label 涂得很漂亮！', ta: 'நீ $subjectEmoji $label-ஐ அழகாக வண்ணம் தீட்டிவிட்டாய்!'),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 15,
@@ -1351,7 +1341,7 @@ class _CelebrationDialog extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text(isMalay ? 'Lagi!' : 'Again!'),
+                    child: Text(language.copy(ms: 'Lagi!', en: 'Again!', zh: '再来一次！', ta: 'மீண்டும்!')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1364,7 +1354,7 @@ class _CelebrationDialog extends ConsumerWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF00C9A7),
                     ),
-                    child: Text(isMalay ? 'Selesai' : 'Done'),
+                    child: Text(language.copy(ms: 'Selesai', en: 'Done', zh: '完成', ta: 'முடிந்தது')),
                   ),
                 ),
               ],

@@ -1,6 +1,11 @@
 enum AppLanguage { english, malay, mandarin, tamil, indonesian }
 
 extension AppLanguageDetails on AppLanguage {
+  /// Indonesian shares most of its vocabulary with Malay. Screens that only
+  /// have Malay copy show it to Indonesian users rather than English.
+  bool get usesMalayCopy =>
+      this == AppLanguage.malay || this == AppLanguage.indonesian;
+
   String get code {
     switch (this) {
       case AppLanguage.english:
@@ -78,5 +83,22 @@ extension AppLanguageDetails on AppLanguage {
         // for new installs; parents can switch in Settings.
         return AppLanguage.malay;
     }
+  }
+}
+
+/// Picks the copy for the child's language. Indonesian uses the Malay copy.
+extension AppLanguageCopy on AppLanguage {
+  String copy({
+    required String ms,
+    required String en,
+    required String zh,
+    required String ta,
+  }) {
+    return switch (this) {
+      AppLanguage.malay || AppLanguage.indonesian => ms,
+      AppLanguage.english => en,
+      AppLanguage.mandarin => zh,
+      AppLanguage.tamil => ta,
+    };
   }
 }

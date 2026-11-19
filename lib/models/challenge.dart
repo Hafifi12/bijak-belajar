@@ -24,29 +24,6 @@ enum ShapeKind {
 }
 
 extension ChallengeModeLabels on ChallengeMode {
-  String get label {
-    switch (this) {
-      case ChallengeMode.color:
-        return 'Color Hunt';
-      case ChallengeMode.shape:
-        return 'Shape Hunt';
-      case ChallengeMode.object:
-        return 'Object Hunt';
-      case ChallengeMode.sound:
-        return 'Sound Guess';
-      case ChallengeMode.findExplorer:
-        return 'Find Explorer';
-      case ChallengeMode.numberTrain:
-        return 'Number Train';
-      case ChallengeMode.letterTrain:
-        return 'Letter Train';
-      case ChallengeMode.memory:
-        return 'Memory Game';
-      case ChallengeMode.puzzle:
-        return 'Puzzle Game';
-    }
-  }
-
   String get storageKey {
     switch (this) {
       case ChallengeMode.color:

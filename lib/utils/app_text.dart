@@ -1,13 +1,25 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/app_language.dart';
 import '../models/challenge.dart';
 import '../models/explorer_item.dart';
 import '../models/level.dart';
 import '../models/memory_item.dart';
-import '../models/quest.dart';
 import '../models/train_mode.dart';
 
 class AppText {
   const AppText._();
+
+  /// Every key in the UI table. Exposed for the translation-coverage test.
+  @visibleForTesting
+  static Iterable<String> get uiKeys => _uiText.keys;
+
+  /// Languages with no translation for [key].
+  @visibleForTesting
+  static List<AppLanguage> missingLanguages(String key) => [
+    for (final language in AppLanguage.values)
+      if (_uiText[key]?[language] == null) language,
+  ];
 
   static String ui(String key, AppLanguage language) {
     return _uiText[key]?[language] ??
@@ -31,23 +43,7 @@ class AppText {
   }
 
   /// Localized quest title (falls back to the quest's English title).
-  static String questTitle(DailyQuest quest, AppLanguage language) {
-    return _questTitles[quest.id]?[language] ??
-        _questTitles[quest.id]?[_fallbackLanguage(language)] ??
-        quest.title;
-  }
-
   /// Localized quest description (falls back to the quest's English text).
-  static String questDescription(DailyQuest quest, AppLanguage language) {
-    return _questDescriptions[quest.id]?[language] ??
-        _questDescriptions[quest.id]?[_fallbackLanguage(language)] ??
-        quest.description;
-  }
-
-  static String challengeTitle(Challenge challenge, AppLanguage language) {
-    return label(challenge.id, language, fallback: challenge.title);
-  }
-
   static String challengeTarget(Challenge challenge, AppLanguage language) {
     return label(challenge.id, language, fallback: challenge.targetLabel);
   }
@@ -188,318 +184,371 @@ const _uiText = <String, Map<AppLanguage, String>>{
     AppLanguage.malay: 'Bijak Belajar',
     AppLanguage.mandarin: 'Bijak Belajar',
     AppLanguage.tamil: 'Bijak Belajar',
+    AppLanguage.indonesian: 'Bijak Belajar',
   },
   'homeQuestion': {
     AppLanguage.english: 'What can you learn today?',
     AppLanguage.malay: 'Apa yang boleh kamu belajar hari ini?',
     AppLanguage.mandarin: '今天你能学到什么？',
     AppLanguage.tamil: 'இன்று நீ என்ன கற்கலாம்?',
+    AppLanguage.indonesian: 'Apa yang bisa kamu pelajari hari ini?',
   },
   'findExplorer': {
     AppLanguage.english: 'Find Explorer',
     AppLanguage.malay: 'Penjelajah Cari',
     AppLanguage.mandarin: '寻找探险',
     AppLanguage.tamil: 'கண்டுபிடி பயணம்',
+    AppLanguage.indonesian: 'Penjelajah Cari',
   },
   'findExplorerSubtitle': {
     AppLanguage.english: 'Find real objects around you',
     AppLanguage.malay: 'Cari objek sebenar di sekeliling kamu',
     AppLanguage.mandarin: '在身边寻找真实物品',
     AppLanguage.tamil: 'உன்னைச் சுற்றியுள்ள உண்மையான பொருட்களை தேடு',
+    AppLanguage.indonesian: 'Cari benda nyata di sekitarmu',
   },
   'numberTrain': {
     AppLanguage.english: 'Number Train',
     AppLanguage.malay: 'Kereta Api Nombor',
     AppLanguage.mandarin: '数字火车',
     AppLanguage.tamil: 'எண் ரயில்',
+    AppLanguage.indonesian: 'Kereta Api Angka',
   },
   'letterTrain': {
     AppLanguage.english: 'Letter Train',
     AppLanguage.malay: 'Kereta Api Huruf',
     AppLanguage.mandarin: '字母火车',
     AppLanguage.tamil: 'எழுத்து ரயில்',
+    AppLanguage.indonesian: 'Kereta Api Huruf',
   },
   'numberTrainSubtitle': {
     AppLanguage.english: 'Sort number cars in order',
     AppLanguage.malay: 'Susun gerabak nombor mengikut turutan',
     AppLanguage.mandarin: '按顺序排列数字车厢',
     AppLanguage.tamil: 'எண் வண்டிகளை வரிசைப்படுத்து',
+    AppLanguage.indonesian: 'Urutkan gerbong angka sesuai urutan',
   },
   'letterTrainSubtitle': {
     AppLanguage.english: 'Sort letter cars from A to E',
     AppLanguage.malay: 'Susun gerabak huruf dari A hingga E',
     AppLanguage.mandarin: '按 A 到 E 排列字母车厢',
     AppLanguage.tamil: 'A முதல் E வரை எழுத்து வண்டிகளை வரிசைப்படுத்து',
+    AppLanguage.indonesian: 'Urutkan gerbong huruf dari A sampai E',
   },
   'colorHunt': {
     AppLanguage.english: 'Color Hunt',
     AppLanguage.malay: 'Cari Warna',
     AppLanguage.mandarin: '找颜色',
     AppLanguage.tamil: 'நிற வேட்டை',
+    AppLanguage.indonesian: 'Cari Warna',
   },
   'shapeHunt': {
     AppLanguage.english: 'Shape Hunt',
     AppLanguage.malay: 'Cari Bentuk',
     AppLanguage.mandarin: '找形状',
     AppLanguage.tamil: 'வடிவ வேட்டை',
+    AppLanguage.indonesian: 'Cari Bentuk',
   },
   'objectHunt': {
     AppLanguage.english: 'Object Hunt',
     AppLanguage.malay: 'Cari Objek',
     AppLanguage.mandarin: '找物品',
     AppLanguage.tamil: 'பொருள் வேட்டை',
+    AppLanguage.indonesian: 'Cari Benda',
   },
   'soundGuess': {
     AppLanguage.english: 'Sound Guess',
     AppLanguage.malay: 'Teka Bunyi',
     AppLanguage.mandarin: '猜声音',
     AppLanguage.tamil: 'ஒலி கணிப்பு',
+    AppLanguage.indonesian: 'Tebak Suara',
   },
   'memoryGame': {
     AppLanguage.english: 'Memory Game',
     AppLanguage.malay: 'Permainan Memori',
     AppLanguage.mandarin: '记忆游戏',
     AppLanguage.tamil: 'நினைவுப் விளையாட்டு',
+    AppLanguage.indonesian: 'Permainan Memori',
   },
   'puzzleGame': {
     AppLanguage.english: 'Puzzle Game',
     AppLanguage.malay: 'Permainan Teka-Teki',
     AppLanguage.mandarin: '拼图游戏',
     AppLanguage.tamil: 'புதிர் விளையாட்டு',
+    AppLanguage.indonesian: 'Permainan Teka-Teki',
   },
   'colorSubtitle': {
     AppLanguage.english: 'Find things by color',
     AppLanguage.malay: 'Cari benda mengikut warna',
     AppLanguage.mandarin: '按颜色找东西',
     AppLanguage.tamil: 'நிறப்படி பொருட்களை கண்டுபிடி',
+    AppLanguage.indonesian: 'Cari benda berdasarkan warna',
   },
   'shapeSubtitle': {
     AppLanguage.english: 'Look for circles and more',
     AppLanguage.malay: 'Cari bulatan dan bentuk lain',
     AppLanguage.mandarin: '寻找圆形和其他形状',
     AppLanguage.tamil: 'வட்டம் மற்றும் பிற வடிவங்களை தேடு',
+    AppLanguage.indonesian: 'Cari lingkaran dan bentuk lainnya',
   },
   'objectSubtitle': {
     AppLanguage.english: 'Find everyday things',
     AppLanguage.malay: 'Cari benda harian',
     AppLanguage.mandarin: '寻找日常物品',
     AppLanguage.tamil: 'தினசரி பொருட்களை தேடு',
+    AppLanguage.indonesian: 'Cari benda sehari-hari',
   },
   'soundSubtitle': {
     AppLanguage.english: 'Listen and choose',
     AppLanguage.malay: 'Dengar dan pilih',
     AppLanguage.mandarin: '听一听再选择',
     AppLanguage.tamil: 'கேட்டு தேர்வு செய்',
+    AppLanguage.indonesian: 'Dengarkan lalu pilih',
   },
   'memorySubtitle': {
     AppLanguage.english: 'Match animals, shapes, and colors',
     AppLanguage.malay: 'Padankan haiwan, bentuk, dan warna',
     AppLanguage.mandarin: '配对动物、形状和颜色',
     AppLanguage.tamil: 'விலங்குகள், வடிவங்கள், நிறங்களை பொருத்து',
+    AppLanguage.indonesian: 'Cocokkan hewan, bentuk, dan warna',
   },
   'foundIt': {
     AppLanguage.english: 'Found It',
     AppLanguage.malay: 'Sudah Jumpa',
     AppLanguage.mandarin: '找到了',
     AppLanguage.tamil: 'கண்டுபிடித்தேன்',
+    AppLanguage.indonesian: 'Ketemu!',
   },
   'tryAnother': {
     AppLanguage.english: 'Try Another',
     AppLanguage.malay: 'Cuba Lagi',
     AppLanguage.mandarin: '换一个',
     AppLanguage.tamil: 'மற்றொன்று முயற்சி',
+    AppLanguage.indonesian: 'Coba Lagi',
   },
   'newMission': {
     AppLanguage.english: 'New Mission',
     AppLanguage.malay: 'Misi Baharu',
     AppLanguage.mandarin: '新任务',
     AppLanguage.tamil: 'புதிய பணி',
+    AppLanguage.indonesian: 'Misi Baru',
   },
   'hearWord': {
     AppLanguage.english: 'Hear Word',
     AppLanguage.malay: 'Dengar Perkataan',
     AppLanguage.mandarin: '听词语',
     AppLanguage.tamil: 'சொல்லைக் கேள்',
+    AppLanguage.indonesian: 'Dengar Kata',
   },
   'soundPrompt': {
     AppLanguage.english: 'Which sound did you hear?',
     AppLanguage.malay: 'Bunyi apa yang kamu dengar?',
     AppLanguage.mandarin: '你听到了什么声音？',
     AppLanguage.tamil: 'நீ எந்த ஒலியை கேட்டாய்?',
+    AppLanguage.indonesian: 'Bunyi apa yang kamu dengar?',
   },
   'playSound': {
     AppLanguage.english: 'Play Sound',
     AppLanguage.malay: 'Mainkan Bunyi',
     AppLanguage.mandarin: '播放声音',
     AppLanguage.tamil: 'ஒலியை இயக்கு',
+    AppLanguage.indonesian: 'Putar Suara',
   },
   'listenClosely': {
     AppLanguage.english: 'Listen closely',
     AppLanguage.malay: 'Dengar baik-baik',
     AppLanguage.mandarin: '仔细听',
     AppLanguage.tamil: 'கவனமாக கேள்',
+    AppLanguage.indonesian: 'Dengarkan baik-baik',
   },
   'pickMemoryGame': {
     AppLanguage.english: 'Pick a memory game',
     AppLanguage.malay: 'Pilih permainan memori',
     AppLanguage.mandarin: '选择记忆游戏',
     AppLanguage.tamil: 'நினைவுப் விளையாட்டை தேர்வு செய்',
+    AppLanguage.indonesian: 'Pilih permainan memori',
   },
   'animals': {
     AppLanguage.english: 'Animals',
     AppLanguage.malay: 'Haiwan',
     AppLanguage.mandarin: '动物',
     AppLanguage.tamil: 'விலங்குகள்',
+    AppLanguage.indonesian: 'Hewan',
   },
   'shapes': {
     AppLanguage.english: 'Shapes',
     AppLanguage.malay: 'Bentuk',
     AppLanguage.mandarin: '形状',
     AppLanguage.tamil: 'வடிவங்கள்',
+    AppLanguage.indonesian: 'Bentuk',
   },
   'colors': {
     AppLanguage.english: 'Colors',
     AppLanguage.malay: 'Warna',
     AppLanguage.mandarin: '颜色',
     AppLanguage.tamil: 'நிறங்கள்',
+    AppLanguage.indonesian: 'Warna',
   },
   'jawiCategory': {
     AppLanguage.english: 'Jawi Letters',
     AppLanguage.malay: 'Huruf Jawi',
     AppLanguage.mandarin: '爪夷字母',
     AppLanguage.tamil: 'ஜாவி எழுத்துகள்',
+    AppLanguage.indonesian: 'Huruf Jawi',
   },
   'jawiCategorySubtitle': {
     AppLanguage.english: 'Match Jawi letter pairs',
     AppLanguage.malay: 'Padankan pasangan huruf Jawi',
     AppLanguage.mandarin: '配对爪夷字母',
     AppLanguage.tamil: 'ஜாவி எழுத்து ஜோடிகளைப் பொருத்துங்கள்',
+    AppLanguage.indonesian: 'Cocokkan pasangan huruf Jawi',
   },
   'animalsSubtitle': {
     AppLanguage.english: 'Match animal pairs',
     AppLanguage.malay: 'Padankan pasangan haiwan',
     AppLanguage.mandarin: '配对动物',
     AppLanguage.tamil: 'விலங்கு ஜோடிகளை பொருத்து',
+    AppLanguage.indonesian: 'Cocokkan pasangan hewan',
   },
   'shapesSubtitle': {
     AppLanguage.english: 'Match shape pairs',
     AppLanguage.malay: 'Padankan pasangan bentuk',
     AppLanguage.mandarin: '配对形状',
     AppLanguage.tamil: 'வடிவ ஜோடிகளை பொருத்து',
+    AppLanguage.indonesian: 'Cocokkan pasangan bentuk',
   },
   'colorsSubtitle': {
     AppLanguage.english: 'Match color pairs',
     AppLanguage.malay: 'Padankan pasangan warna',
     AppLanguage.mandarin: '配对颜色',
     AppLanguage.tamil: 'நிற ஜோடிகளை பொருத்து',
+    AppLanguage.indonesian: 'Cocokkan pasangan warna',
   },
   'lookCarefully': {
     AppLanguage.english: 'Look carefully',
     AppLanguage.malay: 'Lihat baik-baik',
     AppLanguage.mandarin: '仔细看',
     AppLanguage.tamil: 'கவனமாக பார்',
+    AppLanguage.indonesian: 'Perhatikan baik-baik',
   },
   'findPairs': {
     AppLanguage.english: 'Find the pairs',
     AppLanguage.malay: 'Cari pasangan',
     AppLanguage.mandarin: '找配对',
     AppLanguage.tamil: 'ஜோடிகளை கண்டுபிடி',
+    AppLanguage.indonesian: 'Cari pasangannya',
   },
   'pairs': {
     AppLanguage.english: 'pairs',
     AppLanguage.malay: 'pasangan',
     AppLanguage.mandarin: '对',
     AppLanguage.tamil: 'ஜோடிகள்',
+    AppLanguage.indonesian: 'pasangan',
   },
   'hiddenCard': {
     AppLanguage.english: 'Hidden card',
     AppLanguage.malay: 'Kad tersembunyi',
     AppLanguage.mandarin: '隐藏的卡片',
     AppLanguage.tamil: 'மறைந்த அட்டை',
+    AppLanguage.indonesian: 'Kartu tersembunyi',
   },
   'language': {
     AppLanguage.english: 'Language',
     AppLanguage.malay: 'Bahasa',
     AppLanguage.mandarin: '语言',
     AppLanguage.tamil: 'மொழி',
+    AppLanguage.indonesian: 'Bahasa',
   },
   'selectLanguage': {
     AppLanguage.english: 'Select language',
     AppLanguage.malay: 'Pilih bahasa',
     AppLanguage.mandarin: '选择语言',
     AppLanguage.tamil: 'மொழியை தேர்வு செய்',
+    AppLanguage.indonesian: 'Pilih bahasa',
   },
   'parentSettings': {
     AppLanguage.english: 'Parent Settings',
     AppLanguage.malay: 'Tetapan Ibu Bapa',
     AppLanguage.mandarin: '家长设置',
     AppLanguage.tamil: 'பெற்றோர் அமைப்புகள்',
+    AppLanguage.indonesian: 'Pengaturan Orang Tua',
   },
   'progress': {
     AppLanguage.english: 'Progress',
     AppLanguage.malay: 'Kemajuan',
     AppLanguage.mandarin: '进度',
     AppLanguage.tamil: 'முன்னேற்றம்',
+    AppLanguage.indonesian: 'Kemajuan',
   },
   'badges': {
     AppLanguage.english: 'Badges',
     AppLanguage.malay: 'Lencana',
     AppLanguage.mandarin: '徽章',
     AppLanguage.tamil: 'பதக்கங்கள்',
+    AppLanguage.indonesian: 'Lencana',
   },
   'earnedStar': {
     AppLanguage.english: 'You earned a star!',
     AppLanguage.malay: 'Kamu dapat satu bintang!',
     AppLanguage.mandarin: '你获得了一颗星！',
     AppLanguage.tamil: 'நீ ஒரு நட்சத்திரம் பெற்றாய்!',
+    AppLanguage.indonesian: 'Kamu dapat satu bintang!',
   },
   'newBadge': {
     AppLanguage.english: 'New badge!',
     AppLanguage.malay: 'Lencana baharu!',
     AppLanguage.mandarin: '新徽章！',
     AppLanguage.tamil: 'புதிய பதக்கம்!',
+    AppLanguage.indonesian: 'Lencana baru!',
   },
   'greatWorkIn': {
     AppLanguage.english: 'Great work in',
     AppLanguage.malay: 'Bagus dalam',
     AppLanguage.mandarin: '做得很好：',
     AppLanguage.tamil: 'சிறப்பாக செய்தாய்:',
+    AppLanguage.indonesian: 'Bagus sekali dalam',
   },
   'playAgain': {
     AppLanguage.english: 'Play Again',
     AppLanguage.malay: 'Main Lagi',
     AppLanguage.mandarin: '再玩一次',
     AppLanguage.tamil: 'மீண்டும் விளையாடு',
+    AppLanguage.indonesian: 'Main Lagi',
   },
   'home': {
     AppLanguage.english: 'Home',
     AppLanguage.malay: 'Laman utama',
     AppLanguage.mandarin: '首页',
     AppLanguage.tamil: 'முகப்பு',
+    AppLanguage.indonesian: 'Beranda',
   },
   'trainComplete': {
     AppLanguage.english: 'Train complete!',
     AppLanguage.malay: 'Kereta api lengkap!',
     AppLanguage.mandarin: '火车完成了！',
     AppLanguage.tamil: 'ரயில் முடிந்தது!',
+    AppLanguage.indonesian: 'Kereta api lengkap!',
   },
   'tryNextCar': {
     AppLanguage.english: 'Try the next car in order.',
     AppLanguage.malay: 'Cuba gerabak seterusnya mengikut turutan.',
     AppLanguage.mandarin: '试试下一个正确的车厢。',
     AppLanguage.tamil: 'வரிசையில் அடுத்த வண்டியை முயற்சி செய்.',
+    AppLanguage.indonesian: 'Coba gerbong berikutnya sesuai urutan.',
   },
   'sound': {
     AppLanguage.english: 'Sound',
     AppLanguage.malay: 'Bunyi',
     AppLanguage.mandarin: '声音',
     AppLanguage.tamil: 'ஒலி',
+    AppLanguage.indonesian: 'Suara',
   },
   'voiceInstruction': {
     AppLanguage.english: 'Voice instruction',
     AppLanguage.malay: 'Arahan suara',
     AppLanguage.mandarin: '语音提示',
     AppLanguage.tamil: 'குரல் வழிகாட்டல்',
+    AppLanguage.indonesian: 'Instruksi suara',
   },
   'voiceSubtitle': {
     AppLanguage.english: 'Pronounce prompts and words',
@@ -677,6 +726,13 @@ const _uiText = <String, Map<AppLanguage, String>>{
     AppLanguage.tamil: 'குரல்',
     AppLanguage.indonesian: 'Suara',
   },
+  'navGames': {
+    AppLanguage.english: 'Games',
+    AppLanguage.malay: 'Permainan',
+    AppLanguage.mandarin: '游戏',
+    AppLanguage.tamil: 'விளையாட்டு',
+    AppLanguage.indonesian: 'Permainan',
+  },
   'navSettings': {
     AppLanguage.english: 'Settings',
     AppLanguage.malay: 'Tetapan',
@@ -798,33 +854,55 @@ const _uiText = <String, Map<AppLanguage, String>>{
     AppLanguage.tamil: 'சாராவுடன் உச்சரிப்புப் பயிற்சி 🎤',
     AppLanguage.indonesian: 'Latihan berbicara bersama Zara 🎤',
   },
-  'micBody': {
+  // Microphone copy. It must match the privacy policy word for word in meaning:
+  // speech is recognised on the phone only, and audio is never kept or sent.
+  'micBodyOnDevice': {
     AppLanguage.english:
-        'To check pronunciation, Bijak Belajar needs the microphone. Your '
-        "phone's speech service (such as Google or Apple) turns your child's "
-        'voice into text — on the device or online, depending on your phone. '
-        'Bijak Belajar itself never records, keeps or shares any audio.',
+        'To check pronunciation, Bijak Belajar uses the microphone. Speech is '
+        'turned into text on your phone only, by its offline voice pack. The app '
+        'never records, keeps or sends any audio. If the offline pack is not '
+        'installed, speaking practice is turned off.',
     AppLanguage.malay:
-        'Untuk menyemak sebutan, Bijak Belajar memerlukan mikrofon. '
-        'Perkhidmatan pertuturan telefon anda (seperti Google atau Apple) '
-        'menukar suara anak anda kepada teks — pada peranti atau dalam talian, '
-        'bergantung pada telefon anda. Bijak Belajar sendiri tidak pernah '
-        'merakam, menyimpan atau berkongsi sebarang audio.',
+        'Untuk menyemak sebutan, Bijak Belajar menggunakan mikrofon. Pertuturan '
+        'ditukar kepada teks pada telefon anda sahaja, menggunakan pek suara '
+        'luar talian. Aplikasi tidak pernah merakam, menyimpan atau menghantar '
+        'sebarang audio. Jika pek luar talian tidak dipasang, latihan bercakap '
+        'dimatikan.',
     AppLanguage.mandarin:
-        '为了检查发音，Bijak Belajar 需要使用麦克风。您手机的语音服务（例如 Google 或 '
-        'Apple）会将孩子的声音转换为文字——根据手机不同，可能在设备上或在线完成。'
-        'Bijak Belajar 本身从不录制、保存或分享任何音频。',
+        '为了检查发音，Bijak Belajar 需要使用麦克风。语音只会通过手机上的离线语音包转换为文字。'
+        '应用从不录制、保存或发送任何音频。如未安装离线语音包，说话练习将关闭。',
     AppLanguage.tamil:
-        'உச்சரிப்பைச் சரிபார்க்க Bijak Belajar-க்கு மைக்ரோஃபோன் தேவை. உங்கள் '
-        'தொலைபேசியின் பேச்சுச் சேவை (Google அல்லது Apple போன்றவை) குழந்தையின் '
-        'குரலை உரையாக மாற்றுகிறது — தொலைபேசியைப் பொறுத்து சாதனத்திலோ இணையத்திலோ. '
-        'Bijak Belajar எந்த ஒலியையும் பதிவு செய்வதோ, சேமிப்பதோ, பகிர்வதோ இல்லை.',
+        'உச்சரிப்பைச் சரிபார்க்க Bijak Belajar மைக்ரோஃபோனைப் பயன்படுத்துகிறது. பேச்சு '
+        'உங்கள் தொலைபேசியிலேயே, ஆஃப்லைன் குரல் தொகுப்பு மூலம் உரையாக மாற்றப்படுகிறது. '
+        'எந்த ஒலியையும் செயலி பதிவு செய்வதில்லை, சேமிப்பதில்லை, அனுப்புவதில்லை. '
+        'ஆஃப்லைன் தொகுப்பு நிறுவப்படாவிட்டால் பேசும் பயிற்சி நிறுத்தப்படும்.',
     AppLanguage.indonesian:
-        'Untuk memeriksa pelafalan, Bijak Belajar memerlukan mikrofon. Layanan '
-        'ucapan ponsel Anda (seperti Google atau Apple) mengubah suara anak '
-        'menjadi teks — di perangkat atau secara online, tergantung ponsel Anda. '
-        'Bijak Belajar sendiri tidak pernah merekam, menyimpan, atau membagikan '
-        'audio apa pun.',
+        'Untuk memeriksa pelafalan, Bijak Belajar menggunakan mikrofon. Ucapan hanya '
+        'diubah menjadi teks di ponsel Anda, memakai paket suara offline. Aplikasi '
+        'tidak pernah merekam, menyimpan, atau mengirim audio apa pun. Jika paket '
+        'offline belum terpasang, latihan berbicara dimatikan.',
+  },
+  'speechUnavailable': {
+    AppLanguage.english:
+        "Speaking practice isn't available on this phone. Everything else still works.",
+    AppLanguage.malay:
+        'Latihan bercakap tidak tersedia pada telefon ini. Bahagian lain masih boleh digunakan.',
+    AppLanguage.mandarin: '此手机暂不支持说话练习。其他内容仍可正常使用。',
+    AppLanguage.tamil:
+        'இந்த தொலைபேசியில் பேசும் பயிற்சி கிடைக்கவில்லை. மற்ற பகுதிகள் வழக்கம்போல் செயல்படும்.',
+    AppLanguage.indonesian:
+        'Latihan berbicara tidak tersedia di ponsel ini. Bagian lain tetap bisa digunakan.',
+  },
+  'speechError': {
+    AppLanguage.english:
+        'Speaking practice needs the offline voice pack for this language. Ask a grown-up to install it in your phone settings.',
+    AppLanguage.malay:
+        'Latihan bercakap memerlukan pek suara luar talian untuk bahasa ini. Minta ibu bapa memasangnya dalam tetapan telefon.',
+    AppLanguage.mandarin: '说话练习需要本语言的离线语音包。请家长在手机设置中安装。',
+    AppLanguage.tamil:
+        'பேசும் பயிற்சிக்கு இந்த மொழிக்கான ஆஃப்லைன் குரல் தொகுப்பு தேவை. தொலைபேசி அமைப்புகளில் பெற்றோரிடம் நிறுவச் சொல்லுங்கள்.',
+    AppLanguage.indonesian:
+        'Latihan berbicara memerlukan paket suara offline untuk bahasa ini. Minta orang dewasa memasangnya di pengaturan ponsel.',
   },
   'notNow': {
     AppLanguage.english: 'Not now',
@@ -1879,129 +1957,4 @@ const _levelTitles = <int, Map<AppLanguage, String>>{
 };
 
 // ── Daily-quest titles (keyed by quest id) ──────────────────────────────────
-const _questTitles = <String, Map<AppLanguage, String>>{
-  'q_lesson_2': {
-    AppLanguage.english: 'Lesson Champ', AppLanguage.malay: 'Juara Pelajaran',
-    AppLanguage.mandarin: '课程冠军', AppLanguage.tamil: 'பாட வீரர்',
-    AppLanguage.indonesian: 'Juara Pelajaran',
-  },
-  'q_game_1': {
-    AppLanguage.english: 'Game Time!', AppLanguage.malay: 'Masa Bermain!',
-    AppLanguage.mandarin: '游戏时间！', AppLanguage.tamil: 'விளையாட்டு நேரம்!',
-    AppLanguage.indonesian: 'Waktu Bermain!',
-  },
-  'q_numbers_3': {
-    AppLanguage.english: 'Number Explorer', AppLanguage.malay: 'Penjelajah Nombor',
-    AppLanguage.mandarin: '数字探险家', AppLanguage.tamil: 'எண் ஆய்வாளர்',
-    AppLanguage.indonesian: 'Penjelajah Angka',
-  },
-  'q_letters_3': {
-    AppLanguage.english: 'ABC Hero', AppLanguage.malay: 'Wira ABC',
-    AppLanguage.mandarin: '字母英雄', AppLanguage.tamil: 'ABC வீரர்',
-    AppLanguage.indonesian: 'Pahlawan ABC',
-  },
-  'q_math_3': {
-    AppLanguage.english: 'Math Whiz', AppLanguage.malay: 'Ahli Matematik',
-    AppLanguage.mandarin: '数学高手', AppLanguage.tamil: 'கணித மேதை',
-    AppLanguage.indonesian: 'Jago Matematika',
-  },
-  'q_jawi_2': {
-    AppLanguage.english: 'Jawi Scholar', AppLanguage.malay: 'Sarjana Jawi',
-    AppLanguage.mandarin: '爪夷文学者', AppLanguage.tamil: 'ஜாவி அறிஞர்',
-    AppLanguage.indonesian: 'Cendekiawan Jawi',
-  },
-  'q_memory_1': {
-    AppLanguage.english: 'Memory Master', AppLanguage.malay: 'Master Ingatan',
-    AppLanguage.mandarin: '记忆大师', AppLanguage.tamil: 'நினைவு மாஸ்டர்',
-    AppLanguage.indonesian: 'Master Ingatan',
-  },
-  'q_body_2': {
-    AppLanguage.english: 'Body Explorer', AppLanguage.malay: 'Penjelajah Badan',
-    AppLanguage.mandarin: '身体探险家', AppLanguage.tamil: 'உடல் ஆய்வாளர்',
-    AppLanguage.indonesian: 'Penjelajah Tubuh',
-  },
-  'q_color_1': {
-    AppLanguage.english: 'Young Artist', AppLanguage.malay: 'Artis Muda',
-    AppLanguage.mandarin: '小小艺术家', AppLanguage.tamil: 'இளம் கலைஞர்',
-    AppLanguage.indonesian: 'Seniman Muda',
-  },
-  'q_lesson_5': {
-    AppLanguage.english: 'Super Student', AppLanguage.malay: 'Pelajar Super',
-    AppLanguage.mandarin: '超级学生', AppLanguage.tamil: 'சூப்பர் மாணவர்',
-    AppLanguage.indonesian: 'Pelajar Super',
-  },
-};
-
 // ── Daily-quest descriptions (keyed by quest id) ────────────────────────────
-const _questDescriptions = <String, Map<AppLanguage, String>>{
-  'q_lesson_2': {
-    AppLanguage.english: 'Complete 2 lessons in any module',
-    AppLanguage.malay: 'Siapkan 2 pelajaran dalam mana-mana modul',
-    AppLanguage.mandarin: '完成任意模块的 2 节课',
-    AppLanguage.tamil: 'எந்த தொகுதியிலும் 2 பாடங்களை முடிக்கவும்',
-    AppLanguage.indonesian: 'Selesaikan 2 pelajaran di modul mana pun',
-  },
-  'q_game_1': {
-    AppLanguage.english: 'Complete 1 game',
-    AppLanguage.malay: 'Selesaikan 1 permainan',
-    AppLanguage.mandarin: '完成 1 个游戏',
-    AppLanguage.tamil: '1 விளையாட்டை முடிக்கவும்',
-    AppLanguage.indonesian: 'Selesaikan 1 permainan',
-  },
-  'q_numbers_3': {
-    AppLanguage.english: 'Learn 3 new numbers',
-    AppLanguage.malay: 'Belajar 3 nombor baru',
-    AppLanguage.mandarin: '学习 3 个新数字',
-    AppLanguage.tamil: '3 புதிய எண்களைக் கற்கவும்',
-    AppLanguage.indonesian: 'Pelajari 3 angka baru',
-  },
-  'q_letters_3': {
-    AppLanguage.english: 'Learn 3 new letters',
-    AppLanguage.malay: 'Belajar 3 huruf baru',
-    AppLanguage.mandarin: '学习 3 个新字母',
-    AppLanguage.tamil: '3 புதிய எழுத்துக்களைக் கற்கவும்',
-    AppLanguage.indonesian: 'Pelajari 3 huruf baru',
-  },
-  'q_math_3': {
-    AppLanguage.english: 'Solve 3 math problems',
-    AppLanguage.malay: 'Selesaikan 3 soalan matematik',
-    AppLanguage.mandarin: '解答 3 道数学题',
-    AppLanguage.tamil: '3 கணிதக் கணக்குகளைத் தீர்க்கவும்',
-    AppLanguage.indonesian: 'Selesaikan 3 soal matematika',
-  },
-  'q_jawi_2': {
-    AppLanguage.english: 'Learn 2 Jawi letters',
-    AppLanguage.malay: 'Belajar 2 huruf Jawi',
-    AppLanguage.mandarin: '学习 2 个爪夷字母',
-    AppLanguage.tamil: '2 ஜாவி எழுத்துக்களைக் கற்கவும்',
-    AppLanguage.indonesian: 'Pelajari 2 huruf Jawi',
-  },
-  'q_memory_1': {
-    AppLanguage.english: 'Play Memory Game once',
-    AppLanguage.malay: 'Main Permainan Memori sekali',
-    AppLanguage.mandarin: '玩一次记忆游戏',
-    AppLanguage.tamil: 'நினைவு விளையாட்டை ஒருமுறை விளையாடவும்',
-    AppLanguage.indonesian: 'Main Game Memori sekali',
-  },
-  'q_body_2': {
-    AppLanguage.english: 'Learn 2 body parts',
-    AppLanguage.malay: 'Belajar 2 anggota badan',
-    AppLanguage.mandarin: '学习 2 个身体部位',
-    AppLanguage.tamil: '2 உடல் உறுப்புகளைக் கற்கவும்',
-    AppLanguage.indonesian: 'Pelajari 2 anggota tubuh',
-  },
-  'q_color_1': {
-    AppLanguage.english: 'Do 1 coloring activity',
-    AppLanguage.malay: 'Lakukan 1 aktiviti mewarna',
-    AppLanguage.mandarin: '完成 1 个涂色活动',
-    AppLanguage.tamil: '1 வண்ணமிடும் செயலைச் செய்யவும்',
-    AppLanguage.indonesian: 'Lakukan 1 aktivitas mewarnai',
-  },
-  'q_lesson_5': {
-    AppLanguage.english: 'Complete 5 lessons today',
-    AppLanguage.malay: 'Siapkan 5 pelajaran hari ini',
-    AppLanguage.mandarin: '今天完成 5 节课',
-    AppLanguage.tamil: 'இன்று 5 பாடங்களை முடிக்கவும்',
-    AppLanguage.indonesian: 'Selesaikan 5 pelajaran hari ini',
-  },
-};

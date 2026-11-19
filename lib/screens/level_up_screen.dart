@@ -3,18 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/level.dart';
+import '../models/app_language.dart';
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_text.dart';
 
 class LevelUpDialog extends ConsumerStatefulWidget {
   const LevelUpDialog({
     super.key,
     required this.newLevel,
-    required this.isMalay,
+    required this.language,
   });
 
   final AppLevel newLevel;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   ConsumerState<LevelUpDialog> createState() => _LevelUpDialogState();
@@ -45,13 +47,11 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
     final ps = ref.read(progressServiceProvider);
     if (!ps.voiceEnabled) return;
     final audio = ref.read(audioServiceProvider);
-    final msg = widget.isMalay
-        ? 'Tahniah! Kamu naik ke Tahap ${widget.newLevel.level}! ${widget.newLevel.titleMalay}!'
-        : 'Congratulations! You reached Level ${widget.newLevel.level}! ${widget.newLevel.title}!';
+    final msg = widget.language.copy(ms: 'Tahniah! Kamu naik ke Tahap ${widget.newLevel.level}! ${widget.newLevel.titleMalay}!', en: 'Congratulations! You reached Level ${widget.newLevel.level}! ${widget.newLevel.title}!', zh: '恭喜！你升到了 ${widget.newLevel.level} 级！${AppText.levelTitle(widget.newLevel, AppLanguage.mandarin)}！', ta: 'வாழ்த்துகள்! நீ நிலை ${widget.newLevel.level}-ஐ அடைந்தாய்! ${AppText.levelTitle(widget.newLevel, AppLanguage.tamil)}!');
     await audio.speakLocale(
       msg,
       enabled: true,
-      locale: widget.isMalay ? 'ms-MY' : 'en-US',
+      locale: widget.language.ttsLocale,
     );
   }
 
@@ -65,7 +65,7 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
   @override
   Widget build(BuildContext context) {
     final level = widget.newLevel;
-    final isMalay = widget.isMalay;
+    final language = widget.language;
 
     return Stack(
       alignment: Alignment.topCenter,
@@ -114,7 +114,7 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
                         borderRadius: BorderRadius.circular(50),
                       ),
                       child: Text(
-                        isMalay ? '⬆ NAIK TAHAP!' : '⬆ LEVEL UP!',
+                        language.copy(ms: '⬆ NAIK TAHAP!', en: '⬆ LEVEL UP!', zh: '⬆ 升级！', ta: '⬆ நிலை உயர்வு!'),
                         style: const TextStyle(
                           color: AppTheme.ink,
                           fontSize: 16,
@@ -131,7 +131,7 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
 
                     // Level number
                     Text(
-                      isMalay ? 'Tahap ${level.level}' : 'Level ${level.level}',
+                      language.copy(ms: 'Tahap ${level.level}', en: 'Level ${level.level}', zh: '第 ${level.level} 级', ta: 'நிலை ${level.level}'),
                       style: TextStyle(
                         color: level.color,
                         fontSize: 20,
@@ -148,7 +148,7 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
 
                     // Level title
                     Text(
-                      isMalay ? level.titleMalay : level.title,
+                      language.usesMalayCopy ? level.titleMalay : level.title,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 28,
@@ -183,7 +183,7 @@ class _LevelUpDialogState extends ConsumerState<LevelUpDialog>
                           ],
                         ),
                         child: Text(
-                          isMalay ? '🚀 Teruskan!' : '🚀 Keep Going!',
+                          language.copy(ms: '🚀 Teruskan!', en: '🚀 Keep Going!', zh: '🚀 继续加油！', ta: '🚀 தொடர்ந்து செல்!'),
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,

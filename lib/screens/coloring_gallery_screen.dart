@@ -38,10 +38,10 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
     setState(() => _artworks = ArtworkStore.list());
   }
 
-  Future<void> _openFullscreen(File file, bool isMalay) async {
+  Future<void> _openFullscreen(File file, AppLanguage language) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => _ArtworkFullscreen(file: file, isMalay: isMalay),
+        builder: (_) => _ArtworkFullscreen(file: file, language: language),
       ),
     );
     _reload();
@@ -49,8 +49,7 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMalay =
-        ref.watch(progressServiceProvider).language == AppLanguage.malay;
+    final language = ref.watch(progressServiceProvider).language;
 
     return Scaffold(
       backgroundColor: AppTheme.nightMid,
@@ -61,10 +60,10 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Text(
-          isMalay ? 'Galeri Seni Saya 🖼️' : 'My Art Gallery 🖼️',
+          language.copy(ms: 'Galeri Seni Saya 🖼️', en: 'My Art Gallery 🖼️', zh: '我的画廊 🖼️', ta: 'என் ஓவியக் காட்சியகம் 🖼️'),
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
@@ -83,9 +82,7 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
                     const Text('😅', style: TextStyle(fontSize: 56)),
                     const SizedBox(height: 12),
                     Text(
-                      isMalay
-                          ? 'Galeri tidak dapat dibuka.\nTutup apl sepenuhnya dan buka semula.'
-                          : 'Could not open the gallery.\nFully close and reopen the app.',
+                      language.copy(ms: 'Galeri tidak dapat dibuka.\nTutup apl sepenuhnya dan buka semula.', en: 'Could not open the gallery.\nFully close and reopen the app.', zh: '无法打开画廊。\n请完全关闭应用后重新打开。', ta: 'கேலரியைத் திறக்க முடியவில்லை.\nசெயலியை முழுமையாக மூடிவிட்டு மீண்டும் திறக்கவும்.'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 15,
@@ -96,7 +93,7 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: _reload,
-                      child: Text(isMalay ? 'Cuba Lagi' : 'Try Again'),
+                      child: Text(language.copy(ms: 'Cuba Lagi', en: 'Try Again', zh: '再试一次', ta: 'மீண்டும் முயற்சி')),
                     ),
                   ],
                 ),
@@ -117,9 +114,7 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
                     const Text('🎨', style: TextStyle(fontSize: 64)),
                     const SizedBox(height: 16),
                     Text(
-                      isMalay
-                          ? 'Belum ada lukisan lagi.\nJom mewarna dan simpan hasil seni kamu!'
-                          : 'No artwork yet.\nGo colour something and save it!',
+                      language.copy(ms: 'Belum ada lukisan lagi.\nJom mewarna dan simpan hasil seni kamu!', en: 'No artwork yet.\nGo colour something and save it!', zh: '还没有作品。\n去涂色并保存吧！', ta: 'இன்னும் ஓவியம் இல்லை.\nசென்று வண்ணம் தீட்டி சேமியுங்கள்!'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 16,
@@ -143,10 +138,8 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
             itemBuilder: (context, i) {
               final file = files[i];
               return Pressable(
-                onTap: () => _openFullscreen(file, isMalay),
-                semanticLabel: isMalay
-                    ? 'Lukisan ${files.length - i}'
-                    : 'Artwork ${files.length - i}',
+                onTap: () => _openFullscreen(file, language),
+                semanticLabel: language.copy(ms: 'Lukisan ${files.length - i}', en: 'Artwork ${files.length - i}', zh: '作品 ${files.length - i}', ta: 'ஓவியம் ${files.length - i}'),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -173,9 +166,9 @@ class _ColoringGalleryScreenState extends ConsumerState<ColoringGalleryScreen> {
 }
 
 class _ArtworkFullscreen extends StatelessWidget {
-  const _ArtworkFullscreen({required this.file, required this.isMalay});
+  const _ArtworkFullscreen({required this.file, required this.language});
   final File file;
-  final bool isMalay;
+  final AppLanguage language;
 
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -184,15 +177,15 @@ class _ArtworkFullscreen extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         ),
-        title: Text(isMalay ? 'Padam lukisan ini?' : 'Delete this artwork?'),
+        title: Text(language.copy(ms: 'Padam lukisan ini?', en: 'Delete this artwork?', zh: '删除这幅作品？', ta: 'இந்த ஓவியத்தை நீக்கவா?')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(isMalay ? 'Batal' : 'Cancel'),
+            child: Text(language.copy(ms: 'Batal', en: 'Cancel', zh: '取消', ta: 'ரத்து செய்')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(isMalay ? 'Padam' : 'Delete'),
+            child: Text(language.copy(ms: 'Padam', en: 'Delete', zh: '删除', ta: 'நீக்கு')),
           ),
         ],
       ),
@@ -214,7 +207,7 @@ class _ArtworkFullscreen extends StatelessWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         actions: [
           IconButton(
@@ -230,9 +223,7 @@ class _ArtworkFullscreen extends StatelessWidget {
               try {
                 await Share.shareXFiles(
                   [XFile(file.path)],
-                  text: isMalay
-                      ? 'Lihat lukisan saya dari Bijak Belajar! 🎨'
-                      : 'Look at my drawing from Bijak Belajar! 🎨',
+                  text: language.copy(ms: 'Lihat lukisan saya dari Bijak Belajar! 🎨', en: 'Look at my drawing from Bijak Belajar! 🎨', zh: '快来看看我在 Bijak Belajar 画的画！🎨', ta: 'Bijak Belajar-இல் நான் வரைந்த ஓவியத்தைப் பாருங்கள்! 🎨'),
                 );
               } catch (e) {
                 // Plugin not linked yet (needs full rebuild) — never crash.
@@ -240,12 +231,12 @@ class _ArtworkFullscreen extends StatelessWidget {
               }
             },
             icon: const Icon(Icons.share_rounded),
-            tooltip: isMalay ? 'Kongsi' : 'Share',
+            tooltip: language.copy(ms: 'Kongsi', en: 'Share', zh: '分享', ta: 'பகிர்'),
           ),
           IconButton(
             onPressed: () => _confirmDelete(context),
             icon: const Icon(Icons.delete_outline_rounded),
-            tooltip: isMalay ? 'Padam' : 'Delete',
+            tooltip: language.copy(ms: 'Padam', en: 'Delete', zh: '删除', ta: 'நீக்கு'),
           ),
         ],
       ),
@@ -269,9 +260,7 @@ class _ArtworkFullscreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
               child: Text(
-                isMalay
-                    ? '🎉 Tunjukkan pada keluarga kamu!'
-                    : '🎉 Show your family!',
+                language.copy(ms: '🎉 Tunjukkan pada keluarga kamu!', en: '🎉 Show your family!', zh: '🎉 展示给家人看！', ta: '🎉 குடும்பத்தினருக்குக் காட்டுங்கள்!'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppTheme.sunnyYellow,

@@ -486,15 +486,13 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
     if (!mounted) return;
     XpPopup.show(context, amount: 5);
     _bounceController.forward(from: 0);
-    final isMalay = ps.language == AppLanguage.malay;
+    final language = ps.language;
     await ref
         .read(audioServiceProvider)
         .speakLocale(
-          isMalay
-              ? 'Hebat! Kamu sudah sampai nombor $n! Lima bintang bonus!'
-              : 'Amazing! You reached number $n! Five bonus stars!',
+          language.copy(ms: 'Hebat! Kamu sudah sampai nombor $n! Lima bintang bonus!', en: 'Amazing! You reached number $n! Five bonus stars!', zh: '太棒了！你到达了数字 $n！奖励五颗星星！', ta: 'அற்புதம்! நீ எண் $n-ஐ அடைந்தாய்! ஐந்து போனஸ் நட்சத்திரங்கள்!'),
           enabled: ps.voiceEnabled,
-          locale: isMalay ? 'ms-MY' : 'en-US',
+          locale: language.ttsLocale,
         );
   }
 
@@ -539,17 +537,17 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
     );
   }
 
-  String _levelLabel(int n, bool isMalay) {
+  String _levelLabel(int n, AppLanguage language) {
     if (n <= 10) {
-      return isMalay ? 'Tahap 1: Nombor 1–10' : 'Level 1: Numbers 1–10';
+      return language.copy(ms: 'Tahap 1: Nombor 1–10', en: 'Level 1: Numbers 1–10', zh: '第 1 级：数字 1–10', ta: 'நிலை 1: எண்கள் 1–10');
     }
     if (n <= 20) {
-      return isMalay ? 'Tahap 2: Nombor 11–20' : 'Level 2: Numbers 11–20';
+      return language.copy(ms: 'Tahap 2: Nombor 11–20', en: 'Level 2: Numbers 11–20', zh: '第 2 级：数字 11–20', ta: 'நிலை 2: எண்கள் 11–20');
     }
     if (n <= 50) {
-      return isMalay ? 'Tahap 3: Nombor 21–50' : 'Level 3: Numbers 21–50';
+      return language.copy(ms: 'Tahap 3: Nombor 21–50', en: 'Level 3: Numbers 21–50', zh: '第 3 级：数字 21–50', ta: 'நிலை 3: எண்கள் 21–50');
     }
-    return isMalay ? 'Tahap 4: Nombor 51–100' : 'Level 4: Numbers 51–100';
+    return language.copy(ms: 'Tahap 4: Nombor 51–100', en: 'Level 4: Numbers 51–100', zh: '第 4 级：数字 51–100', ta: 'நிலை 4: எண்கள் 51–100');
   }
 
   @override
@@ -557,7 +555,6 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
     final language = ref.watch(progressServiceProvider).language;
     final item = _numbers[_current];
     final color = item.color;
-    final isMalay = language == AppLanguage.malay;
     final isFirst = _current == 0;
     final isLast = _current == _numbers.length - 1;
 
@@ -572,7 +569,7 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         // Hero continues the emoji "flight" from the Learning Path card.
         // Moved from leading into the title row so the back button can occupy leading.
@@ -590,7 +587,7 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    isMalay ? 'Nombor 1–100' : 'Numbers 1–100',
+                    language.copy(ms: 'Nombor 1–100', en: 'Numbers 1–100', zh: '数字 1–100', ta: 'எண்கள் 1–100'),
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 16,
@@ -599,7 +596,7 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    _levelLabel(_current + 1, isMalay),
+                    _levelLabel(_current + 1, language),
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -671,12 +668,8 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: ZaraPrompt(
-                  message: isMalay
-                      ? 'Nombor apakah ini? Kira & sebut kuat-kuat!'
-                      : 'What number is this? Count & say it aloud!',
-                  sub: isMalay
-                      ? 'What number is this?'
-                      : 'Kira objek & sebut nombor',
+                  message: language.copy(ms: 'Nombor apakah ini? Kira & sebut kuat-kuat!', en: 'What number is this? Count & say it aloud!', zh: '这是什么数字？数一数，大声念出来！', ta: 'இது என்ன எண்? எண்ணி உரக்கச் சொல்!'),
+                  sub: language.copy(ms: 'Kira objek & sebut nombor', en: 'What number is this?', zh: '这是什么数字？', ta: 'இது என்ன எண்?'),
                 ),
               ),
               const SizedBox(height: 8),
@@ -708,9 +701,7 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                           // child tries — it now replays the narration.
                           Semantics(
                             button: true,
-                            label: isMalay
-                                ? 'Nombor ${item.number}. Sentuh untuk dengar.'
-                                : 'Number ${item.number}. Tap to hear.',
+                            label: language.copy(ms: 'Nombor ${item.number}. Sentuh untuk dengar.', en: 'Number ${item.number}. Tap to hear.', zh: '数字 ${item.number}。点击收听。', ta: 'எண் ${item.number}. கேட்க தட்டவும்.'),
                             child: GestureDetector(
                               onTap: () {
                                 _bounceController.forward(from: 0);
@@ -728,16 +719,14 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                           const SizedBox(height: 14),
                           _ReadNumberCard(
                             color: color,
-                            prompt: isMalay
-                                ? 'Baca nombor ini:'
-                                : 'Read this number:',
+                            prompt: language.copy(ms: 'Baca nombor ini:', en: 'Read this number:', zh: '读出这个数字：', ta: 'இந்த எண்ணைப் படி:'),
                             word: _wordForLanguage(item, language),
                           ),
                           const SizedBox(height: 12),
                           _NumberPronunciationPanel(
                             item: item,
                             color: color,
-                            isMalay: isMalay,
+                            language: language,
                             onSpeak: _speakIn,
                           ),
                           const SizedBox(height: 12),
@@ -745,7 +734,7 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                             count: item.number,
                             color: color,
                             objectEmoji: item.emoji,
-                            isMalay: isMalay,
+                            language: language,
                             onCount: (number) => _speakIn(
                               _wordForLanguage(_numbers[number - 1], language),
                               language.ttsLocale,
@@ -774,7 +763,7 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                           onPressed: _prev,
                           icon: const Icon(Icons.arrow_back_ios_rounded),
                           label: Text(
-                            isMalay ? 'Sebelum' : 'Back',
+                            language.copy(ms: 'Sebelum', en: 'Back', zh: '返回', ta: 'பின்செல்'),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -782,6 +771,8 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.deepBlue,
+                            disabledBackgroundColor: AppTheme.deepBlue.withValues(alpha: 0.4),
+                            disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
                             foregroundColor: Colors.white,
                             minimumSize: const Size.fromHeight(
                               AppTheme.kidTarget,
@@ -805,7 +796,7 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                       child: ElevatedButton.icon(
                         onPressed: isLast ? null : _next,
                         label: Text(
-                          isMalay ? 'Seterusnya' : 'Next',
+                          language.copy(ms: 'Seterusnya', en: 'Next', zh: '下一步', ta: 'அடுத்தது'),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -840,9 +831,7 @@ class _LearnNumbersScreenState extends ConsumerState<LearnNumbersScreen>
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
-                    isMalay
-                        ? '🎉 Tahniah! Kamu dah kenal nombor 1–100! 🎉'
-                        : '🎉 Well done! You know numbers 1–100! 🎉',
+                    language.copy(ms: '🎉 Tahniah! Kamu dah kenal nombor 1–100! 🎉', en: '🎉 Well done! You know numbers 1–100! 🎉', zh: '🎉 太棒了！你已经认识 1–100 这些数字了！🎉', ta: '🎉 நன்று! நீ 1–100 எண்களைத் தெரிந்துகொண்டாய்! 🎉'),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -997,14 +986,14 @@ class _CountingObjectsPanel extends ConsumerStatefulWidget {
     required this.count,
     required this.color,
     required this.objectEmoji,
-    required this.isMalay,
+    required this.language,
     required this.onCount,
   });
 
   final int count;
   final Color color;
   final String objectEmoji;
-  final bool isMalay;
+  final AppLanguage language;
   final Future<void> Function(int number) onCount;
 
   @override
@@ -1060,9 +1049,7 @@ class _CountingObjectsPanelState extends ConsumerState<_CountingObjectsPanel> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      widget.isMalay
-                          ? 'Sentuh objek untuk mengira'
-                          : 'Tap objects to count',
+                      widget.language.copy(ms: 'Sentuh objek untuk mengira', en: 'Tap objects to count', zh: '点击物品来计数', ta: 'எண்ண பொருட்களைத் தட்டு'),
                       style: const TextStyle(
                         color: AppTheme.ink,
                         fontSize: 13,
@@ -1093,7 +1080,7 @@ class _CountingObjectsPanelState extends ConsumerState<_CountingObjectsPanel> {
                     const SizedBox(width: 6),
                     IconButton(
                       visualDensity: VisualDensity.compact,
-                      tooltip: widget.isMalay ? 'Kira semula' : 'Count again',
+                      tooltip: widget.language.copy(ms: 'Kira semula', en: 'Count again', zh: '再数一次', ta: 'மீண்டும் எண்ணு'),
                       onPressed: () => setState(() => _counted = 0),
                       icon: Icon(Icons.replay_rounded, color: widget.color),
                     ),
@@ -1124,9 +1111,7 @@ class _CountingObjectsPanelState extends ConsumerState<_CountingObjectsPanel> {
                       return Semantics(
                         button: true,
                         selected: counted,
-                        label: widget.isMalay
-                            ? 'Objek nombor $number'
-                            : 'Object number $number',
+                        label: widget.language.copy(ms: 'Objek nombor $number', en: 'Object number $number', zh: '第 $number 个物品', ta: 'பொருள் எண் $number'),
                         child: Material(
                           color: Colors.transparent,
                           shape: const CircleBorder(),
@@ -1172,9 +1157,7 @@ class _CountingObjectsPanelState extends ConsumerState<_CountingObjectsPanel> {
               if (scrollable) ...[
                 const SizedBox(height: 8),
                 Text(
-                  widget.isMalay
-                      ? 'Skrol untuk lihat semua ${widget.count} objek.'
-                      : 'Scroll to see all ${widget.count} objects.',
+                  widget.language.copy(ms: 'Skrol untuk lihat semua ${widget.count} objek.', en: 'Scroll to see all ${widget.count} objects.', zh: '滚动查看全部 ${widget.count} 个物品。', ta: 'எல்லாப் ${widget.count} பொருட்களையும் பார்க்க உருட்டு.'),
                   style: TextStyle(
                     color: widget.color,
                     fontSize: 11,
@@ -1195,13 +1178,13 @@ class _NumberPronunciationPanel extends StatelessWidget {
   const _NumberPronunciationPanel({
     required this.item,
     required this.color,
-    required this.isMalay,
+    required this.language,
     required this.onSpeak,
   });
 
   final _NumberItem item;
   final Color color;
-  final bool isMalay;
+  final AppLanguage language;
   final Future<void> Function(String word, String locale) onSpeak;
 
   @override
@@ -1244,9 +1227,7 @@ class _NumberPronunciationPanel extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isMalay
-                      ? 'Sentuh untuk dengar dalam 5 bahasa'
-                      : 'Tap to hear in 5 languages',
+                  language.copy(ms: 'Sentuh untuk dengar dalam 5 bahasa', en: 'Tap to hear in 5 languages', zh: '点击以 5 种语言收听', ta: '5 மொழிகளில் கேட்க தட்டவும்'),
                   style: const TextStyle(
                     color: AppTheme.ink,
                     fontSize: 14,

@@ -123,7 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
         barrierDismissible: false,
         builder: (_) => LevelUpDialog(
           newLevel: levelUp,
-          isMalay: progress.language == AppLanguage.malay,
+          language: progress.language,
         ),
       );
       if (!mounted) return;
@@ -135,24 +135,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     }
   }
 
-  void _openQuests(ProgressService progress, bool isMalay) {
+  void _openQuests(ProgressService progress, AppLanguage language) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _QuestsSheet(progress: progress, isMalay: isMalay),
+      builder: (_) => _QuestsSheet(progress: progress, language: language),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final progress = ref.watch(progressServiceProvider);
-    final isMalay = progress.language == AppLanguage.malay;
+    final language = progress.language;
 
     return Scaffold(
       backgroundColor: AppTheme.nightMid,
       bottomNavigationBar: _BottomBar(
-        isMalay: isMalay,
+        language: language,
         onHome: _scrollMapToTop,
       ),
       body: BijakScene(
@@ -160,14 +160,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
           bottom: false,
           child: Column(
             children: [
-              _AdventureTopBar(progress: progress, isMalay: isMalay),
+              _AdventureTopBar(progress: progress, language: language),
               Expanded(
                 child: SingleChildScrollView(
                   controller: _mapScroll,
                   physics: const BouncingScrollPhysics(),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(4, 4, 4, 120),
-                    child: _AdventureMap(progress: progress, isMalay: isMalay),
+                    child: _AdventureMap(progress: progress, language: language),
                   ),
                 ),
               ),
@@ -175,8 +175,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                 padding: const EdgeInsets.fromLTRB(14, 2, 14, 12),
                 child: _DailyStrip(
                   progress: progress,
-                  isMalay: isMalay,
-                  onTap: () => _openQuests(progress, isMalay),
+                  language: language,
+                  onTap: () => _openQuests(progress, language),
                 ),
               ),
             ],
@@ -191,9 +191,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
 // Top bar — avatar + level XP + streak
 // ─────────────────────────────────────────────────────────────────────────────
 class _AdventureTopBar extends StatelessWidget {
-  const _AdventureTopBar({required this.progress, required this.isMalay});
+  const _AdventureTopBar({required this.progress, required this.language});
   final ProgressService progress;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context) {
@@ -268,8 +268,66 @@ class _AdventureTopBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
+          Consumer(
+            builder: (context, ref, _) {
+              final on = ref.watch(voiceEnabledProvider);
+              return _VoiceToggle(
+                on: on,
+                label: AppText.ui('navVoice', progress.language),
+                onTap: () => progress.setVoiceEnabled(!on),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
           _StreakChip(streak: progress.currentStreak),
         ],
+      ),
+    );
+  }
+}
+
+/// Quick mute for spoken prompts. Sound effects are set in Parent Settings.
+class _VoiceToggle extends StatelessWidget {
+  const _VoiceToggle({
+    required this.on,
+    required this.label,
+    required this.onTap,
+  });
+  final bool on;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      toggled: on,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: (on ? AppTheme.leafGreen : Colors.white).withValues(
+                alpha: 0.16,
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.35),
+                width: 1.4,
+              ),
+            ),
+            child: Icon(
+              on ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -314,9 +372,9 @@ class _StreakChip extends StatelessWidget {
 // Adventure map — themed zones on a winding trail + Zara
 // ─────────────────────────────────────────────────────────────────────────────
 class _AdventureMap extends StatelessWidget {
-  const _AdventureMap({required this.progress, required this.isMalay});
+  const _AdventureMap({required this.progress, required this.language});
   final ProgressService progress;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context) {
@@ -450,12 +508,8 @@ class _AdventureMap extends StatelessWidget {
                 top: 0.34 * h,
                 child: _ZaraCompanion(
                   message: active.isNotEmpty
-                      ? (isMalay
-                            ? 'Mari sambung\npengembaraan kita!'
-                            : "Let's continue\nour adventure!")
-                      : (isMalay
-                            ? 'Jom mula\npengembaraan!'
-                            : "Let's start\nthe adventure!"),
+                      ? (language.copy(ms: 'Mari sambung\npengembaraan kita!', en: "Let's continue\nour adventure!", zh: '让我们继续\n我们的冒险吧！', ta: 'சாகசத்தைத்\nதொடர்வோம்!'))
+                      : (language.copy(ms: 'Jom mula\npengembaraan!', en: "Let's start\nthe adventure!", zh: '让我们开始\n冒险吧！', ta: 'சாகசத்தைத்\nதொடங்குவோம்!')),
                 ),
               ),
             ],
@@ -795,11 +849,11 @@ class _ZaraCompanionState extends State<_ZaraCompanion>
 class _DailyStrip extends StatelessWidget {
   const _DailyStrip({
     required this.progress,
-    required this.isMalay,
+    required this.language,
     required this.onTap,
   });
   final ProgressService progress;
-  final bool isMalay;
+  final AppLanguage language;
   final VoidCallback onTap;
 
   @override
@@ -814,7 +868,7 @@ class _DailyStrip extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       pressedScale: 0.98,
-      semanticLabel: isMalay ? 'Misi hari ini' : "Today's quests",
+      semanticLabel: language.copy(ms: 'Misi hari ini', en: "Today's quests", zh: '今日任务', ta: 'இன்றைய பணிகள்'),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
@@ -853,9 +907,7 @@ class _DailyStrip extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    isMalay
-                        ? '$done / ${quests.length} selesai · ketuk untuk lihat'
-                        : '$done / ${quests.length} done · tap to view',
+                    language.copy(ms: '$done / ${quests.length} selesai · ketuk untuk lihat', en: '$done / ${quests.length} done · tap to view', zh: '$done / ${quests.length} 已完成 · 点击查看', ta: '$done / ${quests.length} முடிந்தது · பார்க்கத் தட்டவும்'),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.85),
                       fontSize: 11,
@@ -885,9 +937,9 @@ class _DailyStrip extends StatelessWidget {
 }
 
 class _QuestsSheet extends StatelessWidget {
-  const _QuestsSheet({required this.progress, required this.isMalay});
+  const _QuestsSheet({required this.progress, required this.language});
   final ProgressService progress;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context) {
@@ -1116,13 +1168,12 @@ class _DailyQuestsCard extends StatelessWidget {
 // Bottom navigation bar (dark glass)
 // ─────────────────────────────────────────────────────────────────────────────
 class _BottomBar extends ConsumerWidget {
-  const _BottomBar({required this.isMalay, required this.onHome});
-  final bool isMalay;
+  const _BottomBar({required this.language, required this.onHome});
+  final AppLanguage language;
   final VoidCallback onHome;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final voiceEnabled = ref.watch(voiceEnabledProvider);
     final progress = ref.read(progressServiceProvider);
     final items = [
       _NavItem(
@@ -1138,11 +1189,10 @@ class _BottomBar extends ConsumerWidget {
         onTap: () => Navigator.of(context).pushNamed(ProgressScreen.routeName),
       ),
       _NavItem(
-        icon: voiceEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-        label: AppText.ui('navVoice', progress.language),
-        selected: voiceEnabled,
-        isToggle: true,
-        onTap: () => progress.setVoiceEnabled(!voiceEnabled),
+        icon: Icons.sports_esports_rounded,
+        label: AppText.ui('navGames', progress.language),
+        selected: false,
+        onTap: () => Navigator.of(context).pushNamed(GamesHubScreen.routeName),
       ),
       _NavItem(
         icon: Icons.settings_rounded,
@@ -1179,21 +1229,17 @@ class _BottomBar extends ConsumerWidget {
         ),
         child: Row(
           children: items.map((item) {
-            final Color tint = item.isToggle
-                ? (item.selected ? AppTheme.leafGreen : AppTheme.onNightFaint)
-                : (item.selected ? AppTheme.gold : AppTheme.onNightFaint);
-            final Color bg = item.isToggle
-                ? (item.selected
-                      ? AppTheme.leafGreen.withValues(alpha: 0.18)
-                      : Colors.transparent)
-                : (item.selected
-                      ? AppTheme.gold.withValues(alpha: 0.20)
-                      : Colors.transparent);
+            final Color tint = item.selected
+                ? AppTheme.gold
+                : AppTheme.onNightFaint;
+            final Color bg = item.selected
+                ? AppTheme.gold.withValues(alpha: 0.20)
+                : Colors.transparent;
 
             return Expanded(
               child: Semantics(
-                button: !item.isToggle,
-                toggled: item.isToggle ? item.selected : null,
+                button: true,
+                selected: item.selected,
                 label: item.label,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -1245,11 +1291,9 @@ class _NavItem {
     required this.label,
     required this.selected,
     required this.onTap,
-    this.isToggle = false,
   });
   final IconData icon;
   final String label;
   final bool selected;
-  final bool isToggle;
   final VoidCallback onTap;
 }

@@ -283,32 +283,30 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
   Future<void> _speakDoctorPrompt() async {
     if (_dsTarget < 0) return;
     final ps = ref.read(progressServiceProvider);
-    final isMalay = ps.language == AppLanguage.malay;
-    final word = isMalay ? _parts[_dsTarget].malay : _parts[_dsTarget].english;
+    final language = ps.language;
+    final word = language.usesMalayCopy ? _parts[_dsTarget].malay : _parts[_dsTarget].english;
     await ref
         .read(audioServiceProvider)
         .speakLocale(
-          isMalay
-              ? 'Doktor kata: sentuh $word!'
-              : 'Doctor says: touch your $word!',
+          language.copy(ms: 'Doktor kata: sentuh $word!', en: 'Doctor says: touch your $word!', zh: '医生说：请触摸你的$word！', ta: 'மருத்துவர் சொல்கிறார்: உன் $word-ஐத் தொடு!'),
           enabled: ps.voiceEnabled,
-          locale: isMalay ? 'ms-MY' : 'en-US',
+          locale: language.ttsLocale,
         );
   }
 
   Future<void> _handleDoctorTap(int index) async {
     if (!_doctorSaysActive || _dsTarget < 0) return;
     final ps = ref.read(progressServiceProvider);
-    final isMalay = ps.language == AppLanguage.malay;
+    final language = ps.language;
     final audio = ref.read(audioServiceProvider);
 
     if (index == _dsTarget) {
       if (_dsFirstTry) _dsStars++;
       setState(() => _dsLastTapCorrect = true);
       await audio.speakLocale(
-        isMalay ? 'Betul! Pandai!' : 'Correct! Well done!',
+        language.copy(ms: 'Betul! Pandai!', en: 'Correct! Well done!', zh: '正确！做得好！', ta: 'சரி! நன்று!'),
         enabled: ps.voiceEnabled,
-        locale: isMalay ? 'ms-MY' : 'en-US',
+        locale: language.ttsLocale,
       );
       if (!mounted) return;
       if (_dsRound >= _dsTotalRounds) {
@@ -323,16 +321,16 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
         _dsLastTapCorrect = false;
       });
       await audio.speakLocale(
-        isMalay ? 'Cuba lagi!' : 'Try again!',
+        language.copy(ms: 'Cuba lagi!', en: 'Try again!', zh: '再试一次！', ta: 'மீண்டும் முயற்சி செய்!'),
         enabled: ps.voiceEnabled,
-        locale: isMalay ? 'ms-MY' : 'en-US',
+        locale: language.ttsLocale,
       );
     }
   }
 
   Future<void> _finishDoctorSays() async {
     final ps = ref.read(progressServiceProvider);
-    final isMalay = ps.language == AppLanguage.malay;
+    final language = ps.language;
     final earned = _dsStars;
     _stopDoctorSays();
     if (earned > 0) {
@@ -343,11 +341,9 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
     await ref
         .read(audioServiceProvider)
         .speakLocale(
-          isMalay
-              ? 'Permainan tamat! Kamu dapat $earned bintang!'
-              : 'Game over! You earned $earned stars!',
+          language.copy(ms: 'Permainan tamat! Kamu dapat $earned bintang!', en: 'Game over! You earned $earned stars!', zh: '游戏结束！你获得了 $earned 颗星星！', ta: 'விளையாட்டு முடிந்தது! நீ $earned நட்சத்திரங்கள் பெற்றாய்!'),
           enabled: ps.voiceEnabled,
-          locale: isMalay ? 'ms-MY' : 'en-US',
+          locale: language.ttsLocale,
         );
   }
 
@@ -369,7 +365,6 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
   Widget build(BuildContext context) {
     final language = ref.watch(progressServiceProvider).language;
     final item = _parts[_current];
-    final isMalay = language == AppLanguage.malay;
     final isFirst = _current == 0;
     final isLast = _current == _parts.length - 1;
 
@@ -382,7 +377,7 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         titleSpacing: 0,
         title: Column(
@@ -390,13 +385,11 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              isMalay ? 'Anggota Badan' : 'Body Parts',
+              language.copy(ms: 'Anggota Badan', en: 'Body Parts', zh: '身体部位', ta: 'உடல் பாகங்கள்'),
               style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
             ),
             Text(
-              isMalay
-                  ? 'Bahagian ${_current + 1} daripada ${_parts.length}'
-                  : 'Part ${_current + 1} of ${_parts.length}',
+              language.copy(ms: 'Bahagian ${_current + 1} daripada ${_parts.length}', en: 'Part ${_current + 1} of ${_parts.length}', zh: '第 ${_current + 1} 部分，共 ${_parts.length} 部分', ta: 'பகுதி ${_current + 1} / ${_parts.length}'),
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 11,
@@ -471,12 +464,12 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
                           round: _dsRound,
                           total: _dsTotalRounds,
                           targetWord: _dsTarget >= 0
-                              ? (isMalay
+                              ? (language.usesMalayCopy
                                     ? _parts[_dsTarget].malay
                                     : _parts[_dsTarget].english)
                               : null,
                           lastCorrect: _dsLastTapCorrect,
-                          isMalay: isMalay,
+                          language: language,
                           onStart: _startDoctorSays,
                           onStop: _stopDoctorSays,
                           onRepeat: _speakDoctorPrompt,
@@ -504,9 +497,7 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
                             onPressed: _startDoctorSays,
                             icon: const Icon(Icons.medical_services_rounded),
                             label: Text(
-                              isMalay
-                                  ? 'Main “Doktor Kata”'
-                                  : 'Play “Doctor Says”',
+                              language.copy(ms: 'Main “Doktor Kata”', en: 'Play “Doctor Says”', zh: '玩“医生说”', ta: '“மருத்துவர் சொல்கிறார்” விளையாடு'),
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppTheme.deepBlue,
@@ -553,7 +544,7 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
                               size: 21,
                             ),
                             label: _ResponsiveButtonLabel(
-                              isMalay ? 'Sebelum' : 'Back',
+                              language.copy(ms: 'Sebelum', en: 'Back', zh: '返回', ta: 'பின்செல்'),
                             ),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
@@ -587,8 +578,8 @@ class _LearnBodyPartsScreenState extends ConsumerState<LearnBodyPartsScreen> {
                             onPressed: isLast ? _finishLesson : _next,
                             label: _ResponsiveButtonLabel(
                               isLast
-                                  ? (isMalay ? 'Selesai' : 'Finish')
-                                  : (isMalay ? 'Seterusnya' : 'Next'),
+                                  ? (language.copy(ms: 'Selesai', en: 'Finish', zh: '完成', ta: 'முடி'))
+                                  : (language.copy(ms: 'Seterusnya', en: 'Next', zh: '下一步', ta: 'அடுத்தது')),
                             ),
                             icon: Icon(
                               isLast
@@ -825,7 +816,6 @@ class _DoctorBodyChart extends StatelessWidget {
         ? parts[selectedIndex]
         : null;
     final accent = selected?.color ?? AppTheme.moduleBodyParts;
-    final isMalay = language == AppLanguage.malay;
 
     return Container(
       width: double.infinity,
@@ -860,12 +850,8 @@ class _DoctorBodyChart extends StatelessWidget {
                   children: [
                     Text(
                       gameMode
-                          ? (isMalay
-                                ? 'Doktor kata: sentuh bahagian yang disebut'
-                                : 'Doctor says: touch the named body part')
-                          : (isMalay
-                                ? 'Tekan mana-mana bahagian badan'
-                                : 'Tap any body part'),
+                          ? (language.copy(ms: 'Doktor kata: sentuh bahagian yang disebut', en: 'Doctor says: touch the named body part', zh: '医生说：请触摸说出的身体部位', ta: 'மருத்துவர் சொல்கிறார்: சொல்லப்பட்ட உடல் பாகத்தைத் தொடு'))
+                          : (language.copy(ms: 'Tekan mana-mana bahagian badan', en: 'Tap any body part', zh: '点击任意身体部位', ta: 'எந்த உடல் பாகத்தையும் தட்டு')),
                       style: const TextStyle(
                         color: AppTheme.ink,
                         fontSize: 14,
@@ -873,9 +859,7 @@ class _DoctorBodyChart extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      isMalay
-                          ? 'Ikut anak panah atau pilih daripada senarai'
-                          : 'Follow the arrow or choose from the list',
+                      language.copy(ms: 'Ikut anak panah atau pilih daripada senarai', en: 'Follow the arrow or choose from the list', zh: '跟随箭头，或从列表中选择', ta: 'அம்புக்குறியைப் பின்பற்று அல்லது பட்டியலிலிருந்து தேர்ந்தெடு'),
                       style: const TextStyle(
                         color: Color(0xFF68789F),
                         fontSize: 11,
@@ -1197,321 +1181,6 @@ class _BodySpot {
 // Kept as a code-native fallback if the photo asset is unavailable in a future
 // build variant.
 // ignore: unused_element
-class _BodyChartPainter extends CustomPainter {
-  const _BodyChartPainter({required this.selectedPart, required this.color});
-
-  final String selectedPart;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final skin = Paint()..color = const Color(0xFFFFD6B1);
-    final skinShade = Paint()..color = const Color(0xFFEBAE82);
-    final hair = Paint()..color = const Color(0xFF4B3428);
-    final outline = Paint()
-      ..color = const Color(0xFF31557E).withValues(alpha: 0.45)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-    final shirt = Paint()..color = const Color(0xFFBDEFFF);
-    final shorts = Paint()..color = const Color(0xFF7A5CFF);
-    final highlight = Paint()
-      ..color = color.withValues(alpha: 0.34)
-      ..style = PaintingStyle.fill;
-    final highlightStroke = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-
-    final board = RRect.fromRectAndRadius(
-      Rect.fromLTWH(w * 0.04, h * 0.02, w * 0.92, h * 0.94),
-      const Radius.circular(24),
-    );
-    canvas.drawRRect(board, Paint()..color = Colors.white);
-
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.5, h * 0.17),
-        width: w * 0.24,
-        height: h * 0.17,
-      ),
-      skin,
-    );
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: Offset(w * 0.5, h * 0.125),
-        width: w * 0.25,
-        height: h * 0.12,
-      ),
-      3.08,
-      3.28,
-      false,
-      hair
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = h * 0.045,
-    );
-    hair
-      ..style = PaintingStyle.fill
-      ..strokeWidth = 1;
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.36, h * 0.17),
-        width: w * 0.05,
-        height: h * 0.055,
-      ),
-      skin,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.64, h * 0.17),
-        width: w * 0.05,
-        height: h * 0.055,
-      ),
-      skin,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(w * 0.5, h * 0.285),
-          width: w * 0.12,
-          height: h * 0.07,
-        ),
-        const Radius.circular(14),
-      ),
-      skin,
-    );
-
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.46, h * 0.15),
-        width: w * 0.025,
-        height: h * 0.015,
-      ),
-      Paint()..color = AppTheme.ink,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.54, h * 0.15),
-        width: w * 0.025,
-        height: h * 0.015,
-      ),
-      Paint()..color = AppTheme.ink,
-    );
-    canvas.drawLine(
-      Offset(w * 0.5, h * 0.165),
-      Offset(w * 0.49, h * 0.19),
-      outline,
-    );
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: Offset(w * 0.5, h * 0.215),
-        width: w * 0.08,
-        height: h * 0.035,
-      ),
-      0.1,
-      2.9,
-      false,
-      outline,
-    );
-    canvas.drawLine(
-      Offset(w * 0.47, h * 0.225),
-      Offset(w * 0.53, h * 0.225),
-      Paint()
-        ..color = Colors.white
-        ..strokeWidth = 2,
-    );
-
-    final torso = Path()
-      ..moveTo(w * 0.36, h * 0.31)
-      ..quadraticBezierTo(w * 0.50, h * 0.27, w * 0.64, h * 0.31)
-      ..lineTo(w * 0.62, h * 0.58)
-      ..quadraticBezierTo(w * 0.50, h * 0.64, w * 0.38, h * 0.58)
-      ..close();
-    canvas.drawPath(torso, shirt);
-    canvas.drawPath(torso, outline);
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(w * 0.39, h * 0.57, w * 0.22, h * 0.095),
-        const Radius.circular(16),
-      ),
-      shorts,
-    );
-
-    _drawLimb(
-      canvas,
-      skin,
-      outline,
-      Offset(w * 0.36, h * 0.33),
-      Offset(w * 0.24, h * 0.53),
-      w * 0.045,
-    );
-    _drawLimb(
-      canvas,
-      skin,
-      outline,
-      Offset(w * 0.64, h * 0.33),
-      Offset(w * 0.76, h * 0.53),
-      w * 0.045,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.22, h * 0.59),
-        width: w * 0.085,
-        height: h * 0.07,
-      ),
-      skin,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.78, h * 0.59),
-        width: w * 0.085,
-        height: h * 0.07,
-      ),
-      skin,
-    );
-
-    _drawLimb(
-      canvas,
-      skin,
-      outline,
-      Offset(w * 0.44, h * 0.65),
-      Offset(w * 0.40, h * 0.88),
-      w * 0.052,
-    );
-    _drawLimb(
-      canvas,
-      skin,
-      outline,
-      Offset(w * 0.56, h * 0.65),
-      Offset(w * 0.60, h * 0.88),
-      w * 0.052,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.39, h * 0.94),
-        width: w * 0.14,
-        height: h * 0.055,
-      ),
-      skinShade,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.61, h * 0.94),
-        width: w * 0.14,
-        height: h * 0.055,
-      ),
-      skinShade,
-    );
-
-    _drawHighlight(canvas, size, selectedPart, highlight, highlightStroke);
-  }
-
-  void _drawLimb(
-    Canvas canvas,
-    Paint fill,
-    Paint outline,
-    Offset start,
-    Offset end,
-    double width,
-  ) {
-    final limb = Paint()
-      ..color = fill.color
-      ..strokeWidth = width
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(start, end, limb);
-    canvas.drawLine(start, end, outline);
-  }
-
-  void _drawHighlight(
-    Canvas canvas,
-    Size size,
-    String part,
-    Paint fill,
-    Paint stroke,
-  ) {
-    final w = size.width;
-    final h = size.height;
-
-    void oval(double cx, double cy, double ww, double hh) {
-      final rect = Rect.fromCenter(
-        center: Offset(w * cx, h * cy),
-        width: w * ww,
-        height: h * hh,
-      );
-      canvas.drawOval(rect, fill);
-      canvas.drawOval(rect, stroke);
-    }
-
-    void rrect(double l, double t, double ww, double hh) {
-      final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(w * l, h * t, w * ww, h * hh),
-        const Radius.circular(18),
-      );
-      canvas.drawRRect(rect, fill);
-      canvas.drawRRect(rect, stroke);
-    }
-
-    switch (part) {
-      case 'Hair':
-        oval(0.5, 0.095, 0.22, 0.09);
-        break;
-      case 'Head':
-        oval(0.5, 0.17, 0.29, 0.2);
-        break;
-      case 'Eyes':
-        oval(0.46, 0.15, 0.07, 0.045);
-        oval(0.54, 0.15, 0.07, 0.045);
-        break;
-      case 'Ears':
-        oval(0.36, 0.17, 0.08, 0.08);
-        oval(0.64, 0.17, 0.08, 0.08);
-        break;
-      case 'Nose':
-        oval(0.5, 0.18, 0.07, 0.06);
-        break;
-      case 'Mouth':
-      case 'Teeth':
-        oval(0.5, part == 'Teeth' ? 0.228 : 0.215, 0.13, 0.05);
-        break;
-      case 'Shoulder':
-        rrect(0.32, 0.30, 0.36, 0.09);
-        break;
-      case 'Hands':
-        oval(0.22, 0.59, 0.12, 0.1);
-        oval(0.78, 0.59, 0.12, 0.1);
-        break;
-      case 'Fingers':
-        oval(0.16, 0.62, 0.11, 0.08);
-        oval(0.84, 0.62, 0.11, 0.08);
-        break;
-      case 'Stomach':
-        oval(0.5, 0.49, 0.25, 0.17);
-        break;
-      case 'Legs':
-        rrect(0.36, 0.64, 0.28, 0.27);
-        break;
-      case 'Knees':
-        oval(0.41, 0.79, 0.11, 0.08);
-        oval(0.59, 0.79, 0.11, 0.08);
-        break;
-      case 'Feet':
-        oval(0.39, 0.94, 0.16, 0.07);
-        oval(0.61, 0.94, 0.16, 0.07);
-        break;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BodyChartPainter oldDelegate) {
-    return oldDelegate.selectedPart != selectedPart ||
-        oldDelegate.color != color;
-  }
-}
-
 class _PartPickerStrip extends ConsumerWidget {
   const _PartPickerStrip({
     required this.parts,
@@ -1570,7 +1239,7 @@ class _DoctorSaysBar extends StatelessWidget {
     required this.total,
     required this.targetWord,
     required this.lastCorrect,
-    required this.isMalay,
+    required this.language,
     required this.onStart,
     required this.onStop,
     required this.onRepeat,
@@ -1581,7 +1250,7 @@ class _DoctorSaysBar extends StatelessWidget {
   final int total;
   final String? targetWord;
   final bool? lastCorrect;
-  final bool isMalay;
+  final AppLanguage language;
   final VoidCallback onStart;
   final VoidCallback onStop;
   final VoidCallback onRepeat;
@@ -1594,9 +1263,7 @@ class _DoctorSaysBar extends StatelessWidget {
       return Pressable(
         onTap: onStart,
         pressedScale: 0.97,
-        semanticLabel: isMalay
-            ? 'Mula permainan Doktor Kata'
-            : 'Start Doctor Says game',
+        semanticLabel: language.copy(ms: 'Mula permainan Doktor Kata', en: 'Start Doctor Says game', zh: '开始“医生说”游戏', ta: '“மருத்துவர் சொல்கிறார்” விளையாட்டைத் தொடங்கு'),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
@@ -1622,7 +1289,7 @@ class _DoctorSaysBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isMalay ? 'Doktor Kata!' : 'Doctor Says!',
+                      language.copy(ms: 'Doktor Kata!', en: 'Doctor Says!', zh: '医生说！', ta: 'மருத்துவர் சொல்கிறார்!'),
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
@@ -1630,9 +1297,7 @@ class _DoctorSaysBar extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      isMalay
-                          ? 'Dengar dan sentuh anggota yang betul • ⭐ setiap betul'
-                          : 'Listen and touch the right part • ⭐ per correct',
+                      language.copy(ms: 'Dengar dan sentuh anggota yang betul • ⭐ setiap betul', en: 'Listen and touch the right part • ⭐ per correct', zh: '听指令，触摸正确的部位 • 每答对一次 ⭐', ta: 'கேட்டு சரியான பகுதியைத் தொடு • சரியான ஒவ்வொரு முறைக்கும் ⭐'),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -1675,9 +1340,7 @@ class _DoctorSaysBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isMalay
-                      ? 'Pusingan $round/$total — sentuh:'
-                      : 'Round $round/$total — touch:',
+                  language.copy(ms: 'Pusingan $round/$total — sentuh:', en: 'Round $round/$total — touch:', zh: '第 $round/$total 轮 — 请触摸：', ta: 'சுற்று $round/$total — தொடு:'),
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -1697,12 +1360,12 @@ class _DoctorSaysBar extends StatelessWidget {
           ),
           IconButton(
             onPressed: onRepeat,
-            tooltip: isMalay ? 'Ulang arahan' : 'Repeat instruction',
+            tooltip: language.copy(ms: 'Ulang arahan', en: 'Repeat instruction', zh: '重复指令', ta: 'அறிவுறுத்தலை மீண்டும் கேள்'),
             icon: const Icon(Icons.volume_up_rounded, color: color),
           ),
           IconButton(
             onPressed: onStop,
-            tooltip: isMalay ? 'Berhenti' : 'Stop',
+            tooltip: language.copy(ms: 'Berhenti', en: 'Stop', zh: '停止', ta: 'நிறுத்து'),
             icon: const Icon(Icons.close_rounded, color: AppTheme.inkMuted),
           ),
         ],

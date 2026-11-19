@@ -26,13 +26,13 @@ class GamesHubScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(progressServiceProvider);
-    final isMalay = progress.language == AppLanguage.malay;
+    final language = progress.language;
     final mystery = progress.mysteryGameToday;
 
     final games = <_GameInfo>[
       _GameInfo(
         icon: Icons.train_rounded,
-        title: isMalay ? 'Tren Nombor' : 'Number Train',
+        title: language.copy(ms: 'Tren Nombor', en: 'Number Train', zh: '数字火车', ta: 'எண் ரயில்'),
         color: AppTheme.moduleNumbers,
         route: TrainSortScreen.routeName,
         arguments: const TrainSortArgs(mode: TrainMode.numbers),
@@ -41,7 +41,7 @@ class GamesHubScreen extends ConsumerWidget {
       ),
       _GameInfo(
         icon: Icons.directions_railway_rounded,
-        title: isMalay ? 'Tren Huruf' : 'Letter Train',
+        title: language.copy(ms: 'Tren Huruf', en: 'Letter Train', zh: '字母火车', ta: 'எழுத்து ரயில்'),
         color: AppTheme.moduleLetters,
         route: TrainSortScreen.routeName,
         arguments: const TrainSortArgs(mode: TrainMode.letters),
@@ -50,7 +50,7 @@ class GamesHubScreen extends ConsumerWidget {
       ),
       _GameInfo(
         icon: Icons.style_rounded,
-        title: isMalay ? 'Permainan Memori' : 'Memory Game',
+        title: language.copy(ms: 'Permainan Memori', en: 'Memory Game', zh: '记忆游戏', ta: 'நினைவாற்றல் விளையாட்டு'),
         color: const Color(0xFF7E57C2),
         route: MemoryCategoryScreen.routeName,
         count: progress.countFor(ChallengeMode.memory),
@@ -58,7 +58,7 @@ class GamesHubScreen extends ConsumerWidget {
       ),
       _GameInfo(
         icon: Icons.extension_rounded,
-        title: isMalay ? 'Teka-Teki Gambar' : 'Picture Puzzle',
+        title: language.copy(ms: 'Teka-Teki Gambar', en: 'Picture Puzzle', zh: '图片拼图', ta: 'படப் புதிர்'),
         color: const Color(0xFF00897B),
         route: PuzzleScreen.routeName,
         count: progress.countFor(ChallengeMode.puzzle),
@@ -66,7 +66,7 @@ class GamesHubScreen extends ConsumerWidget {
       ),
       _GameInfo(
         icon: Icons.search_rounded,
-        title: isMalay ? 'Penjelajah Cari' : 'Find Explorer',
+        title: language.copy(ms: 'Penjelajah Cari', en: 'Find Explorer', zh: '探险家寻找', ta: 'தேடும் ஆய்வாளர்'),
         color: AppTheme.turquoise,
         route: FindExplorerScreen.routeName,
         count: progress.countFor(ChallengeMode.findExplorer),
@@ -83,10 +83,10 @@ class GamesHubScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Text(
-          isMalay ? 'Bandar Permainan 🎮' : 'Game Town 🎮',
+          language.copy(ms: 'Bandar Permainan 🎮', en: 'Game Town 🎮', zh: '游戏小镇 🎮', ta: 'விளையாட்டு நகரம் 🎮'),
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
@@ -101,24 +101,18 @@ class GamesHubScreen extends ConsumerWidget {
                 children: [
                   // Zara welcomes the child to Game Town.
                   ZaraPrompt(
-                    message: isMalay
-                        ? 'Selamat datang ke Bandar Permainan!'
-                        : 'Welcome to Game Town!',
-                    sub: isMalay
-                        ? 'Ketuk stesen untuk bermain & belajar.'
-                        : 'Tap a station to play & learn.',
+                    message: language.copy(ms: 'Selamat datang ke Bandar Permainan!', en: 'Welcome to Game Town!', zh: '欢迎来到游戏小镇！', ta: 'விளையாட்டு நகரத்திற்கு வரவேற்கிறோம்!'),
+                    sub: language.copy(ms: 'Ketuk stesen untuk bermain & belajar.', en: 'Tap a station to play & learn.', zh: '点击一个车站，边玩边学。', ta: 'ஒரு நிலையத்தைத் தட்டி விளையாடி கற்றுக்கொள்.'),
                   ),
                   const SizedBox(height: 14),
-                  _GameTownMap(games: games, isMalay: isMalay),
+                  _GameTownMap(games: games, language: language),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       const Text('💡', style: TextStyle(fontSize: 18)),
                       const SizedBox(width: 8),
                       Text(
-                        isMalay
-                            ? 'Tips Ibu Bapa & Guru'
-                            : 'Parent & Teacher Tips',
+                        language.copy(ms: 'Tips Ibu Bapa & Guru', en: 'Parent & Teacher Tips', zh: '家长与老师提示', ta: 'பெற்றோர் & ஆசிரியர் குறிப்புகள்'),
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
@@ -128,7 +122,7 @@ class GamesHubScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  _TipCard(isMalay: isMalay),
+                  _TipCard(language: language),
                 ],
               ),
             ),
@@ -141,10 +135,10 @@ class GamesHubScreen extends ConsumerWidget {
 
 // ── Game Town map (interactive trail of game stations) ───────────────────────
 class _GameTownMap extends StatelessWidget {
-  const _GameTownMap({required this.games, required this.isMalay});
+  const _GameTownMap({required this.games, required this.language});
 
   final List<_GameInfo> games;
-  final bool isMalay;
+  final AppLanguage language;
 
   static const _pos = <Offset>[
     Offset(0.24, 0.02),
@@ -198,7 +192,7 @@ class _GameTownMap extends StatelessWidget {
                 Positioned(
                   left: _pos[i].dx * w - 56,
                   top: _pos[i].dy * h,
-                  child: _GameNode(game: games[i], isMalay: isMalay),
+                  child: _GameNode(game: games[i], language: language),
                 ),
             ],
           ),
@@ -209,10 +203,10 @@ class _GameTownMap extends StatelessWidget {
 }
 
 class _GameNode extends StatelessWidget {
-  const _GameNode({required this.game, required this.isMalay});
+  const _GameNode({required this.game, required this.language});
 
   final _GameInfo game;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +231,7 @@ class _GameNode extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  isMalay ? '🎁 2× ⭐' : '🎁 2× ⭐',
+                  language.copy(ms: '🎁 2× ⭐', en: '🎁 2× ⭐', zh: '🎁 2× ⭐', ta: '🎁 2× ⭐'),
                   style: const TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w900,
@@ -296,7 +290,7 @@ class _GameNode extends StatelessWidget {
                 ),
               ),
               child: Text(
-                game.count > 0 ? '⭐ ${game.count}' : (isMalay ? 'BARU' : 'NEW'),
+                game.count > 0 ? '⭐ ${game.count}' : (language.copy(ms: 'BARU', en: 'NEW', zh: '新', ta: 'புதிது')),
                 style: const TextStyle(
                   color: AppTheme.onNight,
                   fontSize: 10,
@@ -367,12 +361,12 @@ class _GameInfo {
 
 // ── Tip card ───────────────────────────────────────────────────────────────────
 class _TipCard extends ConsumerWidget {
-  const _TipCard({required this.isMalay});
-  final bool isMalay;
+  const _TipCard({required this.language});
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tips = isMalay
+    final tips = language.usesMalayCopy
         ? [
             '🎯 Main bersama anak 10–15 minit sehari',
             '🌟 Puji usaha, bukan hanya jawapan betul',

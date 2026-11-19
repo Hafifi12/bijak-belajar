@@ -73,12 +73,12 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen> {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: language == AppLanguage.malay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Text(AppText.categoryTitle(category, language)),
         actions: [
           IconButton(
-            tooltip: language == AppLanguage.malay ? 'Main semula' : 'New game',
+            tooltip: language.copy(ms: 'Main semula', en: 'New game', zh: '重新开始', ta: 'புதிய விளையாட்டு'),
             onPressed: _busy ? null : _startNewGame,
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -319,7 +319,6 @@ class _MemoryHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMalay = language == AppLanguage.malay;
 
     return Card(
       child: Padding(
@@ -348,7 +347,7 @@ class _MemoryHeader extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${stage.boardLabel(isMalay: isMalay)}  •  $matchedPairs / $totalPairs ${AppText.ui('pairs', language)}',
+                    '${stage.boardLabel(language: language)}  •  $matchedPairs / $totalPairs ${AppText.ui('pairs', language)}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),

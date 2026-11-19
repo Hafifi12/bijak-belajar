@@ -20,7 +20,6 @@ class ParentSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(progressServiceProvider);
     final language = progress.language;
-    final isMalay = language == AppLanguage.malay;
 
     return Scaffold(
       appBar: AppBar(
@@ -30,7 +29,7 @@ class ParentSettingsScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: isMalay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Text(AppText.ui('parentSettings', language)),
       ),
@@ -105,10 +104,10 @@ class ParentSettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 14),
               // ── Weekly recap — the "let's do your 10 minutes" nudge ──
-              _WeeklyRecapCard(progress: progress, isMalay: isMalay),
+              _WeeklyRecapCard(progress: progress, language: language),
               const SizedBox(height: 14),
               // ── Parent / Teacher Progress Summary ──
-              _ProgressSummaryCard(progress: progress, isMalay: isMalay),
+              _ProgressSummaryCard(progress: progress, language: language),
               const SizedBox(height: 14),
               Card(
                 child: Padding(
@@ -120,7 +119,7 @@ class ParentSettingsScreen extends ConsumerWidget {
                         onPressed: () => _confirmReset(context, ref),
                         icon: const Icon(Icons.restart_alt_rounded),
                         label: Text(
-                          isMalay ? 'Set Semula Kemajuan' : 'Reset Progress',
+                          language.copy(ms: 'Set Semula Kemajuan', en: 'Reset Progress', zh: '重置进度', ta: 'முன்னேற்றத்தை மீட்டமை'),
                         ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red,
@@ -145,11 +144,9 @@ class ParentSettingsScreen extends ConsumerWidget {
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.privacy_tip_rounded),
-                  title: Text(isMalay ? 'Dasar Privasi' : 'Privacy Policy'),
+                  title: Text(language.copy(ms: 'Dasar Privasi', en: 'Privacy Policy', zh: '隐私政策', ta: 'தனியுரிமைக் கொள்கை')),
                   subtitle: Text(
-                    isMalay
-                        ? 'Cara kami melindungi data anak anda'
-                        : 'How we protect your child\'s data',
+                    language.copy(ms: 'Cara kami melindungi data anak anda', en: 'How we protect your child\'s data', zh: '我们如何保护您孩子的数据', ta: 'உங்கள் குழந்தையின் தரவை நாங்கள் எவ்வாறு பாதுகாக்கிறோம்'),
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => Navigator.of(context).push(
@@ -226,16 +223,16 @@ class ParentSettingsScreen extends ConsumerWidget {
 }
 
 class _ProgressSummaryCard extends ConsumerWidget {
-  const _ProgressSummaryCard({required this.progress, required this.isMalay});
+  const _ProgressSummaryCard({required this.progress, required this.language});
   final ProgressService progress;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final modules = [
       _ModuleRow(
         emoji: '🔢',
-        label: isMalay ? 'Nombor' : 'Numbers',
+        label: language.copy(ms: 'Nombor', en: 'Numbers', zh: '数字', ta: 'எண்கள்'),
         done: progress.getModuleLessons('numbers'),
         total: 100,
         last: progress.getLastLesson('numbers'),
@@ -243,7 +240,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
       ),
       _ModuleRow(
         emoji: '🔤',
-        label: isMalay ? 'Huruf' : 'Letters',
+        label: language.copy(ms: 'Huruf', en: 'Letters', zh: '字母', ta: 'எழுத்துகள்'),
         done: progress.getModuleLessons('letters'),
         total: 26,
         last: progress.getLastLesson('letters'),
@@ -251,7 +248,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
       ),
       _ModuleRow(
         emoji: '🌙',
-        label: isMalay ? 'Jawi' : 'Jawi',
+        label: language.copy(ms: 'Jawi', en: 'Jawi', zh: '爪夷文', ta: 'ஜாவி'),
         done: progress.getModuleLessons('jawi'),
         total: 28,
         last: progress.getLastLesson('jawi'),
@@ -259,7 +256,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
       ),
       _ModuleRow(
         emoji: '🧍',
-        label: isMalay ? 'Anggota Badan' : 'Body Parts',
+        label: language.copy(ms: 'Anggota Badan', en: 'Body Parts', zh: '身体部位', ta: 'உடல் பாகங்கள்'),
         done: progress.getModuleLessons('bodyparts'),
         total: 14,
         last: progress.getLastLesson('bodyparts'),
@@ -267,7 +264,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
       ),
       _ModuleRow(
         emoji: '🧮',
-        label: isMalay ? 'Matematik' : 'Math',
+        label: language.copy(ms: 'Matematik', en: 'Math', zh: '数学', ta: 'கணிதம்'),
         done: progress.getModuleLessons('math'),
         total: 50,
         last: progress.getLastLesson('math'),
@@ -275,7 +272,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
       ),
       _ModuleRow(
         emoji: '🎨',
-        label: isMalay ? 'Mewarna' : 'Colouring',
+        label: language.copy(ms: 'Mewarna', en: 'Colouring', zh: '涂色', ta: 'வண்ணம் தீட்டுதல்'),
         done: progress.coloringSessions,
         total: 40,
         last: '',
@@ -295,9 +292,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    isMalay
-                        ? '📊 Laporan Kemajuan Kanak-Kanak'
-                        : '📊 Child Progress Report',
+                    language.copy(ms: '📊 Laporan Kemajuan Kanak-Kanak', en: '📊 Child Progress Report', zh: '📊 儿童学习进度报告', ta: '📊 குழந்தையின் முன்னேற்ற அறிக்கை'),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w900,
@@ -309,9 +304,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              isMalay
-                  ? 'Untuk ibu bapa & guru tadika'
-                  : 'For parents & kindergarten teachers',
+              language.copy(ms: 'Untuk ibu bapa & guru tadika', en: 'For parents & kindergarten teachers', zh: '供家长和幼儿园老师使用', ta: 'பெற்றோர் & மழலையர் ஆசிரியர்களுக்காக'),
               style: const TextStyle(
                 fontSize: 12,
                 color: Color(0xFF9090A8),
@@ -332,17 +325,17 @@ class _ProgressSummaryCard extends ConsumerWidget {
                 children: [
                   _StatBubble(
                     value: '⭐ ${progress.stars}',
-                    label: isMalay ? 'Bintang' : 'Stars',
+                    label: language.copy(ms: 'Bintang', en: 'Stars', zh: '星星', ta: 'நட்சத்திரங்கள்'),
                     color: const Color(0xFFFFD21E),
                   ),
                   _StatBubble(
                     value: '✅ ${progress.completedChallenges}',
-                    label: isMalay ? 'Selesai' : 'Completed',
+                    label: language.copy(ms: 'Selesai', en: 'Completed', zh: '已完成', ta: 'முடிந்தவை'),
                     color: const Color(0xFF34C759),
                   ),
                   _StatBubble(
                     value: '🎨 ${progress.coloringSessions}',
-                    label: isMalay ? 'Mewarna' : 'Colouring',
+                    label: language.copy(ms: 'Mewarna', en: 'Colouring', zh: '涂色', ta: 'வண்ணம் தீட்டுதல்'),
                     color: const Color(0xFFFF9F43),
                   ),
                 ],
@@ -354,7 +347,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
             const SizedBox(height: 14),
 
             Text(
-              isMalay ? 'Kemajuan Mengikut Modul:' : 'Progress by Module:',
+              language.copy(ms: 'Kemajuan Mengikut Modul:', en: 'Progress by Module:', zh: '各模块进度：', ta: 'பாடப் பிரிவு வாரியான முன்னேற்றம்:'),
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
@@ -408,7 +401,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
                     if (m.last.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        '📌 ${isMalay ? "Terakhir" : "Last"}: ${m.last}',
+                        '📌 ${language.copy(ms: "Terakhir", en: "Last", zh: "最近", ta: "கடைசியாக")}: ${m.last}',
                         style: const TextStyle(
                           fontSize: 10,
                           color: Color(0xFF9090A8),
@@ -441,9 +434,7 @@ class _ProgressSummaryCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      isMalay
-                          ? 'Semua data disimpan secara tempatan. Tiada internet diperlukan.'
-                          : 'All data is stored locally. No internet required.',
+                      language.copy(ms: 'Semua data disimpan secara tempatan. Tiada internet diperlukan.', en: 'All data is stored locally. No internet required.', zh: '所有数据均保存在本地，无需网络。', ta: 'எல்லா தரவும் சாதனத்தில் மட்டுமே சேமிக்கப்படும். இணையம் தேவையில்லை.'),
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -552,34 +543,32 @@ class _SafetyBadge extends ConsumerWidget {
 
 // ── Weekly recap card ────────────────────────────────────────────────────────
 class _WeeklyRecapCard extends StatelessWidget {
-  const _WeeklyRecapCard({required this.progress, required this.isMalay});
+  const _WeeklyRecapCard({required this.progress, required this.language});
   final ProgressService progress;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context) {
     final rows = [
       (
         '⭐',
-        isMalay ? 'Bintang minggu ini' : 'Stars this week',
+        language.copy(ms: 'Bintang minggu ini', en: 'Stars this week', zh: '本周星星', ta: 'இந்த வாரத்தின் நட்சத்திரங்கள்'),
         '${progress.starsThisWeek}',
       ),
       (
         '🎮',
-        isMalay ? 'Permainan selesai' : 'Games completed',
+        language.copy(ms: 'Permainan selesai', en: 'Games completed', zh: '完成的游戏', ta: 'முடித்த விளையாட்டுகள்'),
         '${progress.gamesThisWeek}',
       ),
       (
         '🎨',
-        isMalay ? 'Sesi mewarna' : 'Colouring sessions',
+        language.copy(ms: 'Sesi mewarna', en: 'Colouring sessions', zh: '涂色次数', ta: 'வண்ணம் தீட்டும் அமர்வுகள்'),
         '${progress.coloringThisWeek}',
       ),
       (
         '🔥',
-        isMalay ? 'Streak semasa' : 'Current streak',
-        isMalay
-            ? '${progress.currentStreak} hari'
-            : '${progress.currentStreak} days',
+        language.copy(ms: 'Streak semasa', en: 'Current streak', zh: '当前连续天数', ta: 'தற்போதைய தொடர்ச்சி'),
+        language.copy(ms: '${progress.currentStreak} hari', en: '${progress.currentStreak} days', zh: '${progress.currentStreak} 天', ta: '${progress.currentStreak} நாட்கள்'),
       ),
     ];
 
@@ -590,14 +579,12 @@ class _WeeklyRecapCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              isMalay ? '📅 Ringkasan Minggu Ini' : '📅 This Week\'s Recap',
+              language.copy(ms: '📅 Ringkasan Minggu Ini', en: '📅 This Week\'s Recap', zh: '📅 本周回顾', ta: '📅 இந்த வார சுருக்கம்'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 4),
             Text(
-              isMalay
-                  ? 'Sejak Isnin — gunakan untuk sesi 10 minit bersama anak.'
-                  : 'Since Monday — use it to plan a 10-minute session together.',
+              language.copy(ms: 'Sejak Isnin — gunakan untuk sesi 10 minit bersama anak.', en: 'Since Monday — use it to plan a 10-minute session together.', zh: '从周一开始——用来和孩子一起规划 10 分钟的学习时间。', ta: 'திங்கள் முதல் — குழந்தையுடன் 10 நிமிட அமர்வைத் திட்டமிட இதைப் பயன்படுத்துங்கள்.'),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),

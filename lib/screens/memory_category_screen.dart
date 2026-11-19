@@ -29,7 +29,7 @@ class MemoryCategoryScreen extends ConsumerWidget {
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          tooltip: language == AppLanguage.malay ? 'Kembali' : 'Back',
+          tooltip: language.copy(ms: 'Kembali', en: 'Back', zh: '返回', ta: 'பின்செல்'),
         ),
         title: Text(AppText.ui('memoryGame', language)),
       ),
@@ -72,7 +72,6 @@ class _MemoryCategoryStageCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMalay = language == AppLanguage.malay;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -137,7 +136,7 @@ class _MemoryCategoryStageCard extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            isMalay ? 'Pilih tahap:' : 'Choose a stage:',
+            language.copy(ms: 'Pilih tahap:', en: 'Choose a stage:', zh: '选择一个阶段：', ta: 'ஒரு கட்டத்தைத் தேர்ந்தெடு:'),
             style: const TextStyle(
               color: AppTheme.ink,
               fontSize: 12,
@@ -153,7 +152,7 @@ class _MemoryCategoryStageCard extends ConsumerWidget {
                 _StageButton(
                   category: category,
                   stage: stage,
-                  isMalay: isMalay,
+                  language: language,
                 ),
             ],
           ),
@@ -167,12 +166,12 @@ class _StageButton extends ConsumerWidget {
   const _StageButton({
     required this.category,
     required this.stage,
-    required this.isMalay,
+    required this.language,
   });
 
   final MemoryCategory category;
   final MemoryStage stage;
-  final bool isMalay;
+  final AppLanguage language;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -197,7 +196,7 @@ class _StageButton extends ConsumerWidget {
               Icon(Icons.grid_view_rounded, color: category.color, size: 16),
               const SizedBox(width: 6),
               Text(
-                stage.boardLabel(isMalay: isMalay),
+                stage.boardLabel(language: language),
                 style: TextStyle(
                   color: category.color,
                   fontSize: 12,
